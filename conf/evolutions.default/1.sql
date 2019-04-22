@@ -39,6 +39,7 @@ alter table `permissions`
 
 create table `apps`
 (
+    `app_id` INT AUTO_INCREMENT PRIMARY KEY ,
     `client_id` VARCHAR(150) NOT NULL,
     `client_secret` VARCHAR(150) NOT NULL,
     `app_name` VARCHAR(150) NOT NULL,
