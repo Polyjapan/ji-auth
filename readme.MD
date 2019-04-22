@@ -15,6 +15,7 @@ Note: apps are registered against the JI Auth Server with:
  - `clientSecret`: the private identification for the app. Kept by it, sent with some requests but **NEVER** to clients.
  - `emailCallback`: the URL where the user should be redirected when receiving the email confirmation (in public hidden mode)
  - `callback`: the URL where the user should be redirected when successfully logging in
+ - `reCaptchaPkey`: the reCaptcha private key
  
 ### Common backend APIs
 
@@ -31,7 +32,7 @@ Consumes:
  
 Returns:
  - `200 OK` if it worked
-    - `type`: `SET(T_LOGIN, T_REGISTER, T_DOUBLE_REGISTER, T_EMAIL_CONFIRM)`
+    - `type`: `SET(T_LOGIN, T_REGISTER, T_DOUBLE_REGISTER, T_EMAIL_CONFIRM, T_PASSWORD_RESET)`
     - `userId`: `int`, the ID of the user on the CAS server
     - `email`: `string`, the email of the user.
  - `400 BAD REQUEST` if not, with additional info:
@@ -129,7 +130,7 @@ User wants to login against the public SPA (and, behind the scenes, on the CAS, 
 
 #### Endpoints
 
-##### `/api/register` 
+##### `POST /api/register` 
 
 Registers the callee on the server.
 
@@ -137,6 +138,7 @@ Consumes:
  - `email`: `string`
  - `password`: `string`
  - `clientId`: the `appID` of the app
+ - `captcha`: the re-captcha value (will be checked using the app's `reCaptchaPkey`)
  
 Returns:
  - `200 OK` if it worked
@@ -145,6 +147,7 @@ Returns:
     - `errorCode`: int, in following set
         - 101: missing data in the request, or invalid request
         - 102: the clientID is not found (<=> no such app registered)
+        - 201: the captcha is not correct
 
 Notes:
  - If the user already exists:
@@ -170,7 +173,7 @@ Returns:
         - 201: user or password incorrect
         - 202: email is not confirmed
 
-##### `GET /api/email_confirm` 
+##### `POST /api/email_confirm` 
 
 Validates an email address.
 
@@ -188,7 +191,41 @@ Returns:
         - 102: the clientID is not found (<=> no such app registered)        
         - 201: the email confirm code is invalid
         
-        
+##### `POST /api/forgot_password` 
+
+Asks for a password reset for a client.
+
+Consumes:
+ - `email`: `string`
+ - `clientId`: the `appID` of the app
+ - `captcha`: the re-captcha value (will be checked using the app's `reCaptchaPkey`)
+ 
+Returns:
+ - `200 OK` if it worked
+ - `400 BAD REQUEST` if not:
+    - `errorCode`: int, in following set
+        - 101: missing data in the request, or invalid request
+        - 102: the clientID is not found (<=> no such app registered)
+        - 201: the captcha is not correct
+
+##### `POST /api/reset_password` 
+
+Changes a clients' password, using a previously email sent code.
+
+Consumes:
+ - `email`: `string`, the email of the user
+ - `code`: `string`, the password reset code
+ - `clientId`: `string`, the `appID` of the app
+ - `password`: `string`, the new password to set
+ 
+Returns:
+ - `200 OK` if it worked
+    - `ticket`: the app ticket, a string (type `T_PASSWORD_RESET`)
+ - `400 BAD REQUEST` if not, with additional info:
+    - `errorCode`: int, in following set
+        - 101: missing data in the request, or invalid request
+        - 102: the clientID is not found (<=> no such app registered)        
+        - 201: the client or the code is not found
 
 ### "private" Explicit Mode
 
