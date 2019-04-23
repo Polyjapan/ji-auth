@@ -26,9 +26,6 @@ class AppTicketController @Inject()(cc: ControllerComponents,
     */
   val InvalidTicket = 201
 
-
-
-
   def postAppTicket: Action[AppTicketRequest] = Action.async(parse.json[AppTicketRequest]) { implicit rq =>
     if (rq.hasBody) {
       val body = rq.body

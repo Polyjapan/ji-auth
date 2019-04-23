@@ -34,7 +34,7 @@ package object data {
     * @param emailRedirectUrl the URL that should be embedded in email confirmation emails sent in hidden mode
     * @param recaptchaPrivate the private key used by recaptcha, unique to the app
     */
-  case class App(id: Option[Int], createdBy: Int, clientId: String, clientSecret: String, name: String, redirectUrl: String, emailRedirectUrl: String, recaptchaPrivate: String)
+  case class App(id: Option[Int], createdBy: Int, clientId: String, clientSecret: String, name: String, redirectUrl: String, emailRedirectUrl: String, recaptchaPrivate: Option[String])
 
   /**
     * Represents a ticket that is returned to the user by the CAS, and that the user has to "use" against the service it

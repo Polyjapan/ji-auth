@@ -149,7 +149,7 @@ Returns:
     - `errorCode`: int, in following set
         - 101: missing data in the request, or invalid request
         - 102: the clientID is not found (<=> no such app registered)
-        - 201: the captcha is not correct
+        - 104: the captcha is not correct
 
 Notes:
  - If the user already exists:
@@ -208,7 +208,7 @@ Returns:
     - `errorCode`: int, in following set
         - 101: missing data in the request, or invalid request
         - 102: the clientID is not found (<=> no such app registered)
-        - 201: the captcha is not correct
+        - 104: the captcha is not correct
 
 ##### `POST /hidden/reset_password` 
 
@@ -227,7 +227,7 @@ Returns:
     - `errorCode`: int, in following set
         - 101: missing data in the request, or invalid request
         - 102: the clientID is not found (<=> no such app registered)        
-        - 201: the client or the code is not found
+        - 201: the user or the code is not found
 
 ### "private" Explicit Mode
 

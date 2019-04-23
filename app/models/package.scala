@@ -53,7 +53,7 @@ package object models {
 
     def user = foreignKey("apps_users_fk", userId, registeredUsers)(_.id, onDelete = ForeignKeyAction.Cascade)
 
-    def * = (id.?, userId, clientId, clientSecret, appName, redirectUrl, emailRedirectUrl, captchaPrivate).shaped <> (App.tupled, App.unapply)
+    def * = (id.?, userId, clientId, clientSecret, appName, redirectUrl, emailRedirectUrl, captchaPrivate.?).shaped <> (App.tupled, App.unapply)
   }
 
   private[models] val apps = TableQuery[Apps]

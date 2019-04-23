@@ -1,0 +1,37 @@
+
+users.register.email_title=Votre compte JapanImpact
+users.register.email_from=Ne pas répondre
+users.register.email_text=Bonjour et bienvenue sur le site Japan Impact ! \n \
+\nPour confirmer que cette addresse e-mail est correcte, merci de bien vouloir cliquer sur le lien ci dessous. Vous pourrez ensuite vous connecter sur le site :  \
+\n\n\n {0} \
+\n\nCordialement, \
+\nLe Comité PolyJapan
+
+users.register.exists.email_title=Votre compte JapanImpact
+users.register.exists.email_from=Ne pas répondre
+users.register.exists.email_text=Bonjour, \n \
+\nVous avez tenté il y a quelques instants de vous inscrire à la boutique Japan Impact avec cette adresse email. \
+Toutefois, nous avons détecté que vous aviez déjà un compte enregistré avec cette adresse. \
+En conséquence, nous n'avons pas touché à votre compte. Si vous avez oublié votre mot de passe, vous pouvez \
+le réinitialiser depuis la page de connexion. \
+\n\nCordialement, \
+\nLe Comité PolyJapan
+
+users.recover.email_title=Réinitialisation de mot de passe JapanImpact
+users.recover.email_from=Ne pas répondre
+users.recover.email_text=Bonjour,\n \
+Vous avez envoyé une demande de récupération de mot de passe pour votre compte JapanImpact.\n \
+Pour réinitialiser votre mot de passe, merci de cliquer sur le lien ci dessous : \n \
+\n \
+{0} \n \
+\n \
+Cordialement, \n \
+Le Comité PolyJapan
+
+users.recover.no_user_email_text=Bonjour, \n \
+Vous avez envoyé une demande de récupération de mot de passe pour votre compte sur le site JapanImpact.\n \
+Malheureusement, cette adresse e-mail n''est associée à aucun compte sur notre site.\n \
+Nous vous invitons donc à vérifier que vous ne vous trompez pas d''adresse et que vous disposez bien d''un compte sur le site.\n \
+Cordialement, \n \
+Le Comité PolyJapan
+

@@ -24,7 +24,8 @@ object Implicits {
     *
     * @param x the value to convert
     */
-  implicit def toFuture[A](x: => A)(implicit ec: ExecutionContext): Future[A] = Future(x)
+ // implicit def toFuture[A](x: => A)(implicit ec: ExecutionContext): Future[A] = Future(x)
+  implicit def toFuture[A](x: A)(implicit ec: ExecutionContext): Future[A] = Future(x)
 
   /**
     * This implicit conversion allows to convert implicitly any Json writable value to an Ok result

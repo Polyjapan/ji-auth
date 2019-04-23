@@ -1,12 +1,12 @@
 package controllers.hidden
 
-import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import ch.japanimpact.auth.api.TicketType
-import data.RegisteredUser
+import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
+import data.{LoginSuccess, RegisteredUser}
 import javax.inject.Inject
 import models.{AppsModel, HashModel, TicketsModel, UsersModel}
 import play.api.Configuration
-import play.api.libs.json.{Json, Reads, Writes}
+import play.api.libs.json.{Json, Reads}
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import utils.Implicits._
@@ -21,7 +21,7 @@ class HiddenLogInController @Inject()(
                                        users: UsersModel,
                                        tickets: TicketsModel,
                                        apps: AppsModel,
-                                       hashes: HashModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                       hashes: HashModel)(implicit ec: ExecutionContext, config: Configuration) extends AbstractController(cc) {
 
   import hashes._
 
@@ -46,15 +46,8 @@ class HiddenLogInController @Inject()(
     */
   case class LoginRequest(email: String, password: String, clientId: String)
 
-  /**
-    * The object returned on a login success
-    *
-    * @param ticket the ticket the app can use to get the user data
-    */
-  case class LoginSuccess(ticket: String)
 
   implicit val requestReads: Reads[LoginRequest] = Json.reads[LoginRequest]
-  implicit val successWrites: Writes[LoginSuccess] = Json.writes[LoginSuccess]
 
   /**
     * This method computes the bcrypt check of the provided password and compares it to a previously hashed constant value.
@@ -92,21 +85,21 @@ class HiddenLogInController @Inject()(
                   }
 
                   // Create the token and return it
-                  tickets createTicketForUser(id, app.id.get, TicketType.LoginTicket) map LoginSuccess map toOkResult[LoginSuccess]
-                } else ! EmailNotConfirmed
+                  tickets createTicketForUser(id, app.id.get, TicketType.LoginTicket) map LoginSuccess.apply map toOkResult[LoginSuccess]
+                } else !EmailNotConfirmed
 
-              } else ! UserOrPasswordInvalid
+              } else !UserOrPasswordInvalid
 
 
             case None =>
               // No account found... we just spend some time computing a fake password and return
               fakeCheck(body.password)
-              ! UserOrPasswordInvalid
+              !UserOrPasswordInvalid
           }
 
-        case None => ! UnknownApp // No body or body parse fail ==> invalid input
+        case None => !UnknownApp // No body or body parse fail ==> invalid input
       }
-    } else ! MissingData // No body or body parse fail ==> invalid input
+    } else !MissingData // No body or body parse fail ==> invalid input
   }
 
 

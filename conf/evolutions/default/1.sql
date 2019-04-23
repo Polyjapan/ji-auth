@@ -19,7 +19,7 @@ create table `apps`
     `app_name`              VARCHAR(150) NOT NULL,
     `redirect_url`          VARCHAR(250) NOT NULL,
     `email_callback_url`    VARCHAR(250) NOT NULL,
-    `recaptcha_private_key` VARCHAR(250) NOT NULL
+    `recaptcha_private_key` VARCHAR(250) NULL
 );
 
 alter table `apps`
