@@ -45,6 +45,8 @@ Returns:
 ### "public" Hidden Mode
 
 This mode is supposed to be hidden from the user. All the endpoints accept and return only JSON. They are grouped under `/hidden`.
+All these endpoints are called **by the browser of the client** (so that the apps never see the credentials of the user)
+but from a form hosted on the app directly (for example, a single page app).
 
 #### Demo
 
@@ -256,3 +258,7 @@ returns the form or redirects if the user is already logged in on CAS
 ##### `POST /login` 
 
 does the actual logging in
+
+### Manager mode
+
+We will also have to provide a small management console, to allow some authorized persons to register their own app.
