@@ -44,7 +44,7 @@ Returns:
  
 ### "public" Hidden Mode
 
-This mode is supposed to be hidden from the user. All the endpoints accept and return only JSON. They are grouped under `/api`.
+This mode is supposed to be hidden from the user. All the endpoints accept and return only JSON. They are grouped under `/hidden`.
 
 #### Demo
 
@@ -53,14 +53,14 @@ User wants to register against the public SPA (and, behind the scenes, on the CA
 ```
     Public SPA                 JI Auth Server               Public SPA backend
        
-    (1) #--- POST /api/register ---># (username, password, clientId)
+    (1) #--- POST /hidden/register ># (username, password, clientId)
                                     | Server registers users, stores him in DB
                                     | Server sends confirm email using the callback URL of the app
                                     | Server generates [app_ticket] (user, T_REGISTER) and stores it with the appID and 
                                     | an expiration date, set 24h in the future
     (2) #<-- OK, app_ticket --------#
         |                           
-    (3) #--- POST /api/register -----------------------------------># app_ticket, additional info required by the SPA
+    (3) #--- POST /hidden/register --------------------------------># app_ticket, additional info required by the SPA
                                                                     | 
     (4)                             #<-- GET /api/get_user ---------# (app_ticket, clientSecret)
          Server checks app_ticket   |                  
@@ -76,14 +76,14 @@ User wants to login against the public SPA (and, behind the scenes, on the CAS, 
 ```    
     Public SPA                 JI Auth Server               Public SPA backend
        
-    (1) #--- POST /api/login ------># (username, password, clientId)
+    (1) #--- POST /hidden/login ---># (username, password, clientId)
                                     | Server logs in user
                                     | Server does NOT create a session for the user
                                     | Server generates [app_ticket] (user, T_LOGIN) and stores it with the appID and an 
                                     | expiration date, set 24h in the future
     (2) #<-- OK, app_ticket --------#
         |                           
-    (3) #--- POST /api/login {app_ticket}--------------------------># app_ticket
+    (3) #--- POST /hidden/login {app_ticket}-----------------------># app_ticket
                                                                     | 
     (4)                             #<-- GET /api/get_user ---------# (app_ticket, clientSecret)
          Server checks app_ticket   |                  
@@ -117,20 +117,22 @@ User wants to login against the public SPA (and, behind the scenes, on the CAS, 
  
  
 ```      
-    (1) #- GET /api/email_confirm -># (confirmation key, client_id)
-                                    | Server validates email
-                                    | Server logs in user
-                                    | Server does NOT create a session for the user
-                                    | Server generates [app_ticket] (user, T_LOGIN) and stores it with the appID and an 
-                                    | expiration date, set 24h in the future
-    (2) #<-- OK, app_ticket --------#
+      Client                        JI Auth
+      
+    (1) #- GET /hidden/email_confirm --># (confirmation key, client_id)
+                                        | Server validates email
+                                        | Server logs in user
+                                        | Server does NOT create a session for the user
+                                        | Server generates [app_ticket] (user, T_LOGIN) and stores it with the appID and an 
+                                        | expiration date, set 24h in the future
+    (2) #<-- OK, app_ticket ------------#
 
     (see login procedure, starting at 2)
 ```        
 
 #### Endpoints
 
-##### `POST /api/register` 
+##### `POST /hidden/register` 
 
 Registers the callee on the server.
 
@@ -154,7 +156,7 @@ Notes:
     - If password is correct `ticket` will be a `T_LOGIN` ticket
     - If password is incorrect, `ticket` will be a `T_DOUBLE_REGISTER` ticket (usually ignored by recipient)
 
-##### `POST /api/login` 
+##### `POST /hidden/login` 
 
 Logs in the callee on the system.
 
@@ -173,7 +175,7 @@ Returns:
         - 201: user or password incorrect
         - 202: email is not confirmed
 
-##### `POST /api/email_confirm` 
+##### `POST /hidden/email_confirm` 
 
 Validates an email address.
 
@@ -191,7 +193,7 @@ Returns:
         - 102: the clientID is not found (<=> no such app registered)        
         - 201: the email confirm code is invalid
         
-##### `POST /api/forgot_password` 
+##### `POST /hidden/forgot_password` 
 
 Asks for a password reset for a client.
 
@@ -208,7 +210,7 @@ Returns:
         - 102: the clientID is not found (<=> no such app registered)
         - 201: the captcha is not correct
 
-##### `POST /api/reset_password` 
+##### `POST /hidden/reset_password` 
 
 Changes a clients' password, using a previously email sent code.
 

@@ -2,3 +2,12 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
+
+OPTIONS        /                      controllers.OptionsController.rootOptions
+OPTIONS        /*url                  controllers.OptionsController.options(url: String)
+
+
++nocsrf
+POST           /hidden/login          controllers.hidden.HiddenLogInController.postLogin
++nocsrf
+POST           /api/get_ticket        controllers.api.AppTicketController.postAppTicket

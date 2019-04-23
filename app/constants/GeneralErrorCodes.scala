@@ -1,5 +1,8 @@
 package constants
 
+import play.api.libs.json.{Json, Writes}
+import play.api.mvc.{Result, Results}
+
 /**
   * @author Louis Vialar
   */
@@ -15,7 +18,13 @@ object GeneralErrorCodes {
   val UnknownApp = 102
 
   /**
-    * The requested app was found but the App Secret was incorrect
+    * The requested app was not found or the App Secret was incorrect
     */
   val InvalidAppSecret = 103
+
+  case class RequestError(errorCode: Int)
+
+  implicit val failureWrites: Writes[RequestError] = Json.writes[RequestError]
+
+  def error(code: Int): Result = Results.BadRequest(Json.toJson(RequestError(code)))
 }

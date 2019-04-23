@@ -1,6 +1,7 @@
 package utils
 
 import java.security.SecureRandom
+import java.util.Base64
 
 import scala.util.Random
 
@@ -8,8 +9,13 @@ import scala.util.Random
   * @author zyuiop
   */
 object RandomUtils {
-  private val chars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
+  private val base64 = Base64.getUrlEncoder
   private val random = new Random(new SecureRandom())
 
-  def randomString(length: Int): String = List.fill(length)(random.nextInt(chars.length)).map(chars).mkString
+  def randomString(bytes: Int): String = {
+    val tokenBytes = new Array[Byte](bytes)
+    random.nextBytes(tokenBytes)
+
+    base64.encodeToString(tokenBytes)
+  }
 }
