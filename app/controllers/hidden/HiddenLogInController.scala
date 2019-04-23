@@ -1,7 +1,7 @@
 package controllers.hidden
 
-import ch.japanimpact.tools.TicketType
-import constants.GeneralErrorCodes._
+import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
+import ch.japanimpact.auth.api.TicketType
 import data.RegisteredUser
 import javax.inject.Inject
 import models.{AppsModel, HashModel, TicketsModel, UsersModel}

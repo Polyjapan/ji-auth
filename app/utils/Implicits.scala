@@ -1,6 +1,6 @@
 package utils
 
-import constants.GeneralErrorCodes.error
+import ch.japanimpact.auth.api.constants.GeneralErrorCodes.RequestError
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Result, Results}
 
@@ -32,6 +32,9 @@ object Implicits {
     */
   implicit def toOkResult[A](x: A)(implicit writes: Writes[A]): Result = Results.Ok(Json.toJson(x))
 
+
+
+  def error(code: Int): Result = Results.BadRequest(Json.toJson(RequestError(code)))
 
   /**
     * This implicit class allows to use `! code` to return an error code (`BadRequest(RequestError(code))`)

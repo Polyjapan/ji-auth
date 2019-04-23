@@ -1,6 +1,6 @@
 import java.sql.Timestamp
 
-import ch.japanimpact.tools._
+import ch.japanimpact.auth.api.TicketType
 
 /**
   * @author Louis Vialar
@@ -24,12 +24,13 @@ package object data {
 
   /**
     * Represents an app allowed to authenticate users in the system
-    * @param id an internal id for the app
-    * @param createdBy the id of the user who created the app
-    * @param clientId the clientID to provide in requests
-    * @param clientSecret the client secret to authenticate secret (backend to backend) requests
-    * @param name the name of the app
-    * @param redirectUrl the URL where the user should be redirected after logging in
+    *
+    * @param id               an internal id for the app
+    * @param createdBy        the id of the user who created the app
+    * @param clientId         the clientID to provide in requests
+    * @param clientSecret     the client secret to authenticate secret (backend to backend) requests
+    * @param name             the name of the app
+    * @param redirectUrl      the URL where the user should be redirected after logging in
     * @param emailRedirectUrl the URL that should be embedded in email confirmation emails sent in hidden mode
     * @param recaptchaPrivate the private key used by recaptcha, unique to the app
     */
@@ -40,11 +41,13 @@ package object data {
     * was emitted for, in order to gain access to that service. That service will use this ticket to get some info about
     * the user (it will then be invalidated) as well as the type of action the ticket was emitted for, and then maybe
     * create a session for the user in the way prefered by the service.
-    * @param token the unique token returned to the user
-    * @param userId the user this token bounds to
-    * @param appId the app this token was emitted for
-    * @param validTo the last timestamp this ticket can be used
+    *
+    * @param token      the unique token returned to the user
+    * @param userId     the user this token bounds to
+    * @param appId      the app this token was emitted for
+    * @param validTo    the last timestamp this ticket can be used
     * @param ticketType the type of ticket (see [[TicketType]])
     */
   case class Ticket(token: String, userId: Int, appId: Int, validTo: Timestamp, ticketType: TicketType)
+
 }

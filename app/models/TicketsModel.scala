@@ -3,7 +3,7 @@ package models
 import java.security.SecureRandom
 import java.sql.Timestamp
 
-import ch.japanimpact.tools.TicketType
+import ch.japanimpact.auth.api.TicketType
 import data.{RegisteredUser, Ticket}
 import javax.inject.Inject
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}

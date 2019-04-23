@@ -1,10 +1,10 @@
 import java.sql.Timestamp
 
+import ch.japanimpact.auth.api.TicketType
 import data._
 import slick.ast.BaseTypedType
 import slick.jdbc.JdbcType
 import slick.jdbc.MySQLProfile.api._
-import ch.japanimpact.tools._
 
 /**
   * The different models mapping classes from [[data]] to actual SQL tables
