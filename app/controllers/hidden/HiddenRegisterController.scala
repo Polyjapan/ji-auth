@@ -64,10 +64,10 @@ class HiddenRegisterController @Inject()(
                 Future((user.id.get, TicketType.DoubleRegisterTicket))
               case None =>
 
-                val confirmCode = URLEncoder.encode(RandomUtils.randomString(32), "UTF-8")
+                val confirmCode = RandomUtils.randomString(32)
                 val emailEncoded = URLEncoder.encode(body.email, "UTF-8")
 
-                val url = app.emailRedirectUrl + "?email=" + emailEncoded + "&action=confirmEmail&confirmCode=" + confirmCode
+                val url = app.emailRedirectUrl + "?email=" + emailEncoded + "&action=confirmEmail&confirmCode=" + URLEncoder.encode(confirmCode, "UTF-8")
                 val (algo, hash) = hashes.hash(body.password)
 
                 mailer.send(Email(
