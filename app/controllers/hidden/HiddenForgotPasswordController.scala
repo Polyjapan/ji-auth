@@ -53,10 +53,11 @@ class HiddenForgotPasswordController @Inject()(
               case Some(user) =>
 
                 // We have a client, create a code and a reset URL
-                val resetCode = URLEncoder.encode(RandomUtils.randomString(32), "UTF-8")
+                val resetCode = RandomUtils.randomString(32)
+                val resetCodeEncoded = URLEncoder.encode(resetCode, "UTF-8")
                 val emailEncoded = URLEncoder.encode(user.email, "UTF-8")
 
-                val url = app.emailRedirectUrl + "?email=" + emailEncoded + "&action=passwordReset&resetCode=" + resetCode
+                val url = app.emailRedirectUrl + "?email=" + emailEncoded + "&action=passwordReset&resetCode=" + resetCodeEncoded
 
                 // Update the user with the code, and a validity expiration of 24hrs
                 users.updateUser(user.copy(
