@@ -42,7 +42,7 @@ Returns:
         - 103: the clientSecret is wrong for this clientID
         - 201: the ticket is invalid, has expired, or is not allowed to be read by this app 
  
-### "public" Hidden Mode
+### "public" Hidden Mode (implemented and deployed)
 
 This mode is supposed to be hidden from the user. All the endpoints accept and return only JSON. They are grouped under `/hidden`.
 All these endpoints are called **by the browser of the client** (so that the apps never see the credentials of the user)
