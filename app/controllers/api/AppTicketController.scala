@@ -24,7 +24,6 @@ class AppTicketController @Inject()(cc: ControllerComponents,
   /**
     * The ticket has expired, is invalid, or is not readable by the current client
     */
-  val InvalidTicket = 201
 
   def postAppTicket: Action[AppTicketRequest] = Action.async(parse.json[AppTicketRequest]) { implicit rq =>
     if (rq.hasBody) {

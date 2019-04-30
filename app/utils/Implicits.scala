@@ -1,6 +1,6 @@
 package utils
 
-import ch.japanimpact.auth.api.constants.GeneralErrorCodes.RequestError
+import ch.japanimpact.auth.api.constants.GeneralErrorCodes.{ErrorCode, RequestError}
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Result, Results}
 
@@ -35,12 +35,21 @@ object Implicits {
 
 
 
-  def error(code: Int): Result = Results.BadRequest(Json.toJson(RequestError(code)))
+  def error(code: Int): Result = Results.BadRequest(Json.toJson(new RequestError(code)))
+
+  def error(code: RequestError): Result = Results.BadRequest(Json.toJson(code))
 
   /**
     * This implicit class allows to use `! code` to return an error code (`BadRequest(RequestError(code))`)
     */
   implicit class AddUnaryErrorCode(val code: Int) extends AnyVal {
+    def unary_! : Result = error(code)
+  }
+
+  /**
+    * This implicit class allows to use `! code` to return an error code (`BadRequest(RequestError(code))`)
+    */
+  implicit class AddUnaryErrorCodeToErrorCode(val code: RequestError) extends AnyVal {
     def unary_! : Result = error(code)
   }
 
