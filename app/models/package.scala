@@ -28,8 +28,10 @@ package object models {
 
     def passwordResetEnd = column[Option[Timestamp]]("password_reset_end")
 
+    def adminLevel = column[Int]("admin_level")
+
     def * =
-      (id.?, email, emailConfirmKey, password, passwordAlgo, passwordReset, passwordResetEnd).shaped <> (RegisteredUser.tupled, RegisteredUser.unapply)
+      (id.?, email, emailConfirmKey, password, passwordAlgo, passwordReset, passwordResetEnd, adminLevel).shaped <> (RegisteredUser.tupled, RegisteredUser.unapply)
   }
 
   private[models] val registeredUsers = TableQuery[RegisteredUsers]

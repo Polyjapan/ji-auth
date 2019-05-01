@@ -18,9 +18,12 @@ package object data {
     * @param passwordReset    an optional reset key for the password. If it's null then no password change was requested
     * @param passwordResetEnd an optional timestamp marking the date at which the password reset key will no longer be valid
     *                         If absent, the password reset key is considered invalid
+    * @param adminLevel       the admin level (1-10)
     */
   case class RegisteredUser(id: Option[Int], email: String, emailConfirmKey: Option[String], password: String,
-                            passwordAlgo: String, passwordReset: Option[String] = Option.empty, passwordResetEnd: Option[Timestamp] = Option.empty)
+                            passwordAlgo: String, passwordReset: Option[String] = Option.empty,
+                            passwordResetEnd: Option[Timestamp] = Option.empty,
+                            adminLevel: Int)
 
   /**
     * Represents an app allowed to authenticate users in the system
