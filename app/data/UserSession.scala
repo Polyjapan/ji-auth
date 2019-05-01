@@ -6,17 +6,19 @@ import play.api.mvc.{RequestHeader, Session}
   * @author Louis Vialar
   */
 case class UserSession(id: Int, email: String, adminLevel: Int) {
-  def canCreateApp: Boolean = adminLevel >= UserSession.CreateAppLevel
-  def canCreateGroup: Boolean = adminLevel >= UserSession.CreateGroupLevel
-  def canManageGroup: Boolean = adminLevel >= UserSession.ManageGroups
-  def canChangePerms: Boolean = adminLevel >= UserSession.ChangeOtherPermissions
+  def hasPermission(perm: Int): Boolean = (adminLevel & perm) != 0
+  def canCreateApp: Boolean = hasPermission(UserSession.CreateAppLevel)
+  def canCreateGroup: Boolean = hasPermission(UserSession.CreateGroupLevel)
+  def canManageGroup: Boolean = hasPermission(UserSession.ManageGroups)
+  def canChangePerms: Boolean = hasPermission(UserSession.ChangeOtherPermissions)
 }
 
 object UserSession {
-  val ChangeOtherPermissions: Int = 20
-  val ManageGroups: Int = 15 // Delete others' groups
-  val CreateAppLevel: Int = 10
-  val CreateGroupLevel: Int = 5
+  val SuperAdmin: Int = 16 // Cannot be edited with a simple flag ChangeOtherPermissions
+  val ChangeOtherPermissions: Int = 8
+  val ManageGroups: Int = 4 // Delete others' groups
+  val CreateAppLevel: Int = 2
+  val CreateGroupLevel: Int = 1
 
   def apply(ru: RegisteredUser): List[(String, String)] =
     List("id" -> ru.id.get.toString, "email" -> ru.email, "admin_level" -> ru.adminLevel.toString)
