@@ -5,7 +5,7 @@ import java.util.Date
 import ch.japanimpact.auth.api.AuthApi.{AppTicketRequest, AppTicketResponse}
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import javax.inject.Inject
-import models.{AppsModel, TicketsModel}
+import models.{AppsModel, GroupsModel, TicketsModel}
 import play.api.Configuration
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
@@ -18,6 +18,7 @@ import scala.concurrent.ExecutionContext
   */
 class AppTicketController @Inject()(cc: ControllerComponents,
                                     tickets: TicketsModel,
+                                    groups: GroupsModel,
                                     apps: AppsModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
 
@@ -33,11 +34,13 @@ class AppTicketController @Inject()(cc: ControllerComponents,
       apps getAuthentifiedApp(body.clientId, body.clientSecret) flatMap {
         case Some(app) =>
           // Found some app (clientId and clientSecret are therefore valid)
-          tickets useTicket(body.ticket, app) map {
+          tickets useTicket(body.ticket, app) flatMap {
             case Some((data.Ticket(_, _, _, validTo, ticketType), data.RegisteredUser(Some(id), email, _, _, _, _, _))) =>
               // Found some ticket bound to the app
               if (validTo.before(new Date)) !InvalidTicket // The ticket is no longer valid
-              else AppTicketResponse(id, email, ticketType) // The ticket is valid, return the data
+              else {
+                groups getGroups(app, id) map(groupSet => AppTicketResponse(id, email, ticketType, groupSet))
+              } // The ticket is valid, return the data
             case None => !InvalidTicket
           }
 
