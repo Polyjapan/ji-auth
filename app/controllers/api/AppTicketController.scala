@@ -11,43 +11,44 @@ import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import utils.Implicits._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * @author Louis Vialar
   */
 class AppTicketController @Inject()(cc: ControllerComponents,
                                     tickets: TicketsModel,
-                                    groups: GroupsModel,
-                                    apps: AppsModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                    groups: GroupsModel)(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
 
-  /**
-    * The ticket has expired, is invalid, or is not readable by the current client
-    */
-
+  @deprecated
   def postAppTicket: Action[AppTicketRequest] = Action.async(parse.json[AppTicketRequest]) { implicit rq =>
     if (rq.hasBody) {
       val body = rq.body
 
-      // Get client first
-      apps getAuthentifiedApp(body.clientId, body.clientSecret) flatMap {
-        case Some(app) =>
-          // Found some app (clientId and clientSecret are therefore valid)
-          tickets useTicket(body.ticket, app) flatMap {
-            case Some((data.Ticket(_, _, _, validTo, ticketType), data.RegisteredUser(Some(id), email, _, _, _, _, _, _))) =>
-              // Found some ticket bound to the app
-              if (validTo.before(new Date)) !InvalidTicket // The ticket is no longer valid
-              else {
-                groups getGroups(app, id) map(groupSet => AppTicketResponse(id, email, ticketType, groupSet))
-              } // The ticket is valid, return the data
-            case None => !InvalidTicket
-          }
-
-        case None => !InvalidAppSecret
+      ApiUtils.withGivenApp(body.clientId, body.clientSecret) { app =>
+        returnTicket(app, body.ticket)
       }
-    } else !MissingData // No body or body parse fail ==> invalid input
+    }
+    else !MissingData // No body or body parse fail ==> invalid input
   }
 
+  private def returnTicket(app: data.App, ticket: String): Future[Result] = {
+    tickets useTicket(ticket, app) flatMap {
+      case Some((data.Ticket(_, _, _, validTo, ticketType), data.RegisteredUser(Some(id), email, _, _, _, _, _, _))) =>
+        // Found some ticket bound to the app
+        if (validTo.before(new Date)) !InvalidTicket // The ticket is no longer valid
+        else {
+          groups getGroups(app, id) map (groupSet => AppTicketResponse(id, email, ticketType, groupSet))
+        } // The ticket is valid, return the data
+      case None => !InvalidTicket
+    }
+  }
+
+  def getAppTicket(ticket: String): Action[AnyContent] = Action.async { implicit rq =>
+    ApiUtils.withApp { app =>
+      returnTicket(app, ticket)
+    }
+  }
 
 }

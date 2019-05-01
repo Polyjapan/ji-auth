@@ -25,6 +25,8 @@ POST           /hidden/password_reset             controllers.hidden.HiddenPassw
 +nocsrf
 POST           /api/get_ticket                    controllers.api.AppTicketController.postAppTicket
 
+GET            /api/ticket/:ticket                controllers.api.AppTicketController.getAppTicket(ticket: String)
+
 GET            /register                          controllers.explicit.RegisterController.registerGet(app: Option[String])
 POST           /register                          controllers.explicit.RegisterController.registerPost(app: Option[String])
 
