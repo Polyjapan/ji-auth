@@ -43,3 +43,4 @@ GET            /logout                            controllers.explicit.LogoutCon
 
 GET            /assets/*file                      controllers.Assets.at(file)
 
+GET            /                                  controllers.management.ManagementHomeController.home

@@ -23,7 +23,7 @@ package object data {
   case class RegisteredUser(id: Option[Int], email: String, emailConfirmKey: Option[String], password: String,
                             passwordAlgo: String, passwordReset: Option[String] = Option.empty,
                             passwordResetEnd: Option[Timestamp] = Option.empty,
-                            adminLevel: Int)
+                            adminLevel: Int = 0)
 
   /**
     * Represents an app allowed to authenticate users in the system

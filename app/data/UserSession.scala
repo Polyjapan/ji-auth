@@ -7,18 +7,21 @@ import play.api.mvc.{RequestHeader, Session}
   */
 case class UserSession(id: Int, email: String, adminLevel: Int) {
   def hasPermission(perm: Int): Boolean = (adminLevel & perm) != 0
-  def canCreateApp: Boolean = hasPermission(UserSession.CreateAppLevel)
-  def canCreateGroup: Boolean = hasPermission(UserSession.CreateGroupLevel)
-  def canManageGroup: Boolean = hasPermission(UserSession.ManageGroups)
-  def canChangePerms: Boolean = hasPermission(UserSession.ChangeOtherPermissions)
+  lazy val canCreateApp: Boolean = hasPermission(UserSession.CreateApp)
+  lazy val canCreateGroup: Boolean = hasPermission(UserSession.CreateGroup)
+  lazy val canManageGroups: Boolean = hasPermission(UserSession.ManageGroups)
+  lazy val canChangePerms: Boolean = hasPermission(UserSession.ChangeOtherPermissions)
+  lazy val canBrowseUsers: Boolean = hasPermission(UserSession.BrowseUsers)
+  lazy val isSuperAdmin: Boolean = hasPermission(UserSession.SuperAdmin)
 }
 
 object UserSession {
-  val SuperAdmin: Int = 16 // Cannot be edited with a simple flag ChangeOtherPermissions
-  val ChangeOtherPermissions: Int = 8
-  val ManageGroups: Int = 4 // Delete others' groups
-  val CreateAppLevel: Int = 2
-  val CreateGroupLevel: Int = 1
+  val SuperAdmin: Int = 32 // Cannot be edited with a simple flag ChangeOtherPermissions
+  val ChangeOtherPermissions: Int = 16
+  val ManageGroups: Int = 8 // Delete others' groups
+  val CreateApp: Int = 4
+  val CreateGroup: Int = 2
+  val BrowseUsers: Int = 1
 
   def apply(ru: RegisteredUser): List[(String, String)] =
     List("id" -> ru.id.get.toString, "email" -> ru.email, "admin_level" -> ru.adminLevel.toString)

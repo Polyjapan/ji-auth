@@ -35,7 +35,7 @@ class AppTicketController @Inject()(cc: ControllerComponents,
         case Some(app) =>
           // Found some app (clientId and clientSecret are therefore valid)
           tickets useTicket(body.ticket, app) flatMap {
-            case Some((data.Ticket(_, _, _, validTo, ticketType), data.RegisteredUser(Some(id), email, _, _, _, _, _))) =>
+            case Some((data.Ticket(_, _, _, validTo, ticketType), data.RegisteredUser(Some(id), email, _, _, _, _, _, _))) =>
               // Found some ticket bound to the app
               if (validTo.before(new Date)) !InvalidTicket // The ticket is no longer valid
               else {

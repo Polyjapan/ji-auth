@@ -13,11 +13,13 @@ alter table `groups`
 
 create table `groups_members`
 (
-    `group_id`           INT NOT NULL PRIMARY KEY,
-    `user_id`            INT NOT NULL PRIMARY KEY,
+    `group_id`           INT NOT NULL,
+    `user_id`            INT NOT NULL,
     `can_manage_members` BOOLEAN DEFAULT FALSE,
     `can_read_members`   BOOLEAN DEFAULT FALSE,
-    `is_admin`           BOOLEAN DEFAULT FALSE
+    `is_admin`           BOOLEAN DEFAULT FALSE,
+
+    PRIMARY KEY (group_id, user_id)
 );
 
 alter table `groups_members`

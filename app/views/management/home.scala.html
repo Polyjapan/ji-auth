@@ -1,0 +1,67 @@
+@import data.UserSession
+@import data.Group
+@(user: UserSession, groups: Set[Group], apps: Set[data.App])
+
+@main("Console de gestion") {
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        Administration
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Cette page est peu utile pour les visiteurs. Si vous disposez de droits
+                            particuliers, en revanche, c'est ici que vous devez y accéder :)</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @if(user.canBrowseUsers) {
+                            <li class="list-group-item"><a href="#">Gestion des utilisateurs</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        Mes groupes
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @for(group <- groups) {
+                            <li class="list-group-item"><a href="#">@group.displayName (@group.name)</a></li>
+                        }
+
+                        @if(user.canCreateGroup) {
+                            <li class="list-group-item"><a href="#">Créer un groupe</a></li>
+                        }
+
+                        @if(user.canManageGroups) {
+                            <li class="list-group-item"><a href="#">Gérer d'autres groupes</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        Mes applications
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @for(app <- apps) {
+                            <li class="list-group-item"><a href="#">@app.name (@app.clientId)</a></li>
+                        }
+
+                        @if(user.canCreateApp) {
+                            <li class="list-group-item"><a href="#">Créer une application</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}
