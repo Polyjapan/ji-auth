@@ -240,25 +240,114 @@ client app. When accessing other apps, the CAS session will be used to redirect 
 #### Demo
 
 
+User wants to login against the app
+```    
+    Browser                  JI Auth Server                        App
+       
+    (1) #--- GET Access to protected resource --------------------->#
+                                                                    | 
+    (2) #<-- Redirect to authServer/login?app=app_id ---------------#
+        |
+        #--- GET login?app=app_id ->#
+                                    | GET with no session, return form
+        #<-- Login Form ------------# 
+        |
+        | User fills form
+        |                            
+    (3) #--- POST login?app=app_id >#
+                                    | Login the user
+                                    | Generate a CAS session
+                                    | Generate [app_ticket] (user, T_EXPLICIT_GRANT) and stores it with the appID and an 
+                                    | expiration date, set 24h in the future
+    (4) #<-- Redirect* -------------#
+        | * The redirect contains a CAS session
+        |   User is redirected to app.callback_url?ticket={app_ticket}
+        |                           
+    (5) #--- GET callback_url?ticket={app_ticket}------------------># app_ticket
+                                                                    | 
+    (6)                             #<-- GET /api/get_user ---------# (app_ticket, clientSecret)
+         Server checks app_ticket   |                  
+         and clientSecret           |
+    (7)                             #--- OK -----------------------># userId + email + T_EXPLICIT_GRANT
+                                                                    | Check ticket type is T_EXPLICIT_GRANT 
+                                                                    | Create session for user
+    (8) #<-- Web page with session ---------------------------------# 
+```
+
+For the next apps, user will already hold a CAS session.
+
+
+```    
+    Browser                  JI Auth Server                        App
+       
+    (1) #--- GET Access to protected resource --------------------->#
+                                                                    | 
+    (2) #<-- Redirect to authServer/login?app=app_id ---------------#
+        |
+        #--- GET login?app=app_id ->#
+                                    | GET with session, fast login
+                                    | Generate [app_ticket] (user, T_EXPLICIT_GRANT) and stores it with the appID and an 
+                                    | expiration date, set 24h in the future
+    (4) #<-- Redirect* -------------#
+        |   User is redirected to app.callback_url?ticket={app_ticket}
+        |                           
+    (5) #--- GET callback_url?ticket={app_ticket}------------------># app_ticket
+                                                                    | 
+    (6)                             #<-- GET /api/get_user ---------# (app_ticket, clientSecret)
+         Server checks app_ticket   |                  
+         and clientSecret           |
+    (7)                             #--- OK -----------------------># userId + email + T_EXPLICIT_GRANT
+                                                                    | Check ticket type is T_EXPLICIT_GRANT 
+                                                                    | Create session for user
+    (8) #<-- Web page with session ---------------------------------# 
+```
+
 
 #### Endpoints
 
-##### `GET /register` 
+No real endpoint here. Send the user to `auth_server_url/login?app={app client id}`. Once registered and logged in, the
+user will be redirected to `your_app_callback_url?ticket={ticket}`. You can verify the ticket using
+the endpoint described before.
 
-returns the form
-
-##### `POST /register` 
-
-does the actual registration
-
-##### `GET /login` 
-
-returns the form or redirects if the user is already logged in on CAS
-
-##### `POST /login` 
-
-does the actual logging in
+You can also log the user out of the CAS by redirecting him to `auth_server_url/logout?app={app client id}`. He will
+then be redirected to `your_app_callback_url?logout`.
 
 ### Manager mode
 
 We will also have to provide a small management console, to allow some authorized persons to register their own app.
+
+## Groups
+
+We will also add a group system.
+A group has an `id`, a unique `name`, a `display_name` and an `owner_id`.
+
+Users can be members of groups, via a (`user_id`, `group_id`) relationship.
+
+This relationship has several boolean flags:
+- `can_manage_members`: if true, this member can add and remove members from the group
+- `can_read_members`: if true, this member and its apps can read the members of the group
+- `is_admin`: if true, this member can change the flags of all members except the owner
+
+The owner can change the owner, and is always member with all three flags set.
+
+Groups will be returned in the ticket as a list: 
+
+    groups: [group_1_name, group_2_name, ...]
+    
+This list will only be a subset of all the groups the user is in. This subset will **only** contain the groups for which
+the `app_owner` is a member with `can_read_members` flag set on.
+    
+An endpoint will be added that will allow to get the information on a group
+
+    GET /api/group/<group name>
+    
+    Returns:
+    
+    {
+        id: number,
+        name: string,
+        display_name: string
+    }
+    
+This endpoint requires no authentication. It is only provided to allow third party apps to display a pretty name instead
+of a raw group name.
