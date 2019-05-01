@@ -8,12 +8,13 @@ import data.LoginSuccess
 import javax.inject.Inject
 import models.{AppsModel, HashModel, ReCaptchaModel, TicketsModel, UsersModel}
 import play.api.Configuration
+import play.api.data.validation._
 import play.api.i18n.I18nSupport
 import play.api.libs.json.{Json, Reads}
 import play.api.libs.mailer.{Email, MailerClient}
 import play.api.mvc._
 import utils.Implicits._
-import utils.RandomUtils
+import utils.{RandomUtils, ValidationUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -27,6 +28,10 @@ class HiddenRegisterController @Inject()(
                                           apps: AppsModel,
                                           captcha: ReCaptchaModel,
                                           hashes: HashModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
+
+  val InvalidEmail = 201
+  val PasswordTooShort = 202
+
 
   /**
     * The format of the request sent by the client
@@ -44,8 +49,11 @@ class HiddenRegisterController @Inject()(
     if (rq.hasBody) {
       val body = rq.body
 
-      // Get client first
-      apps getApp body.clientId flatMap {
+      if (!ValidationUtils.isValidEmail(body.email)) {
+        !InvalidEmail
+      } else if (!ValidationUtils.isValidPassword(body.password)) {
+        !PasswordTooShort
+      } else apps getApp body.clientId flatMap {
         case Some(app) =>
 
           captcha.checkCaptchaWithExpiration(app, body.captcha).flatMap(result =>

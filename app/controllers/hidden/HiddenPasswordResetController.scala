@@ -12,6 +12,7 @@ import play.api.libs.json.{Json, Reads}
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import utils.Implicits._
+import utils.ValidationUtils
 
 import scala.concurrent.ExecutionContext
 
@@ -30,6 +31,9 @@ class HiddenPasswordResetController @Inject()(
     */
   val InvalidResetCode = 201
 
+  val PasswordTooShort = 202
+
+
   /**
     * The format of the request sent by the client
     *
@@ -46,8 +50,9 @@ class HiddenPasswordResetController @Inject()(
     if (rq.hasBody) {
       val body = rq.body
 
-      // Get client first
-      apps getApp body.clientId flatMap {
+      if (!ValidationUtils.isValidPassword(body.password)) {
+        ! PasswordTooShort
+      } else apps getApp body.clientId flatMap {
         case Some(app) =>
           users getUser body.email flatMap {
             case Some(user@RegisteredUser(Some(id), _, _, _, _, Some(code), Some(deadline))) if code == body.code && deadline.after(new Date) =>
