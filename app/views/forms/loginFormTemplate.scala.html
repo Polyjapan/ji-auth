@@ -1,0 +1,11 @@
+@(elements: helper.FieldElements)
+
+<label for="@elements.id" class="sr-only">@elements.label</label>
+@elements.input
+@if(elements.hasErrors) {
+    @for(error <- elements.errors) {
+        <div class="alert alert-danger">
+            @error
+        </div>
+    }
+}

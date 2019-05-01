@@ -7,7 +7,7 @@ import play.api.data.validation.{Constraints, Valid}
   */
 object ValidationUtils {
   def isValidEmail(email: String): Boolean = {
-    if (email.isEmpty) false
+    if (email.isEmpty || email.length > 180) false
     else Constraints.emailAddress.apply(email) match {
       case Valid => true
       case _ => false

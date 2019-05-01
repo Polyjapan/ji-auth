@@ -16,6 +16,6 @@ object RandomUtils {
     val tokenBytes = new Array[Byte](bytes)
     random.nextBytes(tokenBytes)
 
-    base64.encodeToString(tokenBytes)
+    base64.encodeToString(tokenBytes).filterNot(_ == '=')
   }
 }

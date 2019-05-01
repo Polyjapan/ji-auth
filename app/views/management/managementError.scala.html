@@ -1,0 +1,15 @@
+@import data.UserSession
+
+@(user: UserSession, title: String, content: String)
+
+
+@managementTemplate(title, user) {
+    <div class="row">
+        <div class="col-lg-12">
+
+            <h2>@title</h2>
+
+            <p>@content</p>
+        </div>
+    </div>
+}

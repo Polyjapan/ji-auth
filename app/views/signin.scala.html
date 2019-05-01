@@ -1,24 +1,13 @@
 @(title: String, helptext: Option[String], target: Call, userForm: Form[_], more: Html = Html(""))(rest: Html)(implicit request: RequestHeader, messagesProvider: MessagesProvider)
 
     @import helper._
+    @import views.forms.LoginFieldTemplate._
 
 @style = {
     <link rel="stylesheet" href="@routes.Assets.at("css/signin.css")" crossorigin="anonymous">
 }
 
-@error(errors: Seq[String]) = {
-    <div class="alert alert-danger">
-        @if(errors.size == 1) {
-            @errors.head
-        } else {
-            <ul>
-                @for(error <- errors) {
-                    <li>@error</li>
-                }
-            </ul>
-        }
-    </div>
-}
+
 
 @main(title, style) {
 
@@ -40,19 +29,8 @@
             @error(userForm.globalErrors.map(_.format))
         }
 
-        <label for="email" class="sr-only">Email</label>
-        <input type="email" name="email" id="email" class="form-control" placeholder="Email" required autofocus value="@userForm("email").value.getOrElse("")">
-
-        @if(userForm("email").hasErrors) {
-            @error(userForm("email").errors.map(_.format))
-        }
-
-        <label for="password" class="sr-only">Password</label>
-        <input type="password" name="password" id="password" class="form-control" placeholder="Mot de passe" required>
-
-        @if(userForm("password").hasErrors) {
-            @error(userForm("password").errors.map(_.format))
-        }
+        @inputText(userForm("email"), 'type -> "email", '_label -> "Email", 'class -> "form-control", 'placeholder -> "Email", 'required -> true, 'autofocus -> true)
+        @inputPassword(userForm("password"), '_label -> "Email", 'class -> "form-control", 'placeholder -> "Mot de passe", 'required -> true)
 
         @more
 

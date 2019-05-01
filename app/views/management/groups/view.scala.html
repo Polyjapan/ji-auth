@@ -1,0 +1,47 @@
+@import data.UserSession
+@import helper._
+@import views.forms.FormFieldTemplate._
+
+@import data._
+@(user: UserSession, group: Group, owner: RegisteredUser, perms: GroupMember, members: Seq[(GroupMember, RegisteredUser)])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
+
+@views.html.management.managementTemplate("Groupe " + group.displayName, user) {
+    <div class="row">
+        <div class="col-lg-12">
+
+            <h2>Gestion du groupe @group.name</h2>
+
+            <h3>Propriétés</h3>
+
+            <ul>
+                <li>Identifiant : <code>@group.name</code></li>
+                <li>Nom : <code>@group.displayName</code></li>
+                <li>Gestionnaire : <code>@owner.email</code></li>
+            </ul>
+
+            @if(perms.canRead) {
+                <h3>Membres</h3>
+
+                <ul>
+                    <li><i>email: (read, write, admin)</i></li>
+                    @for(member <- members) {
+                        <li>@member._2.email: (@member._1.canRead, @member._1.canManage, @member._1.isAdmin)</li>
+                    }
+                </ul>
+            }
+
+            @if(perms.canManage) {
+                <h3>Nouveau membre</h3>
+
+                <p>Flemme. #todo</p>
+            }
+
+            @if(perms.isAdmin) {
+                <h3>Modification</h3>
+
+                <a href="@controllers.management.routes.GroupCRUDController.updateGroup(group.name)">Modifier le groupe</a>
+            }
+
+        </div>
+    </div>
+}

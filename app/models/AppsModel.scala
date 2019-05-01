@@ -5,6 +5,7 @@ import data._
 import javax.inject.Inject
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.MySQLProfile
+import utils.RandomUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -23,6 +24,16 @@ class AppsModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider
     */
   def getApp(clientId: String): Future[Option[App]] =
     db.run(apps.filter(row => row.clientId === clientId).result.headOption)
+
+  /**
+    * Get an app registered in the system by its internal id and its owner
+    * @param appId the id of the app
+    * @param ownerId the id of the owner of the app
+    * @return the app, if found
+    */
+  def getAppByIdAndOwner(appId: Int, ownerId: Int): Future[Option[App]] =
+    db.run(apps.filter(row => row.id === appId && row.userId === ownerId).result.headOption)
+
 
   /**
     * Get an app registered in the system by its public clientId and private clientSecret
@@ -54,6 +65,9 @@ class AppsModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider
   def createApp(app: App): Future[Int] =
     db.run((apps returning apps.map(_.id)) += app)
 
+  def createApp(name: String, redirectUrl: String, emailCallbackUrl: String, captcha: Option[String], user: Int): Future[Int] =
+    createApp(App(None, user, RandomUtils.randomString(32), RandomUtils.randomString(32), name, redirectUrl, emailCallbackUrl, captcha))
+
   /**
     * Updates an app whose id is set
     *
@@ -64,4 +78,12 @@ class AppsModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider
     Preconditions.checkArgument(app.id.isDefined)
     db.run(apps.filter(_.id === app.id.get).update(app))
   }
+
+  /**
+    * Get all the apps owned by a specific user
+    * @param owner the owner of the apps
+    * @return all the apps owned by the given user
+    */
+  def getAppsByOwner(owner: Int): Future[Seq[App]] =
+    db.run(apps.filter(_.userId === owner).result)
 }

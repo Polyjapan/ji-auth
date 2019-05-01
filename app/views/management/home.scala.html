@@ -1,30 +1,21 @@
-@import data.UserSession
-@import data.Group
+@import data.{Group, UserSession}
+
 @(user: UserSession, groups: Set[Group], apps: Set[data.App])
 
-@main("Console de gestion") {
+@header = {
+    <p class="card-text">Cette page est peu utile pour les visiteurs. Si vous disposez de droits
+        particuliers, en revanche, c'est ici que vous devez y accéder :)</p>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header">
-                        Administration
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">Cette page est peu utile pour les visiteurs. Si vous disposez de droits
-                            particuliers, en revanche, c'est ici que vous devez y accéder :)</p>
-                    </div>
-                    <ul class="list-group list-group-flush">
-                        @if(user.canBrowseUsers) {
-                            <li class="list-group-item"><a href="#">Gestion des utilisateurs</a></li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <hr>
 
-        <div class="row">
+    @if(user.canBrowseUsers) {
+        <a href="#">Gestion des utilisateurs</a>
+    }
+}
+
+@managementTemplate("Console de gestion", user, header) {
+    <div class="row">
+        @if(groups.nonEmpty || user.canCreateGroup || user.canManageGroups) {
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
@@ -32,11 +23,11 @@
                     </div>
                     <ul class="list-group list-group-flush">
                         @for(group <- groups) {
-                            <li class="list-group-item"><a href="#">@group.displayName (@group.name)</a></li>
+                            <li class="list-group-item"><a href="@controllers.management.routes.GroupCRUDController.getGroup(group.name)">@group.displayName (@group.name)</a></li>
                         }
 
                         @if(user.canCreateGroup) {
-                            <li class="list-group-item"><a href="#">Créer un groupe</a></li>
+                            <li class="list-group-item"><a href="@controllers.management.routes.GroupCRUDController.createGroup()">Créer un groupe</a></li>
                         }
 
                         @if(user.canManageGroups) {
@@ -45,7 +36,9 @@
                     </ul>
                 </div>
             </div>
+        }
 
+        @if(apps.nonEmpty || user.canCreateApp) {
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
@@ -53,15 +46,15 @@
                     </div>
                     <ul class="list-group list-group-flush">
                         @for(app <- apps) {
-                            <li class="list-group-item"><a href="#">@app.name (@app.clientId)</a></li>
+                            <li class="list-group-item"><a href="@controllers.management.routes.AppsCRUDController.getApp(app.id.get)">@app.name</a></li>
                         }
 
                         @if(user.canCreateApp) {
-                            <li class="list-group-item"><a href="#">Créer une application</a></li>
+                            <li class="list-group-item"><a href="@controllers.management.routes.AppsCRUDController.createApp()">Créer une application</a></li>
                         }
                     </ul>
                 </div>
             </div>
-        </div>
+        }
     </div>
 }

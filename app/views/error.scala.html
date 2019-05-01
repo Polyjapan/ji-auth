@@ -1,0 +1,13 @@
+@(errors: Seq[String])
+
+<div class="alert alert-danger">
+    @if(errors.size == 1) {
+        @errors.head
+    } else {
+        <ul>
+        @for(error <- errors) {
+            <li>@error</li>
+        }
+        </ul>
+    }
+</div>

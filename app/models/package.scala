@@ -86,27 +86,27 @@ package object models {
   private[models] class Groups(tag: Tag) extends Table[Group](tag, "groups") {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
-    def userId = column[Int]("owner")
+    def ownerId = column[Int]("owner")
 
     def name = column[String]("name", O.SqlType("VARCHAR(100)"))
 
     def displayName = column[String]("display_name", O.SqlType("VARCHAR(100)"))
 
-    def user = foreignKey("groups_users_fk", userId, registeredUsers)(_.id, onDelete = ForeignKeyAction.Cascade)
+    def user = foreignKey("groups_users_fk", ownerId, registeredUsers)(_.id, onDelete = ForeignKeyAction.Cascade)
 
     def * =
-      (id.?, userId, name, displayName).shaped <> (Group.tupled, Group.unapply)
+      (id.?, ownerId, name, displayName).shaped <> (Group.tupled, Group.unapply)
   }
 
   private[models] val groups = TableQuery[Groups]
 
-  private[models] class GroupMembers(tag: Tag) extends Table[GroupMember](tag, "group_members") {
+  private[models] class GroupMembers(tag: Tag) extends Table[GroupMember](tag, "groups_members") {
     def groupId = column[Int]("group_id", O.PrimaryKey)
 
-    def userId = column[Int]("owner_id", O.PrimaryKey)
+    def userId = column[Int]("user_id", O.PrimaryKey)
 
-    def canManage = column[Boolean]("can_manage")
-    def canRead = column[Boolean]("can_read")
+    def canManage = column[Boolean]("can_manage_members")
+    def canRead = column[Boolean]("can_read_members")
     def isAdmin = column[Boolean]("is_admin")
 
     def user = foreignKey("groups_members_users_fk", userId, registeredUsers)(_.id, onDelete = ForeignKeyAction.Cascade)
