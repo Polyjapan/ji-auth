@@ -81,4 +81,38 @@ package object models {
 
   private[models] val tickets = TableQuery[Tickets]
 
+  private[models] class Groups(tag: Tag) extends Table[Group](tag, "groups") {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+
+    def userId = column[Int]("owner")
+
+    def name = column[String]("name", O.SqlType("VARCHAR(100)"))
+
+    def displayName = column[String]("display_name", O.SqlType("VARCHAR(100)"))
+
+    def user = foreignKey("groups_users_fk", userId, registeredUsers)(_.id, onDelete = ForeignKeyAction.Cascade)
+
+    def * =
+      (id.?, userId, name, displayName).shaped <> (Group.tupled, Group.unapply)
+  }
+
+  private[models] val groups = TableQuery[Groups]
+
+  private[models] class GroupMembers(tag: Tag) extends Table[GroupMember](tag, "group_members") {
+    def groupId = column[Int]("group_id", O.PrimaryKey)
+
+    def userId = column[Int]("owner_id", O.PrimaryKey)
+
+    def canManage = column[Boolean]("can_manage")
+    def canRead = column[Boolean]("can_read")
+    def isAdmin = column[Boolean]("is_admin")
+
+    def user = foreignKey("groups_members_users_fk", userId, registeredUsers)(_.id, onDelete = ForeignKeyAction.Cascade)
+    def group = foreignKey("groups_members_groups_fk", groupId, groups)(_.id, onDelete = ForeignKeyAction.Cascade)
+
+    def * =
+      (groupId, userId, canManage, canRead, isAdmin).shaped <> (GroupMember.tupled, GroupMember.unapply)
+  }
+
+  private[models] val groupMembers = TableQuery[GroupMembers]
 }

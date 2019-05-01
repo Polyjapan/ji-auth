@@ -50,4 +50,23 @@ package object data {
     */
   case class Ticket(token: String, userId: Int, appId: Int, validTo: Timestamp, ticketType: TicketType)
 
+  /**
+    * Represents a group of users
+    *
+    * @param id the id of the group
+    * @param owner the current owner (user id) of the group
+    * @param name the internal name for the group ([a-zA-Z0-9_-]+)
+    * @param displayName the display name for the group
+    */
+  case class Group(id: Option[Int], owner: Int, name: String, displayName: String)
+
+  /**
+    * Represents a relationship between a group and its members
+    * @param group the id of the group
+    * @param user the id of the user
+    * @param canManage if true, the user can add and remove other users (only non admins)
+    * @param canRead if true, the user and its apps can read the list of members
+    * @param isAdmin if true, the user can manage the users' rights
+    */
+  case class GroupMember(group: Int, user: Int, canManage: Boolean, canRead: Boolean, isAdmin: Boolean)
 }
