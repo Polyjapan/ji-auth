@@ -3,26 +3,43 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-OPTIONS        /                              controllers.OptionsController.rootOptions
-OPTIONS        /*url                          controllers.OptionsController.options(url: String)
+OPTIONS        /                                  controllers.OptionsController.rootOptions
+OPTIONS        /*url                              controllers.OptionsController.options(url: String)
 
 
 +nocsrf
-POST           /hidden/login                  controllers.hidden.HiddenLogInController.postLogin
+POST           /hidden/login                      controllers.hidden.HiddenLogInController.postLogin
 
 +nocsrf
-POST           /hidden/register               controllers.hidden.HiddenRegisterController.postRegister
+POST           /hidden/register                   controllers.hidden.HiddenRegisterController.postRegister
 
 +nocsrf
-POST           /hidden/email_confirm          controllers.hidden.HiddenEmailConfirmController.postEmailConfirm
+POST           /hidden/email_confirm              controllers.hidden.HiddenEmailConfirmController.postEmailConfirm
 
 +nocsrf
-POST           /hidden/forgot_password        controllers.hidden.HiddenForgotPasswordController.postForgotPassword
+POST           /hidden/forgot_password            controllers.hidden.HiddenForgotPasswordController.postForgotPassword
 
 +nocsrf
-POST           /hidden/password_reset         controllers.hidden.HiddenPasswordResetController.postPasswordReset
-
-
+POST           /hidden/password_reset             controllers.hidden.HiddenPasswordResetController.postPasswordReset
 
 +nocsrf
-POST           /api/get_ticket                controllers.api.AppTicketController.postAppTicket
+POST           /api/get_ticket                    controllers.api.AppTicketController.postAppTicket
+
+GET            /register                          controllers.explicit.RegisterController.registerGet(app: Option[String])
+POST           /register                          controllers.explicit.RegisterController.registerPost(app: Option[String])
+
+GET            /login                             controllers.explicit.LoginController.loginGet(app: Option[String])
+POST           /login                             controllers.explicit.LoginController.loginPost(app: Option[String])
+
+GET            /forgot_password                   controllers.explicit.ForgotPasswordController.forgotPasswordGet(app: Option[String])
+POST           /forgot_password                   controllers.explicit.ForgotPasswordController.forgotPasswordPost(app: Option[String])
+
+GET            /password_reset                    controllers.explicit.PasswordResetController.passwordResetGet(app: Option[String])
+POST           /password_reset                    controllers.explicit.PasswordResetController.passwordResetPost(app: Option[String])
+
+GET            /email_confirm/:email/:code        controllers.explicit.EmailConfirmController.emailConfirmGet(email: String, code: String, app: Option[String])
+
+GET            /logout                            controllers.explicit.LogoutController.logout(app: Option[String])
+
+GET            /assets/*file                      controllers.Assets.at(file)
+

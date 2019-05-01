@@ -43,22 +43,12 @@ class HiddenEmailConfirmController @Inject()(
       // Get client first
       apps getApp body.clientId flatMap {
         case Some(app) =>
-
-          // Then get the user by its email
-          users getUser body.email flatMap {
-
-            // Check if the user needs email confirmation and if the code is correct
-            case Some(user@RegisteredUser(Some(id), _, Some(c), _, _, _, _)) if c == body.code =>
-
-              // Update the user to mark the email is confirmed, and return a new ticket
-              users updateUser user.copy(emailConfirmKey = None) flatMap { _ =>
-                tickets createTicketForUser(id, app.id.get, TicketType.EmailConfirmTicket) map
-                  LoginSuccess.apply map toOkResult[LoginSuccess]
-              }
-            case _ =>
-              !InvalidConfirmCode
+          users.confirmEmail(body.email, body.code).flatMap {
+            case Some(user) =>
+              tickets createTicketForUser(user.id.get, app.id.get, TicketType.EmailConfirmTicket) map
+                LoginSuccess.apply map toOkResult[LoginSuccess]
+            case None => !InvalidConfirmCode
           }
-
         case None => !UnknownApp
       }
     } else !MissingData // No body or body parse fail ==> invalid input

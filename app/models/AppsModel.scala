@@ -34,6 +34,18 @@ class AppsModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider
     db.run(apps.filter(row => row.clientId === clientId && row.clientSecret === clientSecret).result.headOption)
 
   /**
+    * Get the name of an app, given a clientId
+    * @param clientId an optional clientId. If empty, the app name will be empty too.
+    * @return the name of the app, or None if this app doesn't exist
+    */
+  def getAppName(clientId: Option[String]): Future[Option[String]] = {
+    clientId match {
+      case Some(clientId) => getApp(clientId).map(opt => opt.map(_.name))
+      case None => Future(None)
+    }
+  }
+
+  /**
     * Create an app
     *
     * @param app the app to create

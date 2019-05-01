@@ -1,0 +1,10 @@
+@(userForm: Form[_], captcha: String, app: Option[String], appName: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
+
+@captchaCode = {
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <div class="g-recaptcha" data-sitekey="@captcha"></div>
+}
+
+@signin("Inscription", appName.map(name => "Inscrivez vous pour pouvoir accéder à : " + name), controllers.explicit.routes.RegisterController.registerPost(app), userForm, captchaCode) {
+    <a class="mb-3 text-muted" href="@controllers.explicit.routes.LoginController.loginGet(app)">J'ai déjà un compte</a>
+}

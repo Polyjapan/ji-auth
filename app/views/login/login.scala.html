@@ -1,0 +1,8 @@
+@(userForm: Form[_], app: Option[String], appName: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
+
+@signin("Connexion", appName.map(name => "Connectez vous pour accéder à : " + name), controllers.explicit.routes.LoginController.loginPost(app), userForm) {
+    <p class="mb-3 text-muted">
+        Vos identifiants Japan Impact vous permettent également de vous connecter sur la boutique, et vice versa. Pas encore de compte ?
+        <a href="@controllers.explicit.routes.RegisterController.registerGet(app)">Créer un compte</a>
+    </p>
+}

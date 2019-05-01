@@ -55,45 +55,20 @@ class HiddenRegisterController @Inject()(
         !PasswordTooShort
       } else apps getApp body.clientId flatMap {
         case Some(app) =>
-
-          captcha.checkCaptchaWithExpiration(app, body.captcha).flatMap(result =>
-            if (!result.success) !InvalidCaptcha
-
-            // If we have no error in the form itself we try to find the user data
-            else users.getUser(body.email).flatMap {
-              case Some(user) =>
-                mailer.send(Email(
-                  rq.messages("users.register.exists.email_title"),
-                  rq.messages("users.register.exists.email_from") + " <noreply@japan-impact.ch>",
-                  Seq(body.email),
-                  bodyText = Some(rq.messages("users.register.exists.email_text"))
-                ))
-
-                Future((user.id.get, TicketType.DoubleRegisterTicket))
-              case None =>
-
-                val confirmCode = RandomUtils.randomString(32)
-                val emailEncoded = URLEncoder.encode(body.email, "UTF-8")
-
-                val url = app.emailRedirectUrl + "?email=" + emailEncoded + "&action=confirmEmail&confirmCode=" + URLEncoder.encode(confirmCode, "UTF-8")
-                val (algo, hash) = hashes.hash(body.password)
-
-                mailer.send(Email(
-                  rq.messages("users.register.email_title"),
-                  rq.messages("users.register.email_from") + " <noreply@japan-impact.ch>",
-                  Seq(body.email),
-                  bodyText = Some(rq.messages("users.register.email_text", url))
-                ))
-
-                users
-                  .createUser(data.RegisteredUser(Option.empty, body.email, Some(confirmCode), hash, algo))
-                  .map(id => (id, TicketType.RegisterTicket))
-            }.flatMap {
-              case (userId, tt) =>
-                tickets.createTicketForUser(userId, app.id.get, tt) map LoginSuccess.apply map toOkResult[LoginSuccess]
-            }
-          )
-
+          users.register(
+            body.captcha, app.recaptchaPrivate,
+            body.email, body.password,
+            (email, code) => app.emailRedirectUrl + "?email=" + email + "&action=confirmEmail&confirmCode=" + code
+          ).map {
+            case users.BadCaptcha => !InvalidCaptcha
+            case users.AlreadyRegistered(id) => (id, TicketType.DoubleRegisterTicket)
+            case users.AccountCreated(id) => (id, TicketType.RegisterTicket)
+          }.flatMap {
+            case (id: Int, tt: TicketType) =>
+              tickets.createTicketForUser(id, app.id.get, tt) map LoginSuccess.apply map toOkResult[LoginSuccess]
+            case f: Future[Result] => f
+            case f: Result => Future(f)
+          }
         case None => !UnknownApp // No body or body parse fail ==> invalid input
       }
     } else !MissingData // No body or body parse fail ==> invalid input

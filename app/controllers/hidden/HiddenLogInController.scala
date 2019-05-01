@@ -2,12 +2,11 @@ package controllers.hidden
 
 import ch.japanimpact.auth.api.TicketType
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
-import data.{LoginSuccess, RegisteredUser}
+import data.LoginSuccess
 import javax.inject.Inject
 import models.{AppsModel, HashModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.json.{Json, Reads}
-import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import utils.Implicits._
 
@@ -23,8 +22,6 @@ class HiddenLogInController @Inject()(
                                        apps: AppsModel,
                                        hashes: HashModel)(implicit ec: ExecutionContext, config: Configuration) extends AbstractController(cc) {
 
-  import hashes._
-
   /**
     * The user or the password sent by the client match no user
     */
@@ -34,8 +31,6 @@ class HiddenLogInController @Inject()(
     * The user is valid but the email was never confirmed
     */
   val EmailNotConfirmed = 202
-
-  private val randomHashed = hash("this is a random string")._2
 
   /**
     * The format of the request sent by the client
@@ -49,54 +44,19 @@ class HiddenLogInController @Inject()(
 
   implicit val requestReads: Reads[LoginRequest] = Json.reads[LoginRequest]
 
-  /**
-    * This method computes the bcrypt check of the provided password and compares it to a previously hashed constant value.
-    * This method is just used to spend some time, to avoid leaking that an accounts doesn't exist because the API replies quicker.
-    *
-    * @param pass the password the user sent
-    */
-  private def fakeCheck(pass: String) = {
-    check(DefaultAlgo, randomHashed, pass) // Spend some time to avoid timing attacks
-  }
 
   def postLogin: Action[LoginRequest] = Action.async(parse.json[LoginRequest]) { implicit rq: Request[LoginRequest] =>
     if (rq.hasBody) {
       val body = rq.body
 
-      // Get client first
       apps getApp body.clientId flatMap {
         case Some(app) =>
-          users getUser body.email flatMap {
-            case Some(user@RegisteredUser(Some(id), _, emailConfirmKey, password, passwordAlgo, _, _)) =>
-              // Check if password is correct
-              if (check(passwordAlgo, password, body.password)) {
-
-                // Check if email is confirmed
-                if (emailConfirmKey.isEmpty) {
-
-                  // Try to upgrade password if needed
-                  val np = upgrade(passwordAlgo, body.password)
-                  np match {
-                    case Some((algo, pass)) =>
-                      // The method returned a new (algo, pass) pair ==> we have to update!
-                      users updateUser user.copy(passwordAlgo = algo, password = pass)
-
-                    case _ => // do nothing
-                  }
-
-                  // Create the token and return it
-                  tickets createTicketForUser(id, app.id.get, TicketType.LoginTicket) map LoginSuccess.apply map toOkResult[LoginSuccess]
-                } else !EmailNotConfirmed
-
-              } else !UserOrPasswordInvalid
-
-
-            case None =>
-              // No account found... we just spend some time computing a fake password and return
-              fakeCheck(body.password)
-              !UserOrPasswordInvalid
+          users.login(body.email, body.password).flatMap {
+            case users.BadLogin => !UserOrPasswordInvalid
+            case users.EmailNotConfirmed => !EmailNotConfirmed
+            case users.LoginSuccess(user) =>
+              tickets createTicketForUser(user.id.get, app.id.get, TicketType.LoginTicket) map LoginSuccess.apply map toOkResult[LoginSuccess]
           }
-
         case None => !UnknownApp // No body or body parse fail ==> invalid input
       }
     } else !MissingData // No body or body parse fail ==> invalid input

@@ -1,0 +1,23 @@
+@(email: String)
+
+@main("Inscription réussie") {
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <br>
+                <div class="alert alert-success" role="alert">
+                    <h4 class="alert-heading">Inscription réussie!</h4>
+                    <p>Votre inscription a bien été enregistrée. Vous devriez recevoir un email sur votre adresse <b>@email</b>
+                        dans les plus brefs délais.
+                        Cet email vous permettra de confirmer votre adresse email. Merci de suivre le lien qu'il contient pour poursuivre.</p>
+
+                    <hr>
+                    <p class="mb-0">
+                        Si vous ne recevez pas d'email dans la prochaine heure, contactez nous à <a href="mailto:ticket@@japan-impact.ch">
+                        ticket@@japan-impact.ch</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -9,15 +9,18 @@ import org.mindrot.jbcrypt.BCrypt
   * @author zyuiop
   */
 @Singleton
-class HashModel{
+class HashModel {
   private val providers: Map[String, HashProvider] = Map(
     "bcrypt" -> new BCryptHashProvider,
     "old" -> new ShittyAlgoProvider
   )
   val DefaultAlgo = "bcrypt"
+  private val RandomHashed = hash("this is a random string")._2
+
 
   /**
     * Hashes the given password with the default algorithm
+    *
     * @param password the password to hash
     * @return a tuple (algo, hash)
     */
@@ -27,6 +30,13 @@ class HashModel{
 
   def check(algo: String, hashed: String, input: String): Boolean = providers(algo).check(hashed, input)
 
+  /**
+    * Check the password against a constant password, to counter timing attacks
+    */
+  def fakeCheck(pass: String): Unit = {
+    check(DefaultAlgo, RandomHashed, pass)
+  }
+
   def upgrade(algo: String, clearPassword: String): Option[(String, String)] = {
     if (algo != DefaultAlgo) Some(hash(clearPassword))
     else Option.empty
@@ -34,6 +44,7 @@ class HashModel{
 
   private trait HashProvider {
     def hash(password: String): String
+
     def check(hashed: String, input: String): Boolean
   }
 
@@ -69,4 +80,5 @@ class HashModel{
       hash == hashed
     }
   }
+
 }
