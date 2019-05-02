@@ -5,11 +5,12 @@ import java.sql.Timestamp
 
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import javax.inject.Inject
-import models.{AppsModel, ReCaptchaModel, UsersModel}
+import models.{AppsModel, UsersModel}
 import play.api.i18n.I18nSupport
 import play.api.libs.json.{Json, Reads}
 import play.api.libs.mailer.{Email, MailerClient}
 import play.api.mvc._
+import services.ReCaptchaService
 import utils.Implicits._
 import utils.RandomUtils
 
@@ -22,7 +23,7 @@ class HiddenForgotPasswordController @Inject()(
                                                 cc: MessagesControllerComponents,
                                                 users: UsersModel,
                                                 apps: AppsModel,
-                                                captcha: ReCaptchaModel)(implicit ec: ExecutionContext, mailer: MailerClient) extends MessagesAbstractController(cc) with I18nSupport {
+                                                captcha: ReCaptchaService)(implicit ec: ExecutionContext, mailer: MailerClient) extends MessagesAbstractController(cc) with I18nSupport {
 
 
   /**

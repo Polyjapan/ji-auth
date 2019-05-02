@@ -1,4 +1,4 @@
-package models
+package services
 
 import javax.inject.Singleton
 import javax.xml.bind.DatatypeConverter
@@ -9,7 +9,7 @@ import org.mindrot.jbcrypt.BCrypt
   * @author zyuiop
   */
 @Singleton
-class HashModel {
+class HashService {
   private val providers: Map[String, HashProvider] = Map(
     "bcrypt" -> new BCryptHashProvider,
     "old" -> new ShittyAlgoProvider

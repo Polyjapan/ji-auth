@@ -1,8 +1,8 @@
 package controllers.api
 
 import ch.japanimpact.auth.api.TicketType
+import ch.japanimpact.auth.api.LoginSuccess
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
-import data.LoginSuccess
 import javax.inject.Inject
 import models.{AppsModel, TicketsModel}
 import play.api.Configuration

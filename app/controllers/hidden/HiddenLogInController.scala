@@ -2,12 +2,13 @@ package controllers.hidden
 
 import ch.japanimpact.auth.api.TicketType
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
-import data.LoginSuccess
+import ch.japanimpact.auth.api.LoginSuccess
 import javax.inject.Inject
-import models.{AppsModel, HashModel, TicketsModel, UsersModel}
+import models.{AppsModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.json.{Json, Reads}
 import play.api.mvc._
+import services.HashService
 import utils.Implicits._
 
 import scala.concurrent.ExecutionContext
@@ -20,7 +21,7 @@ class HiddenLogInController @Inject()(
                                        users: UsersModel,
                                        tickets: TicketsModel,
                                        apps: AppsModel,
-                                       hashes: HashModel)(implicit ec: ExecutionContext, config: Configuration) extends AbstractController(cc) {
+                                       hashes: HashService)(implicit ec: ExecutionContext, config: Configuration) extends AbstractController(cc) {
 
   /**
     * The user or the password sent by the client match no user

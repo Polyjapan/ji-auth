@@ -1,20 +1,17 @@
 package controllers.hidden
 
-import java.net.URLEncoder
-
-import ch.japanimpact.auth.api.TicketType
+import ch.japanimpact.auth.api.{LoginSuccess, TicketType}
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
-import data.LoginSuccess
 import javax.inject.Inject
-import models.{AppsModel, HashModel, ReCaptchaModel, TicketsModel, UsersModel}
+import models.{AppsModel, TicketsModel, UsersModel}
 import play.api.Configuration
-import play.api.data.validation._
 import play.api.i18n.I18nSupport
 import play.api.libs.json.{Json, Reads}
-import play.api.libs.mailer.{Email, MailerClient}
+import play.api.libs.mailer.MailerClient
 import play.api.mvc._
+import services.{HashService, ReCaptchaService}
 import utils.Implicits._
-import utils.{RandomUtils, ValidationUtils}
+import utils.ValidationUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -26,8 +23,8 @@ class HiddenRegisterController @Inject()(
                                           users: UsersModel,
                                           tickets: TicketsModel,
                                           apps: AppsModel,
-                                          captcha: ReCaptchaModel,
-                                          hashes: HashModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
+                                          captcha: ReCaptchaService,
+                                          hashes: HashService)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
 
   val InvalidEmail = 201
   val PasswordTooShort = 202

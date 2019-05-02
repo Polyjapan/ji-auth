@@ -9,6 +9,7 @@ import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.libs.mailer.{Email, MailerClient}
 import play.api.mvc.MessagesRequestHeader
+import services.{HashService, ReCaptchaService}
 import slick.jdbc.MySQLProfile
 import utils.Implicits._
 import utils.RandomUtils
@@ -18,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * @author zyuiop
   */
-class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, mailer: MailerClient, reCaptcha: ReCaptchaModel, hashes: HashModel)(implicit ec: ExecutionContext, config: Configuration)
+class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, mailer: MailerClient, reCaptcha: ReCaptchaService, hashes: HashService)(implicit ec: ExecutionContext, config: Configuration)
   extends HasDatabaseConfigProvider[MySQLProfile] {
 
   import profile.api._

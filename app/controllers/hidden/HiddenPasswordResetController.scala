@@ -4,13 +4,15 @@ import java.util.Date
 
 import ch.japanimpact.auth.api.TicketType
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
-import data.{LoginSuccess, RegisteredUser}
+import ch.japanimpact.auth.api.LoginSuccess
+import data.RegisteredUser
 import javax.inject.Inject
-import models.{AppsModel, HashModel, TicketsModel, UsersModel}
+import models.{AppsModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.json.{Json, Reads}
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
+import services.HashService
 import utils.Implicits._
 import utils.ValidationUtils
 
@@ -24,7 +26,7 @@ class HiddenPasswordResetController @Inject()(
                                                users: UsersModel,
                                                tickets: TicketsModel,
                                                apps: AppsModel,
-                                               hashes: HashModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                               hashes: HashService)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
   /**
     * The password reset code is invalid (wrong user or code)

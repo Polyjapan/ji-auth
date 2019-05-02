@@ -1,4 +1,4 @@
-package models
+package services
 
 import java.util.Date
 
@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * @author zyuiop
   */
-class ReCaptchaModel @Inject()(ws: WSClient)(implicit ec: ExecutionContext, config: Configuration) {
+class ReCaptchaService @Inject()(ws: WSClient)(implicit ec: ExecutionContext, config: Configuration) {
 
   lazy val AuthSiteKey: String = config.get[String]("recaptcha.siteKey")
   lazy val AuthSecretKey: String = config.get[String]("recaptcha.secretKey")

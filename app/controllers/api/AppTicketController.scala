@@ -2,7 +2,7 @@ package controllers.api
 
 import java.util.Date
 
-import ch.japanimpact.auth.api.AuthApi.{AppTicketRequest, AppTicketResponse}
+import ch.japanimpact.auth.api.AppTicketResponse
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import javax.inject.Inject
 import models.{AppsModel, GroupsModel, TicketsModel}

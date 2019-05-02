@@ -2,9 +2,9 @@ package controllers.hidden
 
 import ch.japanimpact.auth.api.TicketType
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
-import data.{LoginSuccess, RegisteredUser}
+import ch.japanimpact.auth.api.LoginSuccess
 import javax.inject.Inject
-import models.{AppsModel, HashModel, TicketsModel, UsersModel}
+import models.{AppsModel, TicketsModel, UsersModel}
 import play.api.libs.json.{Json, Reads}
 import play.api.mvc._
 import utils.Implicits._

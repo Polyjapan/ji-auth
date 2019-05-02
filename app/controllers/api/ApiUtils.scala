@@ -2,7 +2,7 @@ package controllers.api
 
 import java.util.Date
 
-import ch.japanimpact.auth.api.AuthApi.AppTicketResponse
+import ch.japanimpact.auth.api.AppTicketResponse
 import ch.japanimpact.auth.api.TicketType
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes.{InvalidAppSecret, InvalidTicket, MissingData}
 import data.App
