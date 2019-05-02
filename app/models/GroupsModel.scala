@@ -13,6 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class GroupsModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[MySQLProfile] {
 
+
   import profile.api._
 
   def getGroups(app: data.App, userId: Int): Future[Set[String]] =
@@ -117,4 +118,32 @@ class GroupsModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
         .join(groupMembers).on((g, gm) => gm.userId === user && gm.groupId === g.id)
         .join(registeredUsers).on((p, u) => u.id === p._1.ownerId).map(triple => (triple._1._1, triple._1._2, triple._2))
         .result.headOption)
+
+
+  def addMember(groupId: Int, userId: Int): Future[Boolean] = {
+    db.run(
+      groupMembers
+        .filter(gm => gm.groupId === groupId && gm.userId === userId)
+        .result
+        .flatMap(seq => {
+          (if (seq.isEmpty) {
+            (groupMembers += GroupMember(groupId, userId, false, false, false)).map(res => res == 1)
+          } else DBIO.successful(false)).asInstanceOf[DBIO[Boolean]]
+        })
+    )
+  }
+
+  def removeMember(groupId: Int, userId: Int): Future[Boolean] = {
+    db.run(
+      groups
+        .filter(g => g.id === groupId && g.ownerId === userId)
+        .result
+        .flatMap(seq => {
+          (if (seq.isEmpty) {
+            groupMembers.filter(gm => gm.userId === userId && gm.groupId === groupId).delete.map(res => res == 1)
+          } else DBIO.successful(false)).asInstanceOf[DBIO[Boolean]]
+        })
+    )
+  }
+
 }

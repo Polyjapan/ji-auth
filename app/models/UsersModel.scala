@@ -33,6 +33,15 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
     db.run(registeredUsers.filter(_.email === email).result.headOption)
 
   /**
+    * Gets a user in the database by its id
+    *
+    * @param id the id of the user to get
+    * @return a future optional user (Some(user) if found, None if not)
+    */
+  def getUserById(id: Int): Future[Option[RegisteredUser]] =
+    db.run(registeredUsers.filter(_.id === id).result.headOption)
+
+  /**
     * Create a user
     *
     * @param user the user to create
