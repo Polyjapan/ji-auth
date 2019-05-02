@@ -33,7 +33,6 @@ If the headers are missing, the endpoints return:
 
 ##### (authentified) `GET /api/ticket/<ticket>`
 
-
 Gets the information contained on a ticket and **deletes** it.
 
 Consumes:
@@ -41,9 +40,10 @@ Consumes:
  
 Returns:
  - `200 OK` if it worked
-    - `type`: `SET(T_LOGIN, T_REGISTER, T_DOUBLE_REGISTER, T_EMAIL_CONFIRM, T_PASSWORD_RESET)`
+    - `type`: `SET(T_LOGIN, T_EXPLICIT_GRANT, T_REGISTER, T_DOUBLE_REGISTER, T_EMAIL_CONFIRM, T_PASSWORD_RESET)`
     - `userId`: `int`, the ID of the user on the CAS server
     - `email`: `string`, the email of the user.
+    - `groups`: `array(string)`, the visible groups this user is part of. A group is visible if the app owner has a read permission on that group.
  - `400 BAD REQUEST` if not, with additional info:
     - `errorCode`: int, in following set
         - 101: missing data in the request, or invalid request
@@ -51,27 +51,43 @@ Returns:
         - 103: the clientSecret is wrong for this clientID
         - 201: the ticket is invalid, has expired, or is not allowed to be read by this app 
 
-##### (deprecated) `POST /api/app_ticket` 
+##### (authentified) `POST /api/groups/<group>/members`
 
-Gets the information contained on a ticket and **deletes** it.
+Adds a member to a group. The app owner needs to have a write permission on that group.
 
 Consumes:
- - `ticket`: `string`, the ticket sent by the server
- - `clientId`: `string`, the `appID` of the app
- - `clientSecret`: `string`, the `appSecret` of the app
+ - `userId`: `int`, the user to add to the group
  
 Returns:
  - `200 OK` if it worked
-    - `type`: `SET(T_LOGIN, T_REGISTER, T_DOUBLE_REGISTER, T_EMAIL_CONFIRM, T_PASSWORD_RESET)`
-    - `userId`: `int`, the ID of the user on the CAS server
-    - `email`: `string`, the email of the user.
  - `400 BAD REQUEST` if not, with additional info:
     - `errorCode`: int, in following set
         - 101: missing data in the request, or invalid request
         - 102: the clientID is not found (<=> no such app registered)        
         - 103: the clientSecret is wrong for this clientID
-        - 201: the ticket is invalid, has expired, or is not allowed to be read by this app 
+        - 201: the group was not found (doesn't exist, or can't be accessed by this app)
+        - 202: the user was not found 
+        - 203: the app cannot add users to the group (app owner doesn't have write permission) 
+        
+
+##### (authentified) `DELETE /api/groups/<group>/members/<userId>`
+
+Removes <userId> from the group <group>. The app owner needs write permission on the group. If the user is an admin of the group,
+the app owner needs to be admin of the group as well. This endpoint cannot remove the owner of the group.
  
+Returns:
+ - `200 OK` if it worked
+ - `400 BAD REQUEST` if not, with additional info:
+    - `errorCode`: int, in following set
+        - 101: missing data in the request, or invalid request
+        - 102: the clientID is not found (<=> no such app registered)        
+        - 103: the clientSecret is wrong for this clientID
+        - 201: the group was not found (doesn't exist, or can't be accessed by this app)
+        - 202: the user was not found or not a member of the group
+        - 203: the app cannot remove this user (no write permission OR trying to remove an admin without admin permission OR trying to remove owner)
+        
+
+
 ### "public" Hidden Mode (implemented and deployed)
 
 This mode is supposed to be hidden from the user. All the endpoints accept and return only JSON. They are grouped under `/hidden`.
