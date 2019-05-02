@@ -11,6 +11,9 @@ You can then run `sbt dist` to produce a zip, or `sbt boot` to start development
 
 You can provide a specific configuration file using the `-Dconfig.file=path` switch.
 
+## Client
+
+[https://github.com/Polyjapan/ji-auth-framework] is a cool client written in scala for the JVM :)
 
 ## Protocol
 
