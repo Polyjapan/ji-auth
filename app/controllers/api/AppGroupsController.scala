@@ -24,7 +24,7 @@ class AppGroupsController @Inject()(cc: ControllerComponents,
   def addMemberToGroup(groupName: String): Action[JsValue] = Action.async(parse.json) { implicit rq =>
     if (rq.hasBody) {
       val body = rq.body
-      val interesting = (body \ "clientId").validate[Int]
+      val interesting = (body \ "userId").validate[Int]
 
       if (interesting.isSuccess) {
         val userId = interesting.get
