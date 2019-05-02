@@ -3,6 +3,15 @@ JI Auth
 
 It's just a slightly tweaked CAS-like protocol, really.
 
+## Compile
+
+You'll need to clone [https://github.com/Polyjapan/ji-auth-framework], and compile it using `sbt publishLocal`.
+
+You can then run `sbt dist` to produce a zip, or `sbt boot` to start development environment (in which case the server will start on port 9000).
+
+You can provide a specific configuration file using the `-Dconfig.file=path` switch.
+
+
 ## Protocol
 
 Because the CAS will be used on both public-facing SPA and internal standard/SP applications, we need to support two authentication modes.
@@ -30,6 +39,8 @@ If the headers are missing, the endpoints return:
 
  - `401 UNAUTHENTICATED` with json
     - `errorCode` = `101` (Missing Data)
+    
+Random idea: an endpoint that takes a list of emails, and returns the ids of the accounts (allows easier migrations)
 
 ##### (authentified) `GET /api/ticket/<ticket>`
 
@@ -179,6 +190,7 @@ User wants to login against the public SPA (and, behind the scenes, on the CAS, 
 ```        
 
 #### Endpoints
+
 
 ##### `POST /hidden/register` 
 
