@@ -26,6 +26,7 @@ POST           /hidden/password_reset                   controllers.hidden.Hidde
 POST           /api/get_ticket                          controllers.api.AppTicketController.postAppTicket
 
 GET            /api/ticket/:ticket                      controllers.api.AppTicketController.getAppTicket(ticket: String)
+GET            /api/app_login/:targetClientId           controllers.api.AppLogInController.login(targetClientId: String)
 +nocsrf
 POST           /api/groups/:name/members                controllers.api.AppGroupsController.addMemberToGroup(name: String)
 DELETE         /api/groups/:name/members/:member        controllers.api.AppGroupsController.removeMemberFromGroup(name: String, member: Int)
