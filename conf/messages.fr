@@ -10,7 +10,7 @@ users.register.email_text=Bonjour et bienvenue sur le site Japan Impact ! \n \
 users.register.exists.email_title=Votre compte JapanImpact
 users.register.exists.email_from=Ne pas répondre
 users.register.exists.email_text=Bonjour, \n \
-\nVous avez tenté il y a quelques instants de vous inscrire à la boutique Japan Impact avec cette adresse email. \
+\nVous avez tenté il y a quelques instants de vous inscrire sur le site Japan Impact avec cette adresse email. \
 Toutefois, nous avons détecté que vous aviez déjà un compte enregistré avec cette adresse. \
 En conséquence, nous n'avons pas touché à votre compte. Si vous avez oublié votre mot de passe, vous pouvez \
 le réinitialiser depuis la page de connexion. \
