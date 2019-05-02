@@ -54,7 +54,7 @@ Consumes:
  
 Returns:
  - `200 OK` if it worked
-    - `type`: `SET(T_LOGIN, T_EXPLICIT_GRANT, T_REGISTER, T_DOUBLE_REGISTER, T_EMAIL_CONFIRM, T_PASSWORD_RESET)`
+    - `type`: `SET(T_LOGIN, T_EXPLICIT_GRANT, T_REGISTER, T_DOUBLE_REGISTER, T_EMAIL_CONFIRM, T_PASSWORD_RESET, T_APP)`
     - `userId`: `int`, the ID of the user on the CAS server
     - `email`: `string`, the email of the user.
     - `groups`: `array(string)`, the visible groups this user is part of. A group is visible if the app owner has a read permission on that group.
@@ -64,6 +64,25 @@ Returns:
         - 102: the clientID is not found (<=> no such app registered)        
         - 103: the clientSecret is wrong for this clientID
         - 201: the ticket is invalid, has expired, or is not allowed to be read by this app 
+
+
+##### (authentified) `GET /api/app_login/<other client ID>`
+
+Generates a ticket for the app to use against the app identified by the provided "other client ID".
+
+The ticket's content will be filled from the owner of the app calling this endpoint.
+
+This allows easy inter-apps communication, as apps only have to login like regular users.
+
+Returns:
+ - `200 OK` if it worked
+    - `ticket`: `string`, a ticket of type `T_APP` to use on the app
+ - `400 BAD REQUEST` if not, with additional info:
+    - `errorCode`: int, in following set
+        - 101: missing data in the request, or invalid request
+        - 102: the other client id is not found (<=> no such app registered)        
+        - 103: the clientSecret is wrong for this clientID
+
 
 ##### (authentified) `POST /api/groups/<group>/members`
 
