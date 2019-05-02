@@ -22,9 +22,6 @@ POST           /hidden/forgot_password                  controllers.hidden.Hidde
 +nocsrf
 POST           /hidden/password_reset                   controllers.hidden.HiddenPasswordResetController.postPasswordReset
 
-+nocsrf
-POST           /api/get_ticket                          controllers.api.AppTicketController.postAppTicket
-
 GET            /api/ticket/:ticket                      controllers.api.AppTicketController.getAppTicket(ticket: String)
 GET            /api/app_login/:targetClientId           controllers.api.AppLogInController.login(targetClientId: String)
 +nocsrf
