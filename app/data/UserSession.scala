@@ -13,6 +13,10 @@ case class UserSession(id: Int, email: String, adminLevel: Int) {
   lazy val canChangePerms: Boolean = hasPermission(UserSession.ChangeOtherPermissions)
   lazy val canBrowseUsers: Boolean = hasPermission(UserSession.BrowseUsers)
   lazy val isSuperAdmin: Boolean = hasPermission(UserSession.SuperAdmin)
+
+  lazy val isAdmin: Boolean = {
+     canCreateApp || canCreateGroup || canManageGroups || canChangePerms || canBrowseUsers || isSuperAdmin
+  }
 }
 
 object UserSession {

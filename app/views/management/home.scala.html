@@ -3,8 +3,14 @@
 @(user: UserSession, groups: Set[Group], apps: Set[data.App])
 
 @header = {
-    <p class="card-text">Cette page est peu utile pour les visiteurs. Si vous disposez de droits
-        particuliers, en revanche, c'est ici que vous devez y accéder :)</p>
+    <p class="card-text">Bonjour, <b>@{user.email} !</b> Votre identifiant est le <b>#@{user.id}</b>. Vous êtes bien
+        connecté à votre compte Japan Impact et pourrez donc accéder facilement à nos divers services en ligne.</p>
+
+@if(user.isAdmin) {
+    <p class="card-text">Cette page vous permet d'administrer le service de connexion centralisé Japan Impact.</p>
+}
+
+    <a class="btn btn-danger" href="/logout">Déconnexion</a>
 
     <hr>
 
