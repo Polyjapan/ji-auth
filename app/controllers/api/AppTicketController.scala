@@ -7,18 +7,23 @@ import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import javax.inject.Inject
 import models.{AppsModel, GroupsModel, TicketsModel}
 import play.api.Configuration
+import play.api.libs.json.{JsObject, Json}
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
+import services.JwtService
 import utils.Implicits._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 /**
   * @author Louis Vialar
   */
 class AppTicketController @Inject()(cc: ControllerComponents,
                                     tickets: TicketsModel,
-                                    groups: GroupsModel)(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                    groups: GroupsModel,
+                                    jwt: JwtService
+
+                                   )(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
   def getAppTicket(ticket: String): Action[AnyContent] = Action.async { implicit rq =>
     ApiUtils.withApp { app =>
@@ -27,10 +32,19 @@ class AppTicketController @Inject()(cc: ControllerComponents,
           // Found some ticket bound to the app
           if (validTo.before(new Date)) !InvalidTicket // The ticket is no longer valid
           else {
-            groups getGroups(app, id) map (groupSet => AppTicketResponse(id, email, ticketType, groupSet))
+            groups getGroups(app, id) map (groupSet => {
+              val resp = AppTicketResponse(id, email, ticketType, groupSet)
+              val claim = Json.toJson(resp).as[JsObject]
+
+              println("Nice jwt:")
+              println(jwt.encodeJson(claim))
+
+              resp
+            })
           } // The ticket is valid, return the data
         case None => !InvalidTicket
-      }    }
+      }
+    }
   }
 
 }
