@@ -57,7 +57,7 @@ class HiddenPasswordResetController @Inject()(
       } else apps getApp body.clientId flatMap {
         case Some(app) =>
           users getUser body.email flatMap {
-            case Some(user@RegisteredUser(Some(id), _, _, _, _, Some(code), Some(deadline), _)) if code == body.code && deadline.after(new Date) =>
+            case Some(user@RegisteredUser(Some(id), _, _, _, _, Some(code), Some(deadline), _, _, _, _)) if code == body.code && deadline.after(new Date) =>
 
               // Hash the new password and update the user
               val (algo, hashPass) = hashes hash body.password

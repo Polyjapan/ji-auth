@@ -16,10 +16,10 @@ import scala.concurrent.ExecutionContext
 /**
   * @author Louis Vialar
   */
-class AppProfileControler @Inject()(cc: ControllerComponents,
-                                    tickets: TicketsModel,
-                                    users: UsersModel,
-                                    groups: GroupsModel)(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+class AppProfileController @Inject()(cc: ControllerComponents,
+                                     tickets: TicketsModel,
+                                     users: UsersModel,
+                                     groups: GroupsModel)(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
 
   def getUserProfile(user: Int): Action[AnyContent] = Action.async { implicit rq =>

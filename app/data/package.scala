@@ -24,9 +24,9 @@ package object data {
                             passwordAlgo: String, passwordReset: Option[String] = Option.empty,
                             passwordResetEnd: Option[Timestamp] = Option.empty,
                             adminLevel: Int = 0,
-                            firstName: Option[String],
-                            lastName: Option[String],
-                            phoneNumber: Option[String]
+                            firstName: Option[String] = None,
+                            lastName: Option[String] = None,
+                            phoneNumber: Option[String] = None
                            )
 
   case class Address(userId: Int, address: String, addressComplement: Option[String], postCode: String, region: String, country: String) {

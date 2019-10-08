@@ -153,7 +153,7 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
 
     getUser(email).flatMap({
       // Check if the user needs email confirmation and if the code is correct
-      case Some(user@RegisteredUser(id, _, Some(c), _, _, _, _, _)) if c == code =>
+      case Some(user@RegisteredUser(id, _, Some(c), _, _, _, _, _, _, _, _)) if c == code =>
 
         // Update the user to mark the email is confirmed, and return a new ticket
         val updated = user.copy(emailConfirmKey = None)
@@ -185,7 +185,7 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
 
   def login(email: String, password: String): Future[LoginResult] = {
     getUser(email).flatMap {
-      case Some(user@RegisteredUser(Some(id), _, emailConfirmKey, hash, algo, _, _, _)) =>
+      case Some(user@RegisteredUser(Some(id), _, emailConfirmKey, hash, algo, _, _, _, _, _, _)) =>
         // Check if password is correct
         if (hashes.check(algo, hash, password)) {
 

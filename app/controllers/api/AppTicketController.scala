@@ -20,8 +20,7 @@ import scala.concurrent.ExecutionContext
   */
 class AppTicketController @Inject()(cc: ControllerComponents,
                                     tickets: TicketsModel,
-                                    groups: GroupsModel,
-                                    jwt: JwtService
+                                    groups: GroupsModel
 
                                    )(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
@@ -35,9 +34,6 @@ class AppTicketController @Inject()(cc: ControllerComponents,
             groups getGroups(app, id) map (groupSet => {
               val resp = AppTicketResponse(id, email, ticketType, groupSet)
               val claim = Json.toJson(resp).as[JsObject]
-
-              println("Nice jwt:")
-              println(jwt.encodeJson(claim))
 
               resp
             })

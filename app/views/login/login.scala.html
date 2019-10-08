@@ -1,8 +1,48 @@
 @(userForm: Form[_], app: Option[String], appName: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
 
-@signin("Connexion", appName.map(name => "Connectez vous pour accéder à : " + name), controllers.explicit.routes.LoginController.loginPost(app), userForm) {
-    <p class="mb-3 text-muted">
-        Vos identifiants Japan Impact vous permettent également de vous connecter sur la boutique, et vice versa. Pas encore de compte ?
-        <a href="@controllers.explicit.routes.RegisterController.registerGet(app)">Créer un compte</a>
-    </p>
+
+    @import helper._
+    @import views.forms.LoginFieldTemplate._
+
+@style = {
+    <link rel="stylesheet" href="@routes.Assets.at("css/signin.css")" crossorigin="anonymous">
+}
+
+@main("Connexion", style) {
+
+    <div class="text-center content">
+
+    @form(action = controllers.explicit.routes.LoginController.loginPost(app)) {
+        @CSRF.formField
+
+        <img class="mb-4" src="@routes.Assets.at("img/logo.png")" alt="" width="240" height="200">
+
+        <h1 class="h3 mb-3 font-weight-normal">Connexion</h1>
+
+
+        @if(appName.nonEmpty) {
+            <p>Connectez vous pour accéder à : @{
+                appName.get
+            }</p>
+        }
+
+        @if(userForm.hasGlobalErrors) {
+            @error(userForm.globalErrors.map(_.format))
+        }
+
+        @inputText(userForm("email"), 'type -> "email", '_label -> "Email", 'class -> "form-control", 'placeholder -> "Email", 'required -> true, 'autofocus -> true)
+        @inputPassword(userForm("password"), '_label -> "Email", 'class -> "form-control", 'placeholder -> "Mot de passe", 'required -> true)
+
+
+
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Connexion</button>
+
+        <hr>
+        <p class="mb-3 text-muted">
+            Vos identifiants Japan Impact vous permettent également de vous connecter sur la boutique, et vice versa. Pas encore de compte ?
+            <a href="@controllers.explicit.routes.RegisterController.registerGet(app)">Créer un compte</a>
+        </p>
+    }
+
+    </div>
 }
