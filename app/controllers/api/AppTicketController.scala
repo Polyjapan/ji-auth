@@ -8,6 +8,7 @@ import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import javax.inject.Inject
 import models.{AppsModel, GroupsModel, TicketsModel, UsersModel}
 import play.api.Configuration
+import play.api.libs.json.Json
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import utils.Implicits._
@@ -38,7 +39,9 @@ class AppTicketController @Inject()(cc: ControllerComponents,
                   case _ => (None, None)
                 }
 
-                val resp = AppTicketResponse(id, email, ticketType, groupSet, api.UserProfile(id, email, details, address))
+                val userProfile = api.UserProfile(id, email, details, address)
+
+                val resp = AppTicketResponse(id, email, ticketType, groupSet, userProfile)
                 resp
               })
             })
