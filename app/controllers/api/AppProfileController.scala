@@ -26,7 +26,9 @@ class AppProfileController @Inject()(cc: ControllerComponents,
     ApiUtils.withApp { _ =>
       users.getUserProfile(id = user).map {
         case Some((user, address)) =>
-          val result = UserProfile(user.id.get, user.email, user.firstName.get, user.lastName.get, user.phoneNumber, address.toUserAddress)
+          val details = user.toUserDetails
+          val result = UserProfile(user.id.get, user.email, details, address.map(_.toUserAddress))
+
           Ok(Json.toJson(result))
         case None => !UserNotFound
       }

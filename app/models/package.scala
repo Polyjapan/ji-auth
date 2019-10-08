@@ -48,11 +48,11 @@ package object models {
     def address = column[String]("address")
     def complement = column[Option[String]]("address_complement", O.Default(None))
     def postcode = column[String]("post_code")
-    def region = column[String]("region")
+    def city = column[String]("city")
     def country = column[String]("country")
 
     def * =
-      (id, address, complement, postcode, region, country).shaped <> (Address.tupled, Address.unapply)
+      (id, address, complement, postcode, city, country).shaped <> (Address.tupled, Address.unapply)
   }
 
   private[models] val addresses = TableQuery[Addresses]

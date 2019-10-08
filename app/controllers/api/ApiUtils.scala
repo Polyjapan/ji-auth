@@ -1,13 +1,8 @@
 package controllers.api
 
-import java.util.Date
-
-import ch.japanimpact.auth.api.AppTicketResponse
-import ch.japanimpact.auth.api.TicketType
-import ch.japanimpact.auth.api.constants.GeneralErrorCodes.{InvalidAppSecret, InvalidTicket, MissingData}
+import ch.japanimpact.auth.api.constants.GeneralErrorCodes.{InvalidAppSecret, MissingData}
 import data.App
-import data.UserSession._
-import models.{AppsModel, TicketsModel}
+import models.AppsModel
 import play.api.libs.json.Json
 import play.api.mvc.{RequestHeader, Result, Results}
 import utils.Implicits._

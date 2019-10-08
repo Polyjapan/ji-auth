@@ -33,8 +33,8 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
   def getUser(email: String): Future[Option[RegisteredUser]] =
     db.run(registeredUsers.filter(_.email === email).result.headOption)
 
-  def getUserProfile(id: Int): Future[Option[(RegisteredUser, Address)]] =
-    db.run(registeredUsers.filter(_.id === id).join(addresses).on(_.id === _.id).result.headOption)
+  def getUserProfile(id: Int): Future[Option[(RegisteredUser, Option[Address])]] =
+    db.run(registeredUsers.filter(_.id === id).joinLeft(addresses).on(_.id === _.id).result.headOption)
 
   /**
     * Gets a user in the database by its id
@@ -51,8 +51,12 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
     * @param user the user to create
     * @return a future hodling the id of the inserted user
     */
-  def createUser(user: RegisteredUser): Future[Int] =
+  def createUser(user: RegisteredUser, address: Option[Address]): Future[Int] =
     db.run((registeredUsers returning registeredUsers.map(_.id)) += user)
+      .flatMap(id =>
+        if (address.nonEmpty) db.run(addresses += address.get.copy(userId = id)).map(_ => id)
+        else Future.successful(id)
+      )
 
   /**
     * Updates a user whose id is set
@@ -91,16 +95,14 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
     *
     * @param captcha             the captcha value entered
     * @param captchaPrivateKey   the private key for recaptcha
-    * @param email               the email of the user
-    * @param password            the password of the user
     * @param emailConfirmBuilder a function that produces the email confirm url: (email, code) => url
     * @param rq                  the request
     * @return a future with a [[RegisterResult]]
     */
   def register(captcha: String,
                captchaPrivateKey: Option[String],
-               email: String,
-               password: String,
+               user: RegisteredUser,
+               address: Option[Address],
                emailConfirmBuilder: (String, String) => String
               )(implicit rq: MessagesRequestHeader): Future[RegisterResult] = {
 
@@ -108,12 +110,12 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
       if (!result.success) {
         BadCaptcha
       } else {
-        getUser(email).flatMap {
+        getUser(user.email).flatMap {
           case Some(c) =>
             mailer.send(Email(
               rq.messages("users.register.exists.email_title"),
               rq.messages("users.register.exists.email_from") + " <noreply@japan-impact.ch>",
-              Seq(email),
+              Seq(user.email),
               bodyText = Some(rq.messages("users.register.exists.email_text"))
             ))
 
@@ -121,19 +123,22 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
           case None =>
 
             val confirmCode = RandomUtils.randomString(32)
-            val emailEncoded = URLEncoder.encode(email, "UTF-8")
+            val emailEncoded = URLEncoder.encode(user.email, "UTF-8")
 
             val url = emailConfirmBuilder(emailEncoded, URLEncoder.encode(confirmCode, "UTF-8"))
-            val (algo, hash) = hashes.hash(password)
+            val (algo, hash) = hashes.hash(user.password)
 
             mailer.send(Email(
               rq.messages("users.register.email_title"),
               rq.messages("users.register.email_from") + " <noreply@japan-impact.ch>",
-              Seq(email),
+              Seq(user.email),
               bodyText = Some(rq.messages("users.register.email_text", url))
             ))
 
-            createUser(RegisteredUser(Option.empty, email, Some(confirmCode), hash, algo))
+            createUser(
+              user.copy(password = hash, passwordAlgo = algo, emailConfirmKey = Some(confirmCode)),
+              address
+            )
               .map(AccountCreated)
         }
       }

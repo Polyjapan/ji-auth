@@ -1,6 +1,6 @@
 import java.sql.Timestamp
 
-import ch.japanimpact.auth.api.{TicketType, UserAddress}
+import ch.japanimpact.auth.api.{TicketType, UserAddress, UserDetails}
 
 /**
   * @author Louis Vialar
@@ -27,10 +27,13 @@ package object data {
                             firstName: Option[String] = None,
                             lastName: Option[String] = None,
                             phoneNumber: Option[String] = None
-                           )
+                           ) {
 
-  case class Address(userId: Int, address: String, addressComplement: Option[String], postCode: String, region: String, country: String) {
-    def toUserAddress = UserAddress(address, addressComplement, postCode, region, country)
+    def toUserDetails = if (firstName.isDefined) Some(UserDetails(firstName.get, lastName.get, phoneNumber)) else None
+  }
+
+  case class Address(userId: Int, address: String, addressComplement: Option[String], postCode: String, city: String, country: String) {
+    def toUserAddress = UserAddress(address, addressComplement, postCode, city, country)
   }
 
   /**

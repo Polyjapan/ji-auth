@@ -2,6 +2,7 @@ package controllers.hidden
 
 import ch.japanimpact.auth.api.{LoginSuccess, TicketType}
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
+import data.{Address, RegisteredUser}
 import javax.inject.Inject
 import models.{AppsModel, TicketsModel, UsersModel}
 import play.api.Configuration
@@ -29,6 +30,7 @@ class HiddenRegisterController @Inject()(
   val InvalidEmail = 201
   val PasswordTooShort = 202
 
+  val AllowPartialRegisters = config.getOptional[Boolean]("api.allowPartialRegisters").getOrElse(true)
 
   /**
     * The format of the request sent by the client
@@ -38,12 +40,28 @@ class HiddenRegisterController @Inject()(
     * @param captcha  the value of the captcha
     * @param clientId the clientId of the app
     */
-  case class RegisterRequest(email: String, captcha: String, password: String, clientId: String)
+  case class RegisterRequest(email: String, captcha: String, password: String, clientId: String,
 
+                             firstName: Option[String],
+                             lastName: Option[String],
+                             phone: Option[String],
+
+                             address: Option[RegisterAddress]
+                            ) {
+    def toUser = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = phone)
+
+    def isLegal = if (AllowPartialRegisters) true else address.nonEmpty && firstName.nonEmpty && lastName.nonEmpty
+  }
+
+  case class RegisterAddress(address: String, complement: Option[String], postCode: String, city: String, country: String) {
+    def toAddress = Address(-1, address, complement, postCode, city, country)
+  }
+
+  implicit val formatRegisterAddress: Reads[RegisterAddress] = Json.reads[RegisterAddress]
   implicit val format: Reads[RegisterRequest] = Json.reads[RegisterRequest]
 
   def postRegister: Action[RegisterRequest] = Action.async(parse.json[RegisterRequest]) { implicit rq =>
-    if (rq.hasBody) {
+    if (rq.hasBody && rq.body.isLegal) {
       val body = rq.body
 
       if (!ValidationUtils.isValidEmail(body.email)) {
@@ -53,8 +71,7 @@ class HiddenRegisterController @Inject()(
       } else apps getApp body.clientId flatMap {
         case Some(app) =>
           users.register(
-            body.captcha, app.recaptchaPrivate,
-            body.email, body.password,
+            body.captcha, app.recaptchaPrivate, body.toUser, body.address.map(_.toAddress),
             (email, code) => app.emailRedirectUrl + "?email=" + email + "&action=confirmEmail&confirmCode=" + code
           ).map {
             case users.BadCaptcha => !InvalidCaptcha

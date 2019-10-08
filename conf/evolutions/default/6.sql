@@ -15,7 +15,7 @@ create table users_addresses
     address varchar(200) null,
     address_complement varchar(200) default null null,
     post_code varchar(10) null,
-    region varchar(25) null,
+    city varchar(100) null,
     country varchar(100) null,
     constraint users_addresses_pk
         primary key (user_id),

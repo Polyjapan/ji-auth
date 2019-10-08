@@ -11,6 +11,7 @@ import play.api.mvc._
 import play.twirl.api.HtmlFormat
 import services.{HashService, ReCaptchaService}
 import utils.Implicits._
+import data._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,15 +26,15 @@ class RegisterController @Inject()(cc: MessagesControllerComponents,
   private val registerForm = Form(
     mapping(
       "email" -> email, "password" -> nonEmptyText(8),
-      "firstName" -> nonEmptyText,
-      "lastName" -> nonEmptyText,
-      "phone" -> optional(nonEmptyText),
+      "firstName" -> nonEmptyText(1, 50),
+      "lastName" -> nonEmptyText(1, 50),
+      "phone" -> optional(nonEmptyText(8, 20)),
 
-      "address" -> nonEmptyText,
-      "addressComplement" -> optional(nonEmptyText),
-      "postCode" -> nonEmptyText,
-      "region" -> nonEmptyText,
-      "country" -> nonEmptyText,
+      "address" -> nonEmptyText(2, 200),
+      "addressComplement" -> optional(nonEmptyText(2, 200)),
+      "postCode" -> nonEmptyText(3, 10),
+      "city" -> nonEmptyText(3, 100),
+      "country" -> nonEmptyText(2, 100),
 
       "g-recaptcha-response" -> text)(Tuple11.apply)(Tuple11.unapply))
 
@@ -53,13 +54,18 @@ class RegisterController @Inject()(cc: MessagesControllerComponents,
   def registerPost(app: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
     ExplicitTools.ifLoggedOut(app) {
       registerForm.bindFromRequest().fold(withErrors => {
+        println(withErrors.errors)
         displayForm(withErrors, app).map(f => BadRequest(f))
       }, data => {
-        val (email, password, firstName, lastName, phone, address, addressComplement, postCode, region, country, captchaResponse) = data
+        val (email, password, firstName, lastName, phone, address, addressComplement, postCode, city, country, captchaResponse) = data
+
+        val addr = Address(-1, address, addressComplement, postCode, city, country)
+        // Password is hashed by register method, don't worry
+        val profile = RegisteredUser(None, email, None, password, null, firstName = Some(firstName), lastName = Some(lastName), phoneNumber = phone)
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),
-          email, password, (email, code) => controllers.explicit.routes.EmailConfirmController.emailConfirmGet(email, code, app).absoluteURL(true)
+          profile, Some(addr), (email, code) => controllers.explicit.routes.EmailConfirmController.emailConfirmGet(email, code, app).absoluteURL(true)
         ).flatMap({
           case users.BadCaptcha =>
             displayForm(registerForm.withGlobalError("Captcha incorrect"), app).map(f => BadRequest(f))
