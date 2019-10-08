@@ -1,6 +1,6 @@
 import java.sql.Timestamp
 
-import ch.japanimpact.auth.api.TicketType
+import ch.japanimpact.auth.api.{TicketType, UserAddress}
 
 /**
   * @author Louis Vialar
@@ -23,7 +23,15 @@ package object data {
   case class RegisteredUser(id: Option[Int], email: String, emailConfirmKey: Option[String], password: String,
                             passwordAlgo: String, passwordReset: Option[String] = Option.empty,
                             passwordResetEnd: Option[Timestamp] = Option.empty,
-                            adminLevel: Int = 0)
+                            adminLevel: Int = 0,
+                            firstName: Option[String],
+                            lastName: Option[String],
+                            phoneNumber: Option[String]
+                           )
+
+  case class Address(userId: Int, address: String, addressComplement: Option[String], postCode: String, region: String, country: String) {
+    def toUserAddress = UserAddress(address, addressComplement, postCode, region, country)
+  }
 
   /**
     * Represents an app allowed to authenticate users in the system

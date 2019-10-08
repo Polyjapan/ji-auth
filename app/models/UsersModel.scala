@@ -3,7 +3,7 @@ package models
 import java.net.URLEncoder
 
 import com.google.common.base.Preconditions
-import data.RegisteredUser
+import data.{Address, RegisteredUser}
 import javax.inject.Inject
 import play.api.Configuration
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -32,6 +32,9 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
     */
   def getUser(email: String): Future[Option[RegisteredUser]] =
     db.run(registeredUsers.filter(_.email === email).result.headOption)
+
+  def getUserProfile(id: Int): Future[Option[(RegisteredUser, Address)]] =
+    db.run(registeredUsers.filter(_.id === id).join(addresses).on(_.id === _.id).result.headOption)
 
   /**
     * Gets a user in the database by its id

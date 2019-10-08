@@ -28,13 +28,34 @@ package object models {
 
     def passwordResetEnd = column[Option[Timestamp]]("password_reset_end")
 
+    def firstName = column[Option[String]]("first_name", O.Default(None))
+
+    def lastName = column[Option[String]]("last_name", O.Default(None))
+
+    def phoneNumber = column[Option[String]]("phone_number", O.Default(None))
+
     def adminLevel = column[Int]("admin_level")
 
     def * =
-      (id.?, email, emailConfirmKey, password, passwordAlgo, passwordReset, passwordResetEnd, adminLevel).shaped <> (RegisteredUser.tupled, RegisteredUser.unapply)
+      (id.?, email, emailConfirmKey, password, passwordAlgo, passwordReset, passwordResetEnd, adminLevel, firstName, lastName, phoneNumber).shaped <> (RegisteredUser.tupled, RegisteredUser.unapply)
   }
 
   private[models] val registeredUsers = TableQuery[RegisteredUsers]
+
+  private[models] class Addresses(tag: Tag) extends Table[Address](tag, "users_addresses") {
+    def id = column[Int]("user_id", O.PrimaryKey)
+
+    def address = column[String]("address")
+    def complement = column[Option[String]]("address_complement", O.Default(None))
+    def postcode = column[String]("post_code")
+    def region = column[String]("region")
+    def country = column[String]("country")
+
+    def * =
+      (id, address, complement, postcode, region, country).shaped <> (Address.tupled, Address.unapply)
+  }
+
+  private[models] val addresses = TableQuery[Addresses]
 
   private[models] class Apps(tag: Tag) extends Table[App](tag, "apps") {
     def id = column[Int]("app_id", O.PrimaryKey, O.AutoInc)
@@ -106,10 +127,13 @@ package object models {
     def userId = column[Int]("user_id", O.PrimaryKey)
 
     def canManage = column[Boolean]("can_manage_members")
+
     def canRead = column[Boolean]("can_read_members")
+
     def isAdmin = column[Boolean]("is_admin")
 
     def user = foreignKey("groups_members_users_fk", userId, registeredUsers)(_.id, onDelete = ForeignKeyAction.Cascade)
+
     def group = foreignKey("groups_members_groups_fk", groupId, groups)(_.id, onDelete = ForeignKeyAction.Cascade)
 
     def * =

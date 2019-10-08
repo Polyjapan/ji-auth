@@ -28,7 +28,7 @@ class AppTicketController @Inject()(cc: ControllerComponents,
   def getAppTicket(ticket: String): Action[AnyContent] = Action.async { implicit rq =>
     ApiUtils.withApp { app =>
       tickets useTicket(ticket, app) flatMap {
-        case Some((data.Ticket(_, _, _, validTo, ticketType), data.RegisteredUser(Some(id), email, _, _, _, _, _, _))) =>
+        case Some((data.Ticket(_, _, _, validTo, ticketType), data.RegisteredUser(Some(id), email, _, _, _, _, _, _, _, _, _))) =>
           // Found some ticket bound to the app
           if (validTo.before(new Date)) !InvalidTicket // The ticket is no longer valid
           else {

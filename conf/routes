@@ -27,6 +27,7 @@ GET            /api/app_login/:targetClientId           controllers.api.AppLogIn
 +nocsrf
 POST           /api/groups/:name/members                controllers.api.AppGroupsController.addMemberToGroup(name: String)
 DELETE         /api/groups/:name/members/:member        controllers.api.AppGroupsController.removeMemberFromGroup(name: String, member: Int)
+GET            /api/user/:user                          controllers.api.AppProfileController.getUserProfile(user: Int)
 
 GET            /register                                controllers.explicit.RegisterController.registerGet(app: Option[String])
 POST           /register                                controllers.explicit.RegisterController.registerPost(app: Option[String])
