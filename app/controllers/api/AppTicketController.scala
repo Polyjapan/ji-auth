@@ -36,7 +36,6 @@ class AppTicketController @Inject()(cc: ControllerComponents,
               users.getUserProfile(id).map(profile => {
                 val (details, address) = profile match {
                   case Some((user, address)) => (user.toUserDetails, address.map(_.toUserAddress))
-                  case _ => (None, None)
                 }
 
                 val userProfile = api.UserProfile(id, email, details, address)

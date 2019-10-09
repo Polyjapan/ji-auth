@@ -28,9 +28,9 @@ package object models {
 
     def passwordResetEnd = column[Option[Timestamp]]("password_reset_end")
 
-    def firstName = column[Option[String]]("first_name", O.Default(None))
+    def firstName = column[String]("first_name")
 
-    def lastName = column[Option[String]]("last_name", O.Default(None))
+    def lastName = column[String]("last_name")
 
     def phoneNumber = column[Option[String]]("phone_number", O.Default(None))
 

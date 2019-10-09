@@ -41,13 +41,12 @@ class HiddenRegisterController @Inject()(
     * @param clientId the clientId of the app
     */
   case class RegisterRequest(email: String, captcha: String, password: String, clientId: String,
-
-                             firstName: Option[String],
-                             lastName: Option[String],
+                             firstName: String,
+                             lastName: String,
                              phone: Option[String],
-
                              address: Option[RegisterAddress]
                             ) {
+
     def toUser = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = phone)
 
     def isLegal = if (AllowPartialRegisters) true else address.nonEmpty && firstName.nonEmpty && lastName.nonEmpty

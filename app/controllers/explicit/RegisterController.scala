@@ -61,7 +61,7 @@ class RegisterController @Inject()(cc: MessagesControllerComponents,
 
         val addr = Address(-1, address, addressComplement, postCode, city, country)
         // Password is hashed by register method, don't worry
-        val profile = RegisteredUser(None, email, None, password, null, firstName = Some(firstName), lastName = Some(lastName), phoneNumber = phone)
+        val profile = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = phone)
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),

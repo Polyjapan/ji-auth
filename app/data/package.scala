@@ -24,12 +24,12 @@ package object data {
                             passwordAlgo: String, passwordReset: Option[String] = Option.empty,
                             passwordResetEnd: Option[Timestamp] = Option.empty,
                             adminLevel: Int = 0,
-                            firstName: Option[String] = None,
-                            lastName: Option[String] = None,
+                            firstName: String,
+                            lastName: String,
                             phoneNumber: Option[String] = None
                            ) {
 
-    def toUserDetails = if (firstName.isDefined) Some(UserDetails(firstName.get, lastName.get, phoneNumber)) else None
+    def toUserDetails = UserDetails(firstName, lastName, phoneNumber)
   }
 
   case class Address(userId: Int, address: String, addressComplement: Option[String], postCode: String, city: String, country: String) {
