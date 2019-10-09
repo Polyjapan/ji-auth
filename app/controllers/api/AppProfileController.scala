@@ -45,7 +45,7 @@ class AppProfileController @Inject()(cc: ControllerComponents,
           val result = UserProfile(user.id.get, user.email, details, address.map(_.toUserAddress))
 
           result
-      }).map(map => Ok(Json.toJson(map)))
+      }).map(map => Ok(Json.toJson(map.map(p => (p._1.toString, p._2)))))
     }
   }
 }
