@@ -12,6 +12,7 @@ import play.twirl.api.HtmlFormat
 import services.{HashService, ReCaptchaService}
 import utils.Implicits._
 import data._
+import utils.ValidationUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -27,7 +28,7 @@ class RegisterController @Inject()(cc: MessagesControllerComponents,
       "email" -> email, "password" -> nonEmptyText(8),
       "firstName" -> nonEmptyText(1, 50),
       "lastName" -> nonEmptyText(1, 50),
-      "phone" -> optional(nonEmptyText(8, 20)),
+      "phone" -> optional(ValidationUtils.validPhoneVerifier(nonEmptyText(8, 20))),
 
       "address" -> nonEmptyText(2, 200),
       "addressComplement" -> optional(nonEmptyText(2, 200)),

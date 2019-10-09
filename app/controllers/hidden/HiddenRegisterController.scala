@@ -29,6 +29,7 @@ class HiddenRegisterController @Inject()(
 
   val InvalidEmail = 201
   val PasswordTooShort = 202
+  val PhoneInvalid = 203
 
   val AllowPartialRegisters = config.getOptional[Boolean]("api.allowPartialRegisters").getOrElse(true)
 
@@ -67,6 +68,8 @@ class HiddenRegisterController @Inject()(
         !InvalidEmail
       } else if (!ValidationUtils.isValidPassword(body.password)) {
         !PasswordTooShort
+      } else if (body.phone.isDefined && !ValidationUtils.isValidPhone(body.phone.get)) {
+        !PhoneInvalid
       } else apps getApp body.clientId flatMap {
         case Some(app) =>
           users.register(

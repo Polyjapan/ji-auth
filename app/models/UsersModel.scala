@@ -75,6 +75,14 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
     db.run(registeredUsers.filter(_.id === user.id.get).update(user))
   }
 
+  def update(id: Int, firstName: String, lastName: String, phone: Option[String], addr: Address) = {
+    db.run(
+      registeredUsers.filter(_.id === id).map(u => (u.firstName, u.lastName, u.phoneNumber))
+        .update((firstName, lastName, phone)) >> addresses.insertOrUpdate(addr)
+    )
+  }
+
+
   sealed trait RegisterResult
 
   /**

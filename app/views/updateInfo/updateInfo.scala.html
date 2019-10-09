@@ -1,4 +1,4 @@
-@(userForm: Form[_], captcha: String, app: Option[String], appName: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
+@(userForm: Form[_], app: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
 
     @import helper._
     @import views.forms.FormFieldTemplate._
@@ -8,25 +8,21 @@
     <link rel="stylesheet" href="@routes.Assets.at("css/register.css")" crossorigin="anonymous">
 }
 
-@main("Inscription", style) {
-
+@main("Modifier mes informations", style) {
 
     <div class="container">
         <div class="py-5 text-center">
             <img class="d-block mx-auto mb-4" src="@routes.Assets.at("img/logo.png")" alt="Logo Japan Impact" width="240" height="200">
-            <h2>Inscription</h2>
-            <p class="lead">Créez votre compte Japan Impact en quelques instants.</p>
+            <h2>Modifier mes informations</h2>
+            <p class="lead">Vous pouvez mettre à jour les informations de votre profil ici.</p>
 
-            <a class="mb-3 text-muted" href="@controllers.explicit.routes.LoginController.loginGet(app)">
-                J'ai déjà un compte</a>
             <hr>
-
         </div>
 
         <div class="row justify-content-md-center">
             <div class="col-md-8">
 
-            @form(action = controllers.explicit.routes.RegisterController.registerPost(app)) {
+            @form(action = controllers.explicit.routes.UpdateInfoController.updatePost(app)) {
                 @CSRF.formField
 
                 @if(userForm.hasGlobalErrors) {
@@ -35,15 +31,13 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                    @inputText(userForm("firstName"), 'type -> "text", '_label -> "Prénom", 'class -> "form-control", 'placeholder -> "Prénom", 'required -> true, 'autofocus -> true)
+                        @inputText(userForm("firstName"), 'type -> "text", '_label -> "Prénom", 'class -> "form-control", 'placeholder -> "Prénom", 'required -> true, 'autofocus -> true)
                     </div>
                     <div class="col-md-6 mb-3">
-                    @inputText(userForm("lastName"), 'type -> "text", '_label -> "Nom de famille", 'class -> "form-control", 'placeholder -> "Nom de famille", 'required -> true, 'autofocus -> true)
+                        @inputText(userForm("lastName"), 'type -> "text", '_label -> "Nom de famille", 'class -> "form-control", 'placeholder -> "Nom de famille", 'required -> true, 'autofocus -> true)
                     </div>
                 </div>
 
-                @inputText(userForm("email"), 'type -> "email", '_label -> "Email", 'class -> "form-control", 'placeholder -> "raï@japan-impact.ch", 'required -> true, 'autofocus -> true)
-                @inputPassword(userForm("password"), '_label -> "Mot de passe", 'class -> "form-control", 'placeholder -> "Mot de passe", 'required -> true)
 
                 @inputText(userForm("address"), 'type -> "text", '_label -> "Addresse", 'class -> "form-control", 'placeholder -> "Avenue du Tir Fédéral 12", 'required -> true, 'autofocus -> true)
                 @inputText(userForm("addressComplement"), 'type -> "text", '_label -> "Seconde ligne d'addresse", 'class -> "form-control", 'placeholder -> "Appartement 27", 'autofocus -> true)
@@ -62,13 +56,7 @@
 
                 @inputText(userForm("phone"), 'type -> "text", '_label -> "Numéro de téléphone", 'class -> "form-control", 'placeholder -> "+41 70 123 45 67", 'autofocus -> true)
 
-
-                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-                <div class="g-recaptcha" style="align-self: center;" data-sitekey="@captcha"></div>
-
-                <button class="btn btn-lg btn-primary btn-block" type="submit">Inscription</button>
-
-
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Enregistrer</button>
             }
             </div>
         </div>
