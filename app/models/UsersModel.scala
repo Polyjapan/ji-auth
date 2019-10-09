@@ -22,6 +22,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, mailer: MailerClient, reCaptcha: ReCaptchaService, hashes: HashService)(implicit ec: ExecutionContext, config: Configuration)
   extends HasDatabaseConfigProvider[MySQLProfile] {
 
+
   import profile.api._
 
   /**
@@ -57,6 +58,11 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
         if (address.nonEmpty) db.run(addresses += address.get.copy(userId = id)).map(_ => id)
         else Future.successful(id)
       )
+
+  def setAddress(addr: Address): Future[Boolean] = {
+    db.run(addresses += addr).flatMap(_ > 0)
+  }
+
 
   /**
     * Updates a user whose id is set

@@ -19,9 +19,8 @@ import scala.concurrent.{ExecutionContext, Future}
   * @author Louis Vialar
   */
 class RegisterController @Inject()(cc: MessagesControllerComponents,
-                                   users: UsersModel,
                                    hashes: HashService,
-                                   captcha: ReCaptchaService)(implicit ec: ExecutionContext, apps: AppsModel, tickets: TicketsModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
+                                   captcha: ReCaptchaService)(implicit ec: ExecutionContext, apps: AppsModel, tickets: TicketsModel, users: UsersModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
 
   private val registerForm = Form(
     mapping(

@@ -36,6 +36,9 @@ POST           /register                                controllers.explicit.Reg
 GET            /login                                   controllers.explicit.LoginController.loginGet(app: Option[String])
 POST           /login                                   controllers.explicit.LoginController.loginPost(app: Option[String])
 
+GET            /fill_missing                            controllers.explicit.FillMissingController.fillMissingGet(app: Option[String])
+POST           /fill_missing                            controllers.explicit.FillMissingController.fillMissingPost(app: Option[String])
+
 GET            /forgot_password                         controllers.explicit.ForgotPasswordController.forgotPasswordGet(app: Option[String])
 POST           /forgot_password                         controllers.explicit.ForgotPasswordController.forgotPasswordPost(app: Option[String])
 

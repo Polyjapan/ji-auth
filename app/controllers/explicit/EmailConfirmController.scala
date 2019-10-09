@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
 /**
   * @author Louis Vialar
   */
-class EmailConfirmController @Inject()(cc: ControllerComponents, users: UsersModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration, tickets: TicketsModel, apps: AppsModel) extends AbstractController(cc) {
+class EmailConfirmController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration, tickets: TicketsModel, apps: AppsModel, users: UsersModel) extends AbstractController(cc) {
 
   def emailConfirmGet(email: String, code: String, app: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
     ExplicitTools.ifLoggedOut(app) {
