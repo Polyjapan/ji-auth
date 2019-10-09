@@ -37,6 +37,13 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
   def getUserProfile(id: Int): Future[Option[(RegisteredUser, Option[Address])]] =
     db.run(registeredUsers.filter(_.id === id).joinLeft(addresses).on(_.id === _.id).result.headOption)
 
+  def getUserProfiles(ids: Set[Int]): Future[Map[Int, (RegisteredUser, Option[Address])]] =
+    db.run(registeredUsers
+      .filter(_.id.inSet(ids))
+      .joinLeft(addresses)
+      .on(_.id === _.id).result
+    ).map(_.groupBy(_._1.id.get).mapValues(_.head))
+
   /**
     * Gets a user in the database by its id
     *

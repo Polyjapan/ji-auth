@@ -29,6 +29,7 @@ POST           /api/groups/:name/members                controllers.api.AppGroup
 DELETE         /api/groups/:name/members/:member        controllers.api.AppGroupsController.removeMemberFromGroup(name: String, member: Int)
 
 GET            /api/user/:user                          controllers.api.AppProfileController.getUserProfile(user: Int)
+GET            /api/users/$users<[0-9,]+>                        controllers.api.AppProfileController.getUserProfiles(users: String)
 
 GET            /register                                controllers.explicit.RegisterController.registerGet(app: Option[String])
 POST           /register                                controllers.explicit.RegisterController.registerPost(app: Option[String])

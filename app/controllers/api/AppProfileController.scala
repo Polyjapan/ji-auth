@@ -34,4 +34,18 @@ class AppProfileController @Inject()(cc: ControllerComponents,
       }
     }
   }
+
+  def getUserProfiles(idsStr: String): Action[AnyContent] = Action.async { implicit rq =>
+    val ids = idsStr.split(",").filter(_.forall(_.isDigit)).map(_.toInt).toSet
+
+    ApiUtils.withApp { _ =>
+      users.getUserProfiles(ids).map(f => f.mapValues {
+        case (user, address) =>
+          val details = user.toUserDetails
+          val result = UserProfile(user.id.get, user.email, details, address.map(_.toUserAddress))
+
+          result
+      }).map(map => Ok(Json.toJson(map)))
+    }
+  }
 }
