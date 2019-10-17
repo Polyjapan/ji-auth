@@ -37,7 +37,7 @@ class HiddenForgotPasswordController @Inject()(
 
   implicit val format: Reads[ForgotPasswordRequest] = Json.reads[ForgotPasswordRequest]
 
-  def postForgotPassword: Action[ForgotPasswordRequest] = Action.async(parse.json[ForgotPasswordRequest]) { implicit rq =>
+  def postForgotPassword: Action[ForgotPasswordRequest] = Action.async(parse.json[ForgotPasswordRequest]) { implicit rq: Request[ForgotPasswordRequest] =>
     if (rq.hasBody) {
       val body = rq.body
 
@@ -48,46 +48,13 @@ class HiddenForgotPasswordController @Inject()(
           // Check that the captcha is correct
           captcha.checkCaptchaWithExpiration(app, body.captcha).flatMap(captchaResponse => {
             if (!captchaResponse.success) !InvalidCaptcha
-            else users.getUser(body.email).map {
-
-              // Get the client
-              case Some(user) =>
-
-                // We have a client, create a code and a reset URL
-                val resetCode = RandomUtils.randomString(32)
-                val resetCodeEncoded = URLEncoder.encode(resetCode, "UTF-8")
-                val emailEncoded = URLEncoder.encode(user.email, "UTF-8")
-
-                val url = app.emailRedirectUrl + "?email=" + emailEncoded + "&action=passwordReset&resetCode=" + resetCodeEncoded
-
-                // Update the user with the code, and a validity expiration of 24hrs
-                users.updateUser(user.copy(
-                  passwordReset = Some(resetCode),
-                  passwordResetEnd = Some(new Timestamp(System.currentTimeMillis + (24 * 3600 * 1000)))))
-                  .onComplete(_ => {
-                    mailer.send(Email(
-                      rq.messages("users.recover.email_title"),
-                      rq.messages("users.recover.email_from") + " <noreply@japan-impact.ch>",
-                      Seq(user.email),
-                      bodyText = Some(rq.messages("users.recover.email_text", url))
-                    ))
-                  })
-
-                Ok
-              case None =>
-                // We have no user with that email, send an email to the user to warn him
-                mailer.send(Email(
-                  rq.messages("users.recover.email_title"),
-                  rq.messages("users.recover.email_from") + " <noreply@japan-impact.ch>",
-                  Seq(body.email),
-                  bodyText = Some(rq.messages("users.recover.no_user_email_text"))
-                ))
-
-                Ok
+            else {
+              users
+                .resetPassword(body.email, (email, code) =>
+                  app.emailRedirectUrl + "?email=" + email + "&action=passwordReset&resetCode=" + code)
+                .map(_ => Ok)
             }
           })
-
-
         case None => !UnknownApp // No body or body parse fail ==> invalid input
       }
     }
