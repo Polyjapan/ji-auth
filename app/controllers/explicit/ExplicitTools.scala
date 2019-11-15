@@ -24,27 +24,23 @@ object ExplicitTools {
     } else "/"
   }
 
-  private[explicit] def checkLoggedInAndUpToDate(app: Option[String])(implicit apps: AppsModel, tickets: TicketsModel, users: UsersModel, ec: ExecutionContext, request: RequestHeader): Option[Future[String]] = {
-    if (request.hasUserSession) {
-      Some(
-        if (app.isEmpty) Future("/")
-        else {
-          users.getUserProfile(request.userSession.id).flatMap {
-            case Some((_, Some(_))) => // Okay
+  private[explicit] def produceRedirectOrCompleteInfo(app: Option[String], userId: Int)(implicit apps: AppsModel, tickets: TicketsModel, users: UsersModel, ec: ExecutionContext): Future[String] = {
+      if (app.isEmpty) Future("/")
+      else {
+        users.getUserProfile(userId).flatMap {
+          case Some((_, Some(_))) => // Okay
 
-              apps.getApp(app.get).flatMap {
-                case Some(App(Some(appId), _, _, _, _, redirectUrl, _, _)) =>
-                  tickets.createTicketForUser(request.userSession.id, appId, TicketType.ExplicitGrantTicket).map(ticket => redirectUrl + "?ticket=" + ticket)
-                case _ => "/"
-              }
-
-            case Some((_, None)) =>
-              Future(routes.FillMissingController.fillMissingGet(app).url)
-          }
-
+            produceRedirectUrl(app, userId)
+          case Some((_, None)) =>
+            Future(routes.FillMissingController.fillMissingGet(app).url)
         }
-      )
-    } else None
+
+      }
+  }
+
+  private[explicit] def checkLoggedInAndUpToDate(app: Option[String])(implicit apps: AppsModel, tickets: TicketsModel, users: UsersModel, ec: ExecutionContext, request: RequestHeader): Option[Future[String]] = {
+    if (request.hasUserSession) Some(produceRedirectOrCompleteInfo(app, request.userSession.id))
+    else None
   }
 
   private[explicit] def ifLoggedOut(app: Option[String])(body: => Future[Result])(implicit apps: AppsModel, tickets: TicketsModel, users: UsersModel, ec: ExecutionContext, request: RequestHeader): Future[Result] = {

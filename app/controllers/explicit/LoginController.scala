@@ -52,7 +52,7 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
           case users.EmailNotConfirmed =>
             displayForm(loginForm.withGlobalError("Vous devez confirmer votre adresse email pour pouvoir vous connecter"), app).map(f => BadRequest(f))
           case users.LoginSuccess(user) =>
-            ExplicitTools.produceRedirectUrl(app, user.id.get)
+            ExplicitTools.produceRedirectOrCompleteInfo(app, user.id.get)
               .map(url => Redirect(url).withSession(UserSession(user): _*))
         })
       })

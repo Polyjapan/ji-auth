@@ -27,7 +27,7 @@ class EmailConfirmController @Inject()(cc: ControllerComponents)(implicit ec: Ex
 
       users.confirmEmail(decode(email), decode(code)).flatMap {
         case Some(user) =>
-          ExplicitTools.produceRedirectUrl(app, user.id.get).map(url => ok(user, url))
+          ExplicitTools.produceRedirectOrCompleteInfo(app, user.id.get).map(url => ok(user, url))
         case None =>
           BadRequest(views.html.register.emailconfirmfail())
       }
