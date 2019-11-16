@@ -40,9 +40,6 @@ POST           /login                                   controllers.explicit.Log
 GET            /update_info                             controllers.explicit.UpdateInfoController.updateGet(app: Option[String])
 POST           /update_info                             controllers.explicit.UpdateInfoController.updatePost(app: Option[String])
 
-GET            /fill_missing                            controllers.explicit.FillMissingController.fillMissingGet(app: Option[String])
-POST           /fill_missing                            controllers.explicit.FillMissingController.fillMissingPost(app: Option[String])
-
 GET            /forgot_password                         controllers.explicit.PasswordResetController.passwordResetGet(app: Option[String])
 POST           /forgot_password                         controllers.explicit.PasswordResetController.passwordResetPost(app: Option[String])
 

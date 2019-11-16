@@ -1,7 +1,7 @@
 package controllers.explicit
 
 import ch.japanimpact.auth.api.TicketType
-import data.{App, UserSession}
+import data.{App, RegisteredUser, UserSession}
 import data.UserSession._
 import models.{AppsModel, TicketsModel, UsersModel}
 import play.api.mvc.{RequestHeader, Result, Results}
@@ -28,11 +28,11 @@ object ExplicitTools {
       if (app.isEmpty) Future("/")
       else {
         users.getUserProfile(userId).flatMap {
-          case Some((_, Some(_))) => // Okay
+          case Some((RegisteredUser(_, _, _, _, _, _, _, _, _, _, Some(_)), Some(_))) => // Okay
 
             produceRedirectUrl(app, userId)
           case Some((_, None)) =>
-            Future(routes.FillMissingController.fillMissingGet(app).url)
+            Future(routes.UpdateInfoController.updateGet(app).url)
         }
 
       }

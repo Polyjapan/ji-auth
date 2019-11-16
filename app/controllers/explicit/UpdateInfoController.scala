@@ -27,7 +27,7 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents,
     mapping(
       "firstName" -> nonEmptyText(1, 50),
       "lastName" -> nonEmptyText(1, 50),
-      "phone" -> optional(ValidationUtils.validPhoneVerifier(nonEmptyText(8, 20))),
+      "phone" -> ValidationUtils.validPhoneVerifier(nonEmptyText(8, 20)),
 
       "address" -> nonEmptyText(2, 200),
       "addressComplement" -> optional(nonEmptyText(2, 200)),
@@ -43,7 +43,7 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents,
     ExplicitTools.ifLoggedIn(app) { user =>
       users.getUserProfile(user.id).map {
         case Some((user, address)) =>
-          (user.firstName, user.lastName, user.phoneNumber,
+          (user.firstName, user.lastName, user.phoneNumber.getOrElse(""),
             address.map(_.address).orNull,
             address.flatMap(_.addressComplement),
             address.map(_.postCode).orNull,
@@ -64,8 +64,9 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents,
 
         val addr = Address(user.id, address, addressComplement, postCode, city, country)
 
-        users.update(user.id, firstName, lastName, phone, addr).flatMap(_ =>
-          ExplicitTools.produceRedirectUrl(app, user.id).map(url => Redirect(url))
+        users.update(user.id, firstName, lastName, phone, addr).flatMap(succ =>
+          if (succ) ExplicitTools.produceRedirectUrl(app, user.id).map(url => Redirect(url))
+          else displayForm(registerForm.withGlobalError("Erreur inconnue de base de données"), app).map(f => BadRequest(f))
         )
       })
     }

@@ -69,8 +69,8 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
         else Future.successful(id)
       )
 
-  def setAddress(addr: Address): Future[Boolean] = {
-    db.run(addresses += addr).flatMap(_ > 0)
+  def setAddressAndPhone(addr: Address, phone: String): Future[Boolean] = {
+    db.run((addresses += addr) andThen (registeredUsers.filter(_.id === addr.userId).map(_.phoneNumber).update(Some(phone)))).flatMap(_ > 0)
   }
 
 
@@ -85,11 +85,11 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
     db.run(registeredUsers.filter(_.id === user.id.get).update(user))
   }
 
-  def update(id: Int, firstName: String, lastName: String, phone: Option[String], addr: Address) = {
+  def update(id: Int, firstName: String, lastName: String, phone: String, addr: Address): Future[Boolean] = {
     db.run(
       registeredUsers.filter(_.id === id).map(u => (u.firstName, u.lastName, u.phoneNumber))
-        .update((firstName, lastName, phone)) >> addresses.insertOrUpdate(addr)
-    )
+        .update((firstName, lastName, Some(phone))) >> addresses.insertOrUpdate(addr)
+    ).flatMap(_ > 0)
   }
 
 
