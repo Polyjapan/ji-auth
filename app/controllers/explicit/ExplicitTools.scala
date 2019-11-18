@@ -31,7 +31,7 @@ object ExplicitTools {
           case Some((RegisteredUser(_, _, _, _, _, _, _, _, _, _, Some(_)), Some(_))) => // Okay
 
             produceRedirectUrl(app, userId)
-          case Some((_, None)) =>
+          case Some(_) =>
             Future(routes.UpdateInfoController.updateGet(app).url)
         }
 
