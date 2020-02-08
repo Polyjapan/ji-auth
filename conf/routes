@@ -26,9 +26,11 @@ GET            /api/ticket/:ticket                      controllers.api.AppTicke
 GET            /api/app_login/:targetClientId           controllers.api.AppLogInController.login(targetClientId: String)
 +nocsrf
 POST           /api/groups/:name/members                controllers.api.AppGroupsController.addMemberToGroup(name: String)
+GET            /api/groups/:name/members                controllers.api.AppGroupsController.getGroupMembers(name: String)
 DELETE         /api/groups/:name/members/:member        controllers.api.AppGroupsController.removeMemberFromGroup(name: String, member: Int)
 
 GET            /api/user/:user                          controllers.api.AppProfileController.getUserProfile(user: Int)
+GET            /api/user/search/:query                  controllers.api.AppProfileController.searchUsers(query: String)
 GET            /api/users/$users<[0-9,]+>               controllers.api.AppProfileController.getUserProfiles(users: String)
 
 GET            /register                                controllers.explicit.RegisterController.registerGet(app: Option[String])

@@ -25,7 +25,7 @@
                 <ul>
                     <li><i>email: (read, write, admin)</i></li>
                     @for(member <- members) {
-                        <li>@member._2.email: (@member._1.canRead, @member._1.canManage, @member._1.isAdmin)</li>
+                        <li>#@member._2.id @member._2.email: (@member._1.canRead, @member._1.canManage, @member._1.isAdmin)</li>
                     }
                 </ul>
             }

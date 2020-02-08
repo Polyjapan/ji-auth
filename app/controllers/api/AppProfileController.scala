@@ -35,6 +35,16 @@ class AppProfileController @Inject()(cc: ControllerComponents,
     }
   }
 
+  def searchUsers(query: String) = Action.async { implicit rq =>
+    ApiUtils.withApp { _ =>
+      users.searchUsers(query).map(
+        seq => seq.map(user => {
+          val details = user.toUserDetails
+          UserProfile(user.id.get, user.email, details, None)
+        })).map(r => Ok(Json.toJson(r)))
+    }
+  }
+
   def getUserProfiles(idsStr: String): Action[AnyContent] = Action.async { implicit rq =>
     val ids = idsStr.split(",").filter(_.forall(_.isDigit)).map(_.toInt).toSet
 

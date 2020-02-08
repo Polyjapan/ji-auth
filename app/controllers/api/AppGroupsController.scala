@@ -1,11 +1,12 @@
 package controllers.api
 
+import ch.japanimpact.auth.api.UserProfile
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import data.GroupMember
 import javax.inject.Inject
 import models.{AppsModel, GroupsModel, TicketsModel, UsersModel}
 import play.api.Configuration
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import utils.Implicits._
@@ -19,6 +20,27 @@ class AppGroupsController @Inject()(cc: ControllerComponents,
                                     tickets: TicketsModel,
                                     users: UsersModel,
                                     groups: GroupsModel)(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+
+
+  def getGroupMembers(groupName: String) = Action.async { implicit rq =>
+    ApiUtils.withApp { app =>
+      groups.getGroupMembership(groupName, app.createdBy).flatMap {
+        case Some(GroupMember(groupId, _, _, canRead, _)) if canRead =>
+          groups.getGroupMembers(groupId)
+            .map(res => {
+              Ok(Json.toJson(res.map(pair => {
+                val user = pair._2
+                val details = user.toUserDetails
+                UserProfile(user.id.get, user.email, details, None)
+              })))
+            })
+        case Some(_) =>
+          !MissingPermission
+        case _ =>
+          !GroupNotFound
+      }
+    }
+  }
 
 
   def addMemberToGroup(groupName: String): Action[JsValue] = Action.async(parse.json) { implicit rq =>

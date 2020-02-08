@@ -92,6 +92,14 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
     ).flatMap(_ > 0)
   }
 
+  def searchUsers(searchString: String): Future[Seq[RegisteredUser]] = {
+    if (searchString.length < 3) Future.successful(Seq.empty)
+    else db.run(
+      registeredUsers.filter(u =>
+        (u.email like s"%$searchString%") || (u.firstName like s"%$searchString%") || (u.lastName like s"%$searchString%")
+      ).take(10).result
+    )
+  }
 
   sealed trait RegisterResult
 
