@@ -4,7 +4,7 @@ import java.security.{PrivateKey, PublicKey}
 
 import com.google.inject.Inject
 import javax.inject.Singleton
-import pdi.jwt.algorithms.JwtAsymetricAlgorithm
+import pdi.jwt.algorithms.JwtAsymmetricAlgorithm
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim, JwtJson}
 import play.api.Configuration
 import play.api.libs.json.JsObject
@@ -20,7 +20,7 @@ class JwtService @Inject()(conf: Configuration) {
   private lazy val algoName = conf.getOptional[String]("jwt.algo").getOrElse("RS512")
 
   private val (privKey: PrivateKey, pubKey: PublicKey) = readKeys()
-  private val algo = JwtAlgorithm.fromString(algoName).asInstanceOf[JwtAsymetricAlgorithm]
+  private val algo = JwtAlgorithm.fromString(algoName).asInstanceOf[JwtAsymmetricAlgorithm]
 
   private def readKeys(): (PrivateKey, PublicKey) = {
     import java.nio.file.{Files, Paths}

@@ -8,7 +8,6 @@ import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import javax.inject.Inject
 import models.{AppsModel, GroupsModel, TicketsModel, UsersModel}
 import play.api.Configuration
-import play.api.libs.json.Json
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import utils.Implicits._

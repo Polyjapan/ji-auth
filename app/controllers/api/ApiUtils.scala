@@ -1,6 +1,6 @@
 package controllers.api
 
-import ch.japanimpact.auth.api.constants.GeneralErrorCodes.{InvalidAppSecret, MissingData}
+import ch.japanimpact.auth.api.constants.GeneralErrorCodes.{InvalidAppSecret, MissingData, RequestError}
 import data.App
 import models.AppsModel
 import play.api.libs.json.Json
@@ -24,7 +24,7 @@ object ApiUtils {
     val h = request.headers
 
     if (!h.hasHeader("X-Client-Id") || !h.hasHeader("X-Client-Secret")) {
-      Results.Unauthorized(Json.toJson(MissingData))
+      Results.Unauthorized(Json.toJson[RequestError](MissingData))
     } else {
       withGivenApp(h("X-Client-Id"), h("X-Client-Secret"))(body)
     }

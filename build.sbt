@@ -1,39 +1,46 @@
-name := "JIAuth"
+import sbt.Keys.{libraryDependencies, resolvers}
 
-enablePlugins(PlayScala, DebianPlugin, JDebPackaging, SystemdPlugin)
+lazy val root = (project in file("."))
+  .enablePlugins(PlayScala, DebianPlugin, JDebPackaging, SystemdPlugin)
+  .settings(
+    name := "JIAuth",
+    version := "1.0",
+    scalaVersion := "2.13.1",
 
-version := "1.0"
+    maintainer in Linux := "Louis Vialar <louis.vialar@japan-impact.ch>",
+    packageSummary in Linux := "Scala Backend for Japan Impact Auth Platform",
+    packageDescription := "Scala Backend for Japan Impact Auth Platform",
+    debianPackageDependencies := Seq("java8-runtime-headless"),
 
-maintainer in Linux := "Louis Vialar <louis.vialar@japan-impact.ch>"
+    libraryDependencies ++= Seq(ehcache, ws, specs2 % Test, guice,
+      "com.typesafe.play" %% "play-slick" % "5.0.0",
+      "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0",
+      "mysql" % "mysql-connector-java" % "5.1.34",
+      "org.mariadb.jdbc" % "mariadb-java-client" % "1.1.7",
+      "org.mindrot" % "jbcrypt" % "0.3m",
+      "com.pauldijou" %% "jwt-play" % "4.2.0",
+      // evolutions,
+      // jdbc,
+      // "org.playframework.anorm" %% "anorm" % "2.6.4",
+      "org.bouncycastle" % "bcprov-jdk15on" % "1.64",
 
-packageSummary in Linux := "Scala Backend for Japan Impact Auth Platform"
-packageDescription := "Scala Backend for Japan Impact Auth Platform"
-debianPackageDependencies := Seq("java8-runtime-headless")
+      "com.typesafe.play" %% "play-json" % "2.8.1",
+      "com.typesafe.play" %% "play-json-joda" % "2.8.1",
+      "ch.japanimpact" %% "jiauthframework" % "0.2-SNAPSHOT",
+      "com.typesafe.play" %% "play-mailer" % "8.0.0",
+      "com.typesafe.play" %% "play-mailer-guice" % "8.0.0",
+    ),
 
-lazy val `jiauth` = (project in file(".")).enablePlugins(PlayScala)
+    //libraryDependencies +=
 
-resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
+    resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
+    resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/",
+    //resolvers += Resolver.mavenCentral,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-deprecation"
+    )
+  )
 
-resolvers += "Akka Snapshot Repository" at "http://repo.akka.io/snapshots/"
-
-scalaVersion := "2.12.2"
-
-libraryDependencies ++= Seq(ehcache, ws, specs2 % Test, guice)
-libraryDependencies ++= Seq(
-  "com.typesafe.play" %% "play-slick" % "3.0.0",
-  "com.typesafe.play" %% "play-slick-evolutions" % "3.0.0",
-  "mysql" % "mysql-connector-java" % "5.1.34",
-  "org.mariadb.jdbc" % "mariadb-java-client" % "1.1.7",
-  "org.mindrot" % "jbcrypt" % "0.3m",
-  "com.pauldijou" %% "jwt-play" % "0.16.0",
-  "net.codingwell" %% "scala-guice" % "4.1.0"
-)
-
-libraryDependencies += "com.typesafe.play" %% "play-mailer" % "6.0.1"
-libraryDependencies += "com.typesafe.play" %% "play-mailer-guice" % "6.0.1"
-libraryDependencies += "ch.japanimpact" %% "jiauthframework" % "0.2-SNAPSHOT"
-
-
-unmanagedResourceDirectories in Test <+= baseDirectory(_ / "target/web/public/test")
 
       

@@ -45,7 +45,7 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
       .filter(_.id.inSet(ids))
       .joinLeft(addresses)
       .on(_.id === _.id).result
-    ).map(_.groupBy(_._1.id.get).mapValues(_.head))
+    ).map(_.groupBy(_._1.id.get).view.mapValues(_.head).toMap)
 
   /**
     * Gets a user in the database by its id
