@@ -1,5 +1,7 @@
 package services
 
+import de.mkammerer.argon2.{Argon2Factory, Argon2Helper}
+import de.mkammerer.argon2.Argon2Factory.Argon2Types
 import javax.inject.Singleton
 import javax.xml.bind.DatatypeConverter
 import org.bouncycastle.jcajce.provider.digest.{MD5, SHA1}
@@ -12,9 +14,10 @@ import org.mindrot.jbcrypt.BCrypt
 class HashService {
   private val providers: Map[String, HashProvider] = Map(
     "bcrypt" -> new BCryptHashProvider,
-    "old" -> new ShittyAlgoProvider
+    "old" -> new ShittyAlgoProvider,
+    "argon2di1648" -> new Argon2HashProvider(Argon2Types.ARGON2id, 16, 48)
   )
-  val DefaultAlgo = "bcrypt"
+  val DefaultAlgo = "argon2di1648"
   private val RandomHashed = hash("this is a random string")._2
 
 
@@ -56,6 +59,26 @@ class HashService {
 
     override def check(hashed: String, input: String): Boolean = {
       if (hashed != null && input != null) BCrypt.checkpw(input, hashed)
+      else throw new NullPointerException
+    }
+  }
+
+  private class Argon2HashProvider(tpe: Argon2Types, salt: Int, len: Int) extends HashProvider {
+    private lazy val argon2 = Argon2Factory.create(tpe, salt, len)
+    private val MAX_HASH_TIME_MS = 1000
+    private val MEMORY_KBYTES = 65536
+    private val PARALLELISM = 4
+    private lazy val iterations = Argon2Helper.findIterations(argon2, MAX_HASH_TIME_MS, MEMORY_KBYTES, PARALLELISM)
+
+    override def hash(password: String): String = {
+      if (password != null)
+        argon2.hash(iterations, MEMORY_KBYTES, PARALLELISM, password.toCharArray)
+      else throw new NullPointerException
+    }
+
+    override def check(hashed: String, input: String): Boolean = {
+      if (hashed != null && input != null)
+        argon2.verify(hashed, input.toCharArray)
       else throw new NullPointerException
     }
   }

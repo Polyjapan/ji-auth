@@ -19,10 +19,12 @@ lazy val root = (project in file("."))
       "org.mariadb.jdbc" % "mariadb-java-client" % "1.1.7",
       "org.mindrot" % "jbcrypt" % "0.3m",
       "com.pauldijou" %% "jwt-play" % "4.2.0",
+
       // evolutions,
       // jdbc,
       // "org.playframework.anorm" %% "anorm" % "2.6.4",
       "org.bouncycastle" % "bcprov-jdk15on" % "1.64",
+      "de.mkammerer" % "argon2-jvm" % "2.6",
 
       "com.typesafe.play" %% "play-json" % "2.8.1",
       "com.typesafe.play" %% "play-json-joda" % "2.8.1",
@@ -39,7 +41,11 @@ lazy val root = (project in file("."))
     scalacOptions ++= Seq(
       "-feature",
       "-deprecation"
-    )
+    ),
+
+    // Don't add the doc in the zip
+    publishArtifact in(Compile, packageDoc) := false
+
   )
 
 
