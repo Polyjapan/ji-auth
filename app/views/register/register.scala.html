@@ -1,4 +1,4 @@
-@(userForm: Form[_], captcha: String, app: Option[String], appName: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
+@(userForm: Form[_], captcha: String, app: Option[String], appName: Option[String], tokenType: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
 
     @import helper._
     @import views.forms.FormFieldTemplate._
@@ -17,7 +17,7 @@
             <h2>Inscription</h2>
             <p class="lead">Créez votre compte Japan Impact en quelques instants.</p>
 
-            <a class="mb-3 text-muted" href="@controllers.explicit.routes.LoginController.loginGet(app)">
+            <a class="mb-3 text-muted" href="@controllers.explicit.routes.LoginController.loginGet(app, tokenType)">
                 J'ai déjà un compte</a>
             <hr>
 
@@ -26,7 +26,7 @@
         <div class="row justify-content-md-center">
             <div class="col-md-8">
 
-            @form(action = controllers.explicit.routes.RegisterController.registerPost(app)) {
+            @form(action = controllers.explicit.routes.RegisterController.registerPost(app, tokenType)) {
                 @CSRF.formField
 
                 @if(userForm.hasGlobalErrors) {

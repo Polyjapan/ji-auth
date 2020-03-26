@@ -8,7 +8,7 @@ OPTIONS        /*url                                    controllers.OptionsContr
 
 
 +nocsrf
-POST           /hidden/login                            controllers.hidden.HiddenLogInController.postLogin
+POST           /hidden/login                            controllers.hidden.HiddenLogInController.postLogin(tokenType: Option[String])
 
 +nocsrf
 POST           /hidden/register                         controllers.hidden.HiddenRegisterController.postRegister
@@ -30,25 +30,26 @@ GET            /api/groups/:name/members                controllers.api.AppGroup
 DELETE         /api/groups/:name/members/:member        controllers.api.AppGroupsController.removeMemberFromGroup(name: String, member: Int)
 
 GET            /api/user/:user                          controllers.api.AppProfileController.getUserProfile(user: Int)
+GET            /api/user                                controllers.api.AppProfileController.getBearerProfile
 GET            /api/user/search/:query                  controllers.api.AppProfileController.searchUsers(query: String)
 GET            /api/users/$users<[0-9,]+>               controllers.api.AppProfileController.getUserProfiles(users: String)
 
-GET            /register                                controllers.explicit.RegisterController.registerGet(app: Option[String])
-POST           /register                                controllers.explicit.RegisterController.registerPost(app: Option[String])
+GET            /register                                controllers.explicit.RegisterController.registerGet(app: Option[String], tokenType: Option[String])
+POST           /register                                controllers.explicit.RegisterController.registerPost(app: Option[String], tokenType: Option[String])
 
-GET            /login                                   controllers.explicit.LoginController.loginGet(app: Option[String])
-POST           /login                                   controllers.explicit.LoginController.loginPost(app: Option[String])
+GET            /login                                   controllers.explicit.LoginController.loginGet(app: Option[String], tokenType: Option[String])
+POST           /login                                   controllers.explicit.LoginController.loginPost(app: Option[String], tokenType: Option[String])
 
-GET            /update_info                             controllers.explicit.UpdateInfoController.updateGet(app: Option[String])
-POST           /update_info                             controllers.explicit.UpdateInfoController.updatePost(app: Option[String])
+GET            /update_info                             controllers.explicit.UpdateInfoController.updateGet(app: Option[String], tokenType: Option[String])
+POST           /update_info                             controllers.explicit.UpdateInfoController.updatePost(app: Option[String], tokenType: Option[String])
 
-GET            /forgot_password                         controllers.explicit.PasswordResetController.passwordResetGet(app: Option[String])
-POST           /forgot_password                         controllers.explicit.PasswordResetController.passwordResetPost(app: Option[String])
+GET            /forgot_password                         controllers.explicit.PasswordResetController.passwordResetGet(app: Option[String], tokenType: Option[String])
+POST           /forgot_password                         controllers.explicit.PasswordResetController.passwordResetPost(app: Option[String], tokenType: Option[String])
 
-GET            /password_reset/:email/:code             controllers.explicit.PasswordResetController.passwordResetChangeGet(email: String, code: String, app: Option[String])
-POST           /password_reset                          controllers.explicit.PasswordResetController.passwordResetChangePost(app: Option[String])
+GET            /password_reset/:email/:code             controllers.explicit.PasswordResetController.passwordResetChangeGet(email: String, code: String, app: Option[String], tokenType: Option[String])
+POST           /password_reset                          controllers.explicit.PasswordResetController.passwordResetChangePost(app: Option[String], tokenType: Option[String])
 
-GET            /email_confirm/:email/:code              controllers.explicit.EmailConfirmController.emailConfirmGet(email: String, code: String, app: Option[String])
+GET            /email_confirm/:email/:code              controllers.explicit.EmailConfirmController.emailConfirmGet(email: String, code: String, app: Option[String], tokenType: Option[String])
 
 GET            /logout                                  controllers.explicit.LogoutController.logout(app: Option[String])
 

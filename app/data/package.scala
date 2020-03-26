@@ -15,6 +15,15 @@ package object data {
     override def toString: String = Base64.getEncoder.encodeToString(bytes).filterNot(_ == "=")
   }
 
+  object SessionID {
+    def apply(str: String): SessionID = {
+      val btes = str.getBytes
+
+      if (btes.length != 16) throw new IllegalArgumentException
+      else SessionID(btes)
+    }
+  }
+
   /**
    * Defines a user registered against the server. (In the future, might support sign on via Google/Twitter/Tequila...)
    *

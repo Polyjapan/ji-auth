@@ -20,7 +20,7 @@ class SessionsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
   })
 
   def getSession(sessId: SessionID): Future[Option[(Int, Set[String])]] = Future(db.withConnection { implicit conn =>
-    val lst = SQL"SELECT sessions.user_id, g.name FROM sessions LEFT JOIN groups_members gm on sessions.user_id = gm.user_id LEFT JOIN `groups` g on gm.group_id = g.id WHERE session_key = ${sessId.bytes}"
+    val lst = SQL"SELECT sessions.user_id, g.name FROM sessions LEFT JOIN groups_members gm on sessions.user_id = gm.user_id LEFT JOIN `groups` g on gm.group_id = g.id WHERE session_key = ${sessId.bytes} AND expires_at > CURRENT_TIMESTAMP"
       .as((int("user_id") ~ str("name")).map { case a ~ b => (a, b) }.*)
 
     lst.headOption.map {

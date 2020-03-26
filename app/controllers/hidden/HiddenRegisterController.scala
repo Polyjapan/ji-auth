@@ -19,6 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * @author Louis Vialar
   */
+@deprecated("the hidden flow is deprecated, only the explicit one should be supported")
 class HiddenRegisterController @Inject()(
                                           cc: MessagesControllerComponents,
                                           users: UsersModel,

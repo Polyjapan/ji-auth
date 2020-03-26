@@ -20,8 +20,8 @@ import scala.concurrent.{ExecutionContext, Future}
   * @author Louis Vialar
   */
 class UpdateInfoController @Inject()(cc: MessagesControllerComponents,
-                                     hashes: HashService,
-                                     captcha: ReCaptchaService)(implicit ec: ExecutionContext, apps: AppsModel, tickets: TicketsModel, users: UsersModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
+                                     hashes: HashService, ExplicitTools: ExplicitTools
+                                    )(implicit ec: ExecutionContext, users: UsersModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
 
   private val registerForm = Form(
     mapping(
@@ -36,11 +36,11 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents,
       "country" -> nonEmptyText(2, 100)
     )(Tuple8.apply)(Tuple8.unapply))
 
-  private def displayForm(form: Form[_], app: Option[String])(implicit rq: RequestHeader): Future[HtmlFormat.Appendable] =
-    views.html.updateInfo.updateInfo(form, app)
+  private def displayForm(form: Form[_], app: Option[String], tokenType: Option[String])(implicit rq: RequestHeader): Future[HtmlFormat.Appendable] =
+    views.html.updateInfo.updateInfo(form, app, tokenType)
 
-  def updateGet(app: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedIn(app) { user =>
+  def updateGet(app: Option[String], tokenType: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
+    ExplicitTools.ifLoggedIn(app, tokenType) { user =>
       users.getUserProfile(user.id).map {
         case Some((user, address)) =>
           (user.firstName, user.lastName, user.phoneNumber.getOrElse(""),
@@ -50,23 +50,23 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents,
             address.map(_.city).orNull,
             address.map(_.country).orNull
           )
-      }.flatMap(tuple => displayForm(registerForm.fill(tuple), app).map(f => Ok(f)))
+      }.flatMap(tuple => displayForm(registerForm.fill(tuple), app, tokenType).map(f => Ok(f)))
     }
   }
 
-  def updatePost(app: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedIn(app) { user =>
+  def updatePost(app: Option[String], tokenType: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
+    ExplicitTools.ifLoggedIn(app, tokenType) { user =>
       registerForm.bindFromRequest().fold(withErrors => {
         println(withErrors.errors)
-        displayForm(withErrors, app).map(f => BadRequest(f))
+        displayForm(withErrors, app, tokenType).map(f => BadRequest(f))
       }, data => {
         val (firstName, lastName, phone, address, addressComplement, postCode, city, country) = data
 
         val addr = Address(user.id, address, addressComplement, postCode, city, country)
 
         users.update(user.id, firstName, lastName, phone, addr).flatMap(succ =>
-          if (succ) ExplicitTools.produceRedirectUrl(app, user.id).map(url => Redirect(url))
-          else displayForm(registerForm.withGlobalError("Erreur inconnue de base de données"), app).map(f => BadRequest(f))
+          if (succ) ExplicitTools.produceRedirectUrl(app, tokenType, user.id).map(url => Redirect(url))
+          else displayForm(registerForm.withGlobalError("Erreur inconnue de base de données"), app, tokenType).map(f => BadRequest(f))
         )
       })
     }

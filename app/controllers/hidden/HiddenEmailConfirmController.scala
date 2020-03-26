@@ -14,6 +14,7 @@ import scala.concurrent.ExecutionContext
 /**
   * @author Louis Vialar
   */
+@deprecated("the hidden flow is deprecated, only the explicit one should be supported")
 class HiddenEmailConfirmController @Inject()(
                                               cc: ControllerComponents,
                                               users: UsersModel,

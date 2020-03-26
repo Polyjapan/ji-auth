@@ -1,4 +1,4 @@
-@(userForm: Form[_], app: Option[String], appName: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
+@(userForm: Form[_], app: Option[String], appName: Option[String], tokenType: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
 
 
     @import helper._
@@ -12,7 +12,7 @@
 
     <div class="text-center content">
 
-    @form(action = controllers.explicit.routes.LoginController.loginPost(app)) {
+    @form(action = controllers.explicit.routes.LoginController.loginPost(app, tokenType)) {
         @CSRF.formField
 
         <img class="mb-4" src="@routes.Assets.at("img/logo.png")" alt="" width="240" height="200">
@@ -39,12 +39,12 @@
 
         <hr>
         <p class="mb-3 text-muted">
-            <a href="@controllers.explicit.routes.PasswordResetController.passwordResetGet(app)">Mot de passe oublié</a>
+            <a href="@controllers.explicit.routes.PasswordResetController.passwordResetGet(app, tokenType)">Mot de passe oublié</a>
         </p>
         <hr>
         <p class="mb-3 text-muted">
             Vos identifiants Japan Impact vous permettent également de vous connecter sur la boutique, et vice versa. Pas encore de compte ?
-            <a href="@controllers.explicit.routes.RegisterController.registerGet(app)">Créer un compte</a>
+            <a href="@controllers.explicit.routes.RegisterController.registerGet(app, tokenType)">Créer un compte</a>
 
         </p>
     }

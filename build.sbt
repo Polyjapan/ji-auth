@@ -25,7 +25,7 @@ lazy val root = (project in file("."))
 
       "com.typesafe.play" %% "play-json" % "2.8.1",
       "com.typesafe.play" %% "play-json-joda" % "2.8.1",
-      "ch.japanimpact" %% "jiauthframework" % "0.2-SNAPSHOT",
+      "ch.japanimpact" %% "jiauthframework" % "0.3-SNAPSHOT",
       "com.typesafe.play" %% "play-mailer" % "8.0.0",
       "com.typesafe.play" %% "play-mailer-guice" % "8.0.0",
       "com.pauldijou" %% "jwt-play-json" % "4.2.0"
