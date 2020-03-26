@@ -18,7 +18,6 @@ lazy val root = (project in file("."))
       "mysql" % "mysql-connector-java" % "5.1.34",
       "org.mariadb.jdbc" % "mariadb-java-client" % "1.1.7",
       "org.mindrot" % "jbcrypt" % "0.3m",
-      "com.pauldijou" %% "jwt-play" % "4.2.0",
 
       // evolutions,
       // jdbc,
