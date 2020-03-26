@@ -28,6 +28,8 @@ lazy val root = (project in file("."))
       "ch.japanimpact" %% "jiauthframework" % "0.2-SNAPSHOT",
       "com.typesafe.play" %% "play-mailer" % "8.0.0",
       "com.typesafe.play" %% "play-mailer-guice" % "8.0.0",
+      "com.pauldijou" %% "jwt-play-json" % "4.2.0"
+
     ),
 
     resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",

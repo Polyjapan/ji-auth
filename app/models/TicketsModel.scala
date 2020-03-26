@@ -4,7 +4,7 @@ import java.security.SecureRandom
 import java.sql.Timestamp
 
 import ch.japanimpact.auth.api.TicketType
-import data.{RegisteredUser, Ticket, TicketRowParser, ticketTypes, RegisteredUserRowParser}
+import data.{RegisteredUser, RegisteredUserRowParser, Ticket, TicketRowParser, ticketTypes}
 import javax.inject.Inject
 import utils.RandomUtils
 import anorm._
@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author zyuiop
  */
-class TicketsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContext) {
+class TicketsModel @Inject()(dbApi: play.api.db.DBApi, sessions: SessionsModel)(implicit ec: ExecutionContext) {
   private val db = dbApi database "default"
 
 

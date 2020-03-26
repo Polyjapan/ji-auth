@@ -1,6 +1,6 @@
 package controllers.api
 
-import java.util.Date
+import java.util.{Date, UUID}
 
 import ch.japanimpact.auth.api
 import ch.japanimpact.auth.api.AppTicketResponse
@@ -10,7 +10,9 @@ import models.{AppsModel, GroupsModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
+import services.JWTService
 import utils.Implicits._
+import utils.RandomUtils
 
 import scala.concurrent.ExecutionContext
 

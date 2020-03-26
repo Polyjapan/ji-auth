@@ -1,5 +1,5 @@
 import java.sql.PreparedStatement
-import java.util.Date
+import java.util.{Base64, Date}
 
 import anorm.Macro.ColumnNaming
 import anorm.{Column, Macro, RowParser, ToParameterList, ToStatement}
@@ -10,6 +10,10 @@ import ch.japanimpact.auth.api.{TicketType, UserAddress, UserDetails}
  * @author Louis Vialar
  */
 package object data {
+
+  case class SessionID(bytes: Array[Byte]) {
+    override def toString: String = Base64.getEncoder.encodeToString(bytes).filterNot(_ == "=")
+  }
 
   /**
    * Defines a user registered against the server. (In the future, might support sign on via Google/Twitter/Tequila...)
