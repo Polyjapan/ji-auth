@@ -13,15 +13,13 @@ lazy val root = (project in file("."))
     debianPackageDependencies := Seq("java8-runtime-headless"),
 
     libraryDependencies ++= Seq(ehcache, ws, specs2 % Test, guice,
-      "com.typesafe.play" %% "play-slick" % "5.0.0",
-      "com.typesafe.play" %% "play-slick-evolutions" % "5.0.0",
       "mysql" % "mysql-connector-java" % "5.1.34",
       "org.mariadb.jdbc" % "mariadb-java-client" % "1.1.7",
       "org.mindrot" % "jbcrypt" % "0.3m",
 
-      // evolutions,
-      // jdbc,
-      // "org.playframework.anorm" %% "anorm" % "2.6.4",
+      evolutions,
+      jdbc,
+      "org.playframework.anorm" %% "anorm" % "2.6.4",
       "org.bouncycastle" % "bcprov-jdk15on" % "1.64",
       "de.mkammerer" % "argon2-jvm" % "2.6",
 
@@ -32,11 +30,8 @@ lazy val root = (project in file("."))
       "com.typesafe.play" %% "play-mailer-guice" % "8.0.0",
     ),
 
-    //libraryDependencies +=
-
     resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
     resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/",
-    //resolvers += Resolver.mavenCentral,
     scalacOptions ++= Seq(
       "-feature",
       "-deprecation"

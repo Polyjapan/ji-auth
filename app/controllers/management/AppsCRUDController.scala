@@ -58,7 +58,7 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
             val (name, redirect, email, captcha) = data
 
             apps
-              .updateApp(app.copy(name = name, redirectUrl = redirect, emailRedirectUrl = email, recaptchaPrivate = captcha))
+              .updateApp(app.copy(appName = name, redirectUrl = redirect, emailCallbackUrl = email, recaptchaPrivateKey = captcha))
               .map(
                 _ => Redirect(routes.AppsCRUDController.getApp(id)))
           })
@@ -71,7 +71,7 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
     ManagementTools.ifLoggedIn { implicit session =>
       apps.getAppByIdAndOwner(id, session.id).flatMap {
         case Some(app) =>
-          Ok(views.html.management.apps.createUpdate(session, form.fill((app.name, app.redirectUrl, app.emailRedirectUrl, app.recaptchaPrivate)), Some(id)))
+          Ok(views.html.management.apps.createUpdate(session, form.fill((app.appName, app.redirectUrl, app.emailCallbackUrl, app.recaptchaPrivateKey)), Some(id)))
         case None => NotFound(ManagementTools.error("Application introuvable", "L'application recherchée n'existe pas, ou ne vous est pas accessible."))
       }
     }

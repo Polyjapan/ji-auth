@@ -1,27 +1,27 @@
 @import data.{UserSession, _}
 @(user: UserSession, app: App)(implicit request: RequestHeader, messagesProvider: MessagesProvider)
 
-@views.html.management.managementTemplate("Application " + app.name, user) {
+@views.html.management.managementTemplate("Application " + app.appName, user) {
     <div class="row">
         <div class="col-lg-12">
 
-            <h2>Gestion de l'application @app.name</h2>
+            <h2>Gestion de l'application @app.appName</h2>
 
             <h3>Propriétés</h3>
 
             <ul>
-                <li>Nom : <code>@app.name</code></li>
+                <li>Nom : <code>@app.appName</code></li>
                 <li>Client-Id : <code>@app.clientId</code></li>
                 <li>Client-Secret : <code>@app.clientSecret</code></li>
                 <li>URL de callback : <code>@app.redirectUrl</code></li>
-                <li>URL de callback mail : <code>@app.emailRedirectUrl</code></li>
-                <li>Clé privée ReCaptcha : <code>@app.recaptchaPrivate</code></li>
+                <li>URL de callback mail : <code>@app.emailCallbackUrl</code></li>
+                <li>Clé privée ReCaptcha : <code>@app.recaptchaPrivateKey</code></li>
             </ul>
 
 
             <h3>Modification</h3>
 
-            <a href="@controllers.management.routes.AppsCRUDController.updateApp(app.id.get)">Modifier l'application</a>
+            <a href="@controllers.management.routes.AppsCRUDController.updateApp(app.appId.get)">Modifier l'application</a>
 
         </div>
     </div>

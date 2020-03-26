@@ -45,7 +45,7 @@ class HiddenEmailConfirmController @Inject()(
         case Some(app) =>
           users.confirmEmail(body.email, body.code).flatMap {
             case Some(user) =>
-              tickets createTicketForUser(user.id.get, app.id.get, TicketType.EmailConfirmTicket) map
+              tickets createTicketForUser(user.id.get, app.appId.get, TicketType.EmailConfirmTicket) map
                 LoginSuccess.apply map toOkResult[LoginSuccess]
             case None => !InvalidConfirmCode
           }

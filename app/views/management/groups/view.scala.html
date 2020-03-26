@@ -19,18 +19,18 @@
                 <li>Gestionnaire : <code>@owner.email</code></li>
             </ul>
 
-            @if(perms.canRead) {
+            @if(perms.canReadMembers) {
                 <h3>Membres</h3>
 
                 <ul>
                     <li><i>email: (read, write, admin)</i></li>
                     @for(member <- members) {
-                        <li>#@member._2.id @member._2.email: (@member._1.canRead, @member._1.canManage, @member._1.isAdmin)</li>
+                        <li>#@member._2.id @member._2.email: (@member._1.canReadMembers, @member._1.canManageMembers, @member._1.isAdmin)</li>
                     }
                 </ul>
             }
 
-            @if(perms.canManage) {
+            @if(perms.canManageMembers) {
                 <h3>Nouveau membre</h3>
 
                 <p>Flemme. #todo</p>

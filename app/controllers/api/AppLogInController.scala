@@ -21,7 +21,7 @@ class AppLogInController @Inject()(cc: ControllerComponents,
     ApiUtils.withApp { selfApp =>
       apps getApp clientId flatMap {
         case Some(otherApp) =>
-          tickets.createTicketForUser(selfApp.createdBy, otherApp.id.get, TicketType.AppTicket).map(LoginSuccess.apply).map(toOkResult[LoginSuccess])
+          tickets.createTicketForUser(selfApp.appCreatedBy, otherApp.appId.get, TicketType.AppTicket).map(LoginSuccess.apply).map(toOkResult[LoginSuccess])
         case None =>
           !UnknownApp
       }

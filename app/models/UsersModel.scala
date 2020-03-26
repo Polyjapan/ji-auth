@@ -3,134 +3,137 @@ package models
 import java.net.URLEncoder
 import java.sql.Timestamp
 
-import ch.japanimpact.auth.api.constants.GeneralErrorCodes.InvalidCaptcha
+import anorm._
 import com.google.common.base.Preconditions
-import data.{Address, RegisteredUser}
+import data.{Address, AddressRowParser, RegisteredUser, RegisteredUserRowParser}
 import javax.inject.Inject
 import play.api.Configuration
-import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.i18n.MessagesProvider
 import play.api.libs.mailer.{Email, MailerClient}
 import play.api.mvc.MessagesRequestHeader
 import services.{HashService, ReCaptchaService}
-import slick.jdbc.MySQLProfile
 import utils.Implicits._
 import utils.RandomUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * @author zyuiop
-  */
-class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvider, mailer: MailerClient, reCaptcha: ReCaptchaService, hashes: HashService)(implicit ec: ExecutionContext, config: Configuration)
-  extends HasDatabaseConfigProvider[MySQLProfile] {
-
-
-  import profile.api._
+ * @author zyuiop
+ */
+class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCaptcha: ReCaptchaService, hashes: HashService)(implicit ec: ExecutionContext, config: Configuration) {
+  private val db = dbApi database "default"
 
   /**
-    * Gets a user in the database by its email
-    *
-    * @param email the email of the user to get
-    * @return a future optional user (Some(user) if found, None if not)
-    */
-  def getUser(email: String): Future[Option[RegisteredUser]] =
-    db.run(registeredUsers.filter(_.email === email).result.headOption)
+   * Gets a user in the database by its email
+   *
+   * @param email the email of the user to get
+   * @return a future optional user (Some(user) if found, None if not)
+   */
+  def getUser(email: String): Future[Option[RegisteredUser]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT * FROM users WHERE email = $email".as(RegisteredUserRowParser.singleOpt)
+  })
 
-  def getUserProfile(id: Int): Future[Option[(RegisteredUser, Option[Address])]] =
-    db.run(registeredUsers.filter(_.id === id).joinLeft(addresses).on(_.id === _.id).result.headOption)
+  def getUserProfile(id: Int): Future[Option[(RegisteredUser, Option[Address])]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT * FROM users LEFT JOIN users_addresses ua on users.id = ua.user_id WHERE id = $id"
+      .as((RegisteredUserRowParser ~ AddressRowParser.?)
+        .map { case a ~ b => (a, b) }
+        .singleOpt)
+  })
 
-  def getUserProfiles(ids: Set[Int]): Future[Map[Int, (RegisteredUser, Option[Address])]] =
-    db.run(registeredUsers
-      .filter(_.id.inSet(ids))
-      .joinLeft(addresses)
-      .on(_.id === _.id).result
-    ).map(_.groupBy(_._1.id.get).view.mapValues(_.head).toMap)
-
-  /**
-    * Gets a user in the database by its id
-    *
-    * @param id the id of the user to get
-    * @return a future optional user (Some(user) if found, None if not)
-    */
-  def getUserById(id: Int): Future[Option[RegisteredUser]] =
-    db.run(registeredUsers.filter(_.id === id).result.headOption)
+  def getUserProfiles(ids: Set[Int]): Future[Map[Int, (RegisteredUser, Option[Address])]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT * FROM users LEFT JOIN users_addresses ua on users.id = ua.user_id WHERE id IN ($ids)"
+      .as((RegisteredUserRowParser ~ AddressRowParser.?)
+        .map { case a ~ b => (a, b) }
+        .*)
+      .groupMapReduce(_._1.id.get)(pair => pair)((pair, _) => pair) // we know elements are unique
+  })
 
   /**
-    * Create a user
-    *
-    * @param user the user to create
-    * @return a future hodling the id of the inserted user
-    */
-  def createUser(user: RegisteredUser, address: Option[Address]): Future[Int] =
-    db.run((registeredUsers returning registeredUsers.map(_.id)) += user)
-      .flatMap(id =>
-        if (address.nonEmpty) db.run(addresses += address.get.copy(userId = id)).map(_ => id)
-        else Future.successful(id)
-      )
+   * Gets a user in the database by its id
+   *
+   * @param id the id of the user to get
+   * @return a future optional user (Some(user) if found, None if not)
+   */
+  def getUserById(id: Int): Future[Option[RegisteredUser]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT * FROM users WHERE id = $id".as(RegisteredUserRowParser.singleOpt)
+  })
 
-  def setAddressAndPhone(addr: Address, phone: String): Future[Boolean] = {
-    db.run((addresses += addr) andThen (registeredUsers.filter(_.id === addr.userId).map(_.phoneNumber).update(Some(phone)))).flatMap(_ > 0)
-  }
+  /**
+   * Create a user
+   *
+   * @param user the user to create
+   * @return a future hodling the id of the inserted user
+   */
+  def createUser(user: RegisteredUser, address: Option[Address]): Future[Int] = Future(db.withConnection( { implicit c =>
+    val uid = SqlUtils.insertOne("users", user)
+    if (address.nonEmpty) SqlUtils.insertOne("users_addresses", address.get.copy(userId = uid))
+
+    uid
+  }))
+
+  def setAddressAndPhone(addr: Address, phone: String): Future[Boolean] = Future(db.withConnection { implicit c =>
+    SqlUtils.insertOne("users_addresses", addr, upsert = true) > 0 &&
+      SQL"UPDATE users SET phone_number = $phone WHERE id = ${addr.userId}".executeUpdate() > 0
+  })
 
 
   /**
-    * Updates a user whose id is set
-    *
-    * @param user the user to update/insert
-    * @return the number of updated rows in a future
-    */
+   * Updates a user whose id is set
+   *
+   * @param user the user to update/insert
+   * @return the number of updated rows in a future
+   */
   def updateUser(user: RegisteredUser): Future[Int] = {
     Preconditions.checkArgument(user.id.isDefined)
-    db.run(registeredUsers.filter(_.id === user.id.get).update(user))
+    Future(db.withConnection { implicit c => SqlUtils.replaceOne("users", user, "id") })
   }
 
-  def update(id: Int, firstName: String, lastName: String, phone: String, addr: Address): Future[Boolean] = {
-    db.run(
-      registeredUsers.filter(_.id === id).map(u => (u.firstName, u.lastName, u.phoneNumber))
-        .update((firstName, lastName, Some(phone))) >> addresses.insertOrUpdate(addr)
-    ).flatMap(_ > 0)
-  }
+  def update(id: Int, firstName: String, lastName: String, phone: String, addr: Address): Future[Boolean] = Future(
+    db.withConnection { implicit c =>
+      SQL"UPDATE users SET first_name = $firstName, last_name = $lastName, phone_number = $phone WHERE id = $id".executeUpdate() > 0 &&
+        SqlUtils.insertOne("users_addresses", addr, upsert = true) > 0
+    }
+  )
 
   def searchUsers(searchString: String): Future[Seq[RegisteredUser]] = {
     if (searchString.length < 3) Future.successful(Seq.empty)
-    else db.run(
-      registeredUsers.filter(u =>
-        (u.email like s"%$searchString%") || (u.firstName like s"%$searchString%") || (u.lastName like s"%$searchString%")
-      ).take(10).result
-    )
+    else
+      Future(db.withConnection { implicit c =>
+        SQL"""SELECT * FROM users WHERE email LIKE '$searchString%' OR CONCAT(first_name, ' ', last_name) LIKE '%$searchString%' LIMIT 10"""
+          .as(RegisteredUserRowParser.*)
+      })
   }
 
   sealed trait RegisterResult
 
   /**
-    * The captcha was not correct
-    */
+   * The captcha was not correct
+   */
   case object BadCaptcha extends RegisterResult
 
   /**
-    * There was already an existing user with this id
-    *
-    * @param id the id of the existing user
-    */
+   * There was already an existing user with this id
+   *
+   * @param id the id of the existing user
+   */
   case class AlreadyRegistered(id: Int) extends RegisterResult
 
   /**
-    * The user was created with the following id
-    *
-    * @param id the id of the created user
-    */
+   * The user was created with the following id
+   *
+   * @param id the id of the created user
+   */
   case class AccountCreated(id: Int) extends RegisterResult
 
   /**
-    * Register a new user to the system
-    *
-    * @param captcha             the captcha value entered
-    * @param captchaPrivateKey   the private key for recaptcha
-    * @param emailConfirmBuilder a function that produces the email confirm url: (email, code) => url
-    * @param rq                  the request
-    * @return a future with a [[RegisterResult]]
-    */
+   * Register a new user to the system
+   *
+   * @param captcha             the captcha value entered
+   * @param captchaPrivateKey   the private key for recaptcha
+   * @param emailConfirmBuilder a function that produces the email confirm url: (email, code) => url
+   * @param rq                  the request
+   * @return a future with a [[RegisterResult]]
+   */
   def register(captcha: String,
                captchaPrivateKey: Option[String],
                user: RegisteredUser,
@@ -213,12 +216,12 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
   }
 
   /**
-    * Confirm the email of a user
-    *
-    * @param email the email to confirm
-    * @param code  the confirmation code
-    * @return A future, holding the confirmed user (if exists) or None if the email+code combination doesn't exist
-    */
+   * Confirm the email of a user
+   *
+   * @param email the email to confirm
+   * @param code  the confirmation code
+   * @return A future, holding the confirmed user (if exists) or None if the email+code combination doesn't exist
+   */
   def confirmEmail(email: String, code: String): Future[Option[RegisteredUser]] = {
     println("Confirming " + email + " with code " + code)
 
@@ -238,20 +241,20 @@ class UsersModel @Inject()(protected val dbConfigProvider: DatabaseConfigProvide
   sealed trait LoginResult
 
   /**
-    * The username or password is incorrect
-    */
+   * The username or password is incorrect
+   */
   case object BadLogin extends LoginResult
 
   /**
-    * The email of the user is not confirmed
-    */
+   * The email of the user is not confirmed
+   */
   case object EmailNotConfirmed extends LoginResult
 
   /**
-    * The login was successful.
-    *
-    * @param user the corresponding user
-    */
+   * The login was successful.
+   *
+   * @param user the corresponding user
+   */
   case class LoginSuccess(user: RegisteredUser) extends LoginResult
 
   def login(email: String, password: String): Future[LoginResult] = {

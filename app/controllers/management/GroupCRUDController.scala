@@ -95,7 +95,7 @@ class GroupCRUDController @Inject()(cc: MessagesControllerComponents,
       groups.getGroupIfMember(name, session.id).flatMap {
         case Some((group, membership, owner)) =>
           val members: Future[Seq[(GroupMember, RegisteredUser)]] =
-            if (membership.canRead) {
+            if (membership.canReadMembers) {
               groups.getGroupMembers(group.id.get)
             } else Future(Seq())
 

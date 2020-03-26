@@ -73,15 +73,15 @@ class HiddenRegisterController @Inject()(
       } else apps getApp body.clientId flatMap {
         case Some(app) =>
           users.register(
-            body.captcha, app.recaptchaPrivate, body.toUser, body.address.map(_.toAddress),
-            (email, code) => app.emailRedirectUrl + "?email=" + email + "&action=confirmEmail&confirmCode=" + code
+            body.captcha, app.recaptchaPrivateKey, body.toUser, body.address.map(_.toAddress),
+            (email, code) => app.emailCallbackUrl + "?email=" + email + "&action=confirmEmail&confirmCode=" + code
           ).map {
             case users.BadCaptcha => !InvalidCaptcha
             case users.AlreadyRegistered(id) => (id, TicketType.DoubleRegisterTicket)
             case users.AccountCreated(id) => (id, TicketType.RegisterTicket)
           }.flatMap {
             case (id: Int, tt: TicketType) =>
-              tickets.createTicketForUser(id, app.id.get, tt) map LoginSuccess.apply map toOkResult[LoginSuccess]
+              tickets.createTicketForUser(id, app.appId.get, tt) map LoginSuccess.apply map toOkResult[LoginSuccess]
             case f: Future[Result] => f
             case f: Result => Future(f)
           }

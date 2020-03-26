@@ -24,7 +24,7 @@ class AppGroupsController @Inject()(cc: ControllerComponents,
 
   def getGroupMembers(groupName: String) = Action.async { implicit rq =>
     ApiUtils.withApp { app =>
-      groups.getGroupMembership(groupName, app.createdBy).flatMap {
+      groups.getGroupMembership(groupName, app.appCreatedBy).flatMap {
         case Some(GroupMember(groupId, _, _, canRead, _)) if canRead =>
           groups.getGroupMembers(groupId)
             .map(res => {
@@ -52,7 +52,7 @@ class AppGroupsController @Inject()(cc: ControllerComponents,
         val userId = interesting.get
 
         ApiUtils.withApp { app =>
-          groups.getGroupMembership(groupName, app.createdBy).flatMap {
+          groups.getGroupMembership(groupName, app.appCreatedBy).flatMap {
             case Some(GroupMember(groupId, _, canManage, _, _)) if canManage =>
               users.getUserById(userId).map {
                 case Some(_) =>
@@ -74,7 +74,7 @@ class AppGroupsController @Inject()(cc: ControllerComponents,
 
   def removeMemberFromGroup(groupName: String, member: Int): Action[AnyContent] = Action.async { implicit rq =>
     ApiUtils.withApp { app =>
-      groups.getGroupIfMember(groupName, app.createdBy).flatMap {
+      groups.getGroupIfMember(groupName, app.appCreatedBy).flatMap {
         case Some((_, GroupMember(groupId, _, canManage, _, admin), owner)) if canManage && member != owner.id.get =>
           groups.getGroupMembership(groupName, member).map {
             case Some(GroupMember(_, _, _, _, memberAdmin)) =>

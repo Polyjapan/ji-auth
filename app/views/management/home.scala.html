@@ -53,7 +53,7 @@
                     </div>
                     <ul class="list-group list-group-flush">
                         @for(app <- apps) {
-                            <li class="list-group-item"><a href="@controllers.management.routes.AppsCRUDController.getApp(app.id.get)">@app.name</a></li>
+                            <li class="list-group-item"><a href="@controllers.management.routes.AppsCRUDController.getApp(app.appId.get)">@app.appName</a></li>
                         }
 
                         @if(user.canCreateApp) {

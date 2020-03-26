@@ -51,7 +51,7 @@ class HiddenForgotPasswordController @Inject()(
             else {
               users
                 .resetPassword(body.email, (email, code) =>
-                  app.emailRedirectUrl + "?email=" + email + "&action=passwordReset&resetCode=" + code)
+                  app.emailCallbackUrl + "?email=" + email + "&action=passwordReset&resetCode=" + code)
                 .map(_ => Ok)
             }
           })

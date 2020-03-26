@@ -65,7 +65,7 @@ class HiddenPasswordResetController @Inject()(
 
               // Store the updated user and generate a ticket to return
               users updateUser updated flatMap { _ =>
-                tickets.createTicketForUser(id, app.id.get, TicketType.PasswordResetTicket) map LoginSuccess.apply map toOkResult[LoginSuccess]
+                tickets.createTicketForUser(id, app.appId.get, TicketType.PasswordResetTicket) map LoginSuccess.apply map toOkResult[LoginSuccess]
               }
             case _ => !InvalidResetCode
           }

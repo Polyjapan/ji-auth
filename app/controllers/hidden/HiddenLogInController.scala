@@ -56,7 +56,7 @@ class HiddenLogInController @Inject()(
             case users.BadLogin => !UserOrPasswordInvalid
             case users.EmailNotConfirmed => !EmailNotConfirmed
             case users.LoginSuccess(user) =>
-              tickets createTicketForUser(user.id.get, app.id.get, TicketType.LoginTicket) map LoginSuccess.apply map toOkResult[LoginSuccess]
+              tickets createTicketForUser(user.id.get, app.appId.get, TicketType.LoginTicket) map LoginSuccess.apply map toOkResult[LoginSuccess]
           }
         case None => !UnknownApp // No body or body parse fail ==> invalid input
       }
