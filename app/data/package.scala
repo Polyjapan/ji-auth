@@ -12,12 +12,12 @@ import ch.japanimpact.auth.api.{TicketType, UserAddress, UserDetails}
 package object data {
 
   case class SessionID(bytes: Array[Byte]) {
-    override def toString: String = Base64.getEncoder.encodeToString(bytes).filterNot(_ == "=")
+    override def toString: String = Base64.getUrlEncoder.encodeToString(bytes)
   }
 
   object SessionID {
     def apply(str: String): SessionID = {
-      val btes = str.getBytes
+      val btes = Base64.getUrlDecoder.decode(str)
 
       if (btes.length != 16) throw new IllegalArgumentException
       else SessionID(btes)

@@ -23,6 +23,7 @@ POST           /hidden/forgot_password                  controllers.hidden.Hidde
 POST           /hidden/password_reset                   controllers.hidden.HiddenPasswordResetController.postPasswordReset
 
 GET            /api/ticket/:ticket                      controllers.api.AppTicketController.getAppTicket(ticket: String)
+GET            /api/refresh/:refreshToken               controllers.api.TokenRefreshController.refreshToken(refreshToken: String)
 GET            /api/app_login/:targetClientId           controllers.api.AppLogInController.login(targetClientId: String)
 +nocsrf
 POST           /api/groups/:name/members                controllers.api.AppGroupsController.addMemberToGroup(name: String)

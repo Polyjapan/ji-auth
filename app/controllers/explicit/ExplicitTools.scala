@@ -32,7 +32,7 @@ class ExplicitTools @Inject()(apps: AppsModel, tickets: TicketsModel, groups: Gr
                     val token = jwt.issueToken(userId, groups.map(_.name).toSet)
                     val refresh = sid.toString
 
-                    redirectUrl + "?access_token=" + token + "&refresh_token=" + refresh + "&duration=" + (jwt.ExpirationTimeMinutes * 60)
+                    redirectUrl + "?accessToken=" + token + "&refreshToken=" + refresh + "&duration=" + (jwt.ExpirationTimeMinutes * 60)
                 }
           }
         case _ => "/"
