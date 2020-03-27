@@ -24,7 +24,7 @@ class JWTService @Inject()(conf: Configuration) {
     val claim = JwtClaim(Json.obj(
       "grp" -> groups
     ).toString())
-      .to(userId.toString)
+      .about(userId.toString)
       .issuedNow
       .expiresIn(ExpirationTimeMinutes * 60)
 
