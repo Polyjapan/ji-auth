@@ -2,52 +2,61 @@
 
 
     @import helper._
-    @import views.forms.LoginFieldTemplate._
+@import views.forms.FormFieldTemplate._
 
 @style = {
-    <link rel="stylesheet" href="@routes.Assets.at("css/signin.css")" crossorigin="anonymous">
+    <link rel="stylesheet" href="@routes.Assets.at("css/register.css")" crossorigin="anonymous">
 }
 
 @main("Connexion", style) {
 
-    <div class="text-center content">
-
-    @form(action = controllers.explicit.routes.LoginController.loginPost(app, tokenType)) {
-        @CSRF.formField
-
-        <img class="mb-4" src="@routes.Assets.at("img/logo.png")" alt="" width="240" height="200">
-
-        <h1 class="h3 mb-3 font-weight-normal">Connexion</h1>
+    <div class="container">
+        <div class="py-5 text-center">
+            <img class="d-block mx-auto mb-4" src="@routes.Assets.at("img/logo.png")" alt="Logo Japan Impact" width="240" height="200">
+            <h2>Connexion</h2>
+            <p class="lead">Pour poursuivre, connectez vous à votre compte Japan Impact.</p>
 
 
-        @if(appName.nonEmpty) {
-            <p>Connectez vous pour accéder à : @{
-                appName.get
-            }</p>
-        }
+            <a class="mb-3" href="@controllers.explicit.routes.RegisterController.registerGet(app, tokenType)">
+                Je n'ai pas encore de compte</a>
 
-        @if(userForm.hasGlobalErrors) {
-            @error(userForm.globalErrors.map(_.format))
-        }
-
-        @inputText(userForm("email"), 'type -> "email", '_label -> "Email", 'class -> "form-control", 'placeholder -> "Email", 'required -> true, 'autofocus -> true)
-        @inputPassword(userForm("password"), '_label -> "Email", 'class -> "form-control", 'placeholder -> "Mot de passe", 'required -> true)
+            <hr>
+        </div>
 
 
 
-        <button class="btn btn-lg btn-primary btn-block" type="submit">Connexion</button>
+        <div class="row justify-content-md-center">
+            <div class="col-md-8">
 
-        <hr>
-        <p class="mb-3 text-muted">
-            <a href="@controllers.explicit.routes.PasswordResetController.passwordResetGet(app, tokenType)">Mot de passe oublié</a>
-        </p>
-        <hr>
-        <p class="mb-3 text-muted">
-            Vos identifiants Japan Impact vous permettent également de vous connecter sur la boutique, et vice versa. Pas encore de compte ?
-            <a href="@controllers.explicit.routes.RegisterController.registerGet(app, tokenType)">Créer un compte</a>
+            @form(action = controllers.explicit.routes.LoginController.loginPost(app, tokenType)) {
+                @CSRF.formField
 
-        </p>
-    }
+                @if(userForm.hasGlobalErrors) {
+                    @error(userForm.globalErrors.map(_.format))
+                }
+
+                @inputText(userForm("email"), 'type -> "email", '_label -> "Email", 'class -> "form-control", 'placeholder -> "Email", 'required -> true, 'autofocus -> true)
+                @inputPassword(userForm("password"), '_label -> "Mot de passe", 'class -> "form-control", 'placeholder -> "Mot de passe", 'required -> true)
+
+
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Connexion</button>
+
+                <br>
+                <p class="mb-3 text-muted">
+                    Vous ne vous souvenez plus de votre mot de passe ?
+                    <a href="@controllers.explicit.routes.PasswordResetController.passwordResetGet(app, tokenType)">
+                        Mot de passe oublié</a>
+                </p>
+
+            }
+
+
+                <hr>
+
+                <p class="mb-3 text-muted">Pas encore de compte ? Créez en un en quelques instants !</p>
+                <a href="@controllers.explicit.routes.RegisterController.registerGet(app, tokenType)" class="btn btn-secondary btn-lg btn-block" >Créer un compte</a>
+            </div>
+        </div>
 
     </div>
 }

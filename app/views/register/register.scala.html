@@ -17,7 +17,7 @@
             <h2>Inscription</h2>
             <p class="lead">Créez votre compte Japan Impact en quelques instants.</p>
 
-            <a class="mb-3 text-muted" href="@controllers.explicit.routes.LoginController.loginGet(app, tokenType)">
+            <a class="mb-3" href="@controllers.explicit.routes.LoginController.loginGet(app, tokenType)">
                 J'ai déjà un compte</a>
             <hr>
 
@@ -60,13 +60,20 @@
                     </div>
                 </div>
 
-                @inputText(userForm("phone"), 'type -> "text", '_label -> "Numéro de téléphone", 'class -> "form-control", 'placeholder -> "+41 70 123 45 67", 'autofocus -> true)
+                @inputText(userForm("phone"), 'type -> "text", '_label -> "Numéro de téléphone (facultatif)", 'class -> "form-control", 'placeholder -> "+41 70 123 45 67", 'autofocus -> true)
 
 
                 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
                 <div class="g-recaptcha" style="align-self: center;" data-sitekey="@captcha"></div>
 
                 <button class="btn btn-lg btn-primary btn-block" type="submit">Inscription</button>
+
+                <br>
+                <p class="mb-3 text-muted">
+                    En vous inscrivant, vous acceptez que PolyJapan (AGEPoly) conserve les informations que vous lui transmettez.
+                    Ces informations ne seront pas transmises à des tiers ni utilisées à des fins publicitaires.
+                        Nous ne collectond pas d'autres données personnelles à votre sujet.
+                </p>
 
 
             }
