@@ -17,23 +17,121 @@ You can provide a specific configuration file using the `-Dconfig.file=path` swi
 
 ## Protocol
 
-Because the CAS will be used on both public-facing SPA and internal standard/SP applications, we need to support two authentication modes.
+The login process is quite simple: 
+1. Redirect the user to a special URL
+2. The user logs in
+3. The user is redirected back to your app, with an `accessToken` and a `refreshToken`
 
-An accepted drawback of this system will be that a user logging in from the "public" mode will not be able to access the "private" mode without logging in again (and vice versa). 
+Let's now dig into the details!
 
-Note: apps are registered against the JI Auth Server with:
- - `appID`: an internal ID for the app
- - `clientID`: the public identification for the app (sent to clients) (could be the same as `appID`)
- - `clientSecret`: the private identification for the app. Kept by it, sent with some requests but **NEVER** to clients.
- - `emailCallback`: the URL where the user should be redirected when receiving the email confirmation (in public hidden mode)
- - `callback`: the URL where the user should be redirected when successfully logging in
- - `reCaptchaPkey`: the reCaptcha private key
+### 1. Registering the app
+
+To use JI-Auth, you first need to register your app to the service. You need to be an administrator of the service in order to do that.
+When registering the app, you'll need to provide a callback url. This is the URL to which the user will be redirected after logging in.
+
+### 2. Sending the user
+
+After registering the app, you'll get
+ - a public `Client-Id`
+ - a private `Client-Secret`
  
-### Common backend APIs
+To log an user in, redirect him to `https://${API_DOMAIN}/login?app=${Client-Id}&tokenType=token`
+
+Let's see what's in this URL:
+ - `API_DOMAIN`, the server on which this API runs (usually `auth.japan-impact.ch`)
+ - `tokenType=token` if you omit this parameter, it will default to `ticket`, which correspond to the deprecated old ticket protocol.
+ 
+### 3. Checking the token
+
+After logging in, the user will get redirected to:
+`${CALLBACK URL}?access_token=${ACCESS_TOKEN}&refresh_token=${REFRESH_TOKEN}&duration=${EXP_TIME}`
+
+The GET parameters are the following:
+ - `ACCESS_TOKEN`: your main access token. It's a [JWT](https://jwt.io/) that you can paste on https://jwt.io for details. 
+   It contains thw following mandatory fields:
+    - `sub`: (`string`) the user ID (encoded as a string, but it's only digits so you can safely do `.toInt`)
+    - `exp`: (`number`) the expiration timestamp. You **MUST NOT** accept a token if `timestampSeconds() > exp`
+    - `iat`: (`number`) the issue timestamp. You **MUST NOT** accept a token if `timestampSeconds() < iat`
+    - `grp`: (`string[]`) a list of groups the user is a member of
+    
+   Its header specifies an algorithm. **YOU MUST NOT ACCEPT A TOKEN** if its algorithm is not **ECDSA** (`ES256` currently).
+   
+   The token is signed using a public key. **YOU MUST VALIDATE THE TOKEN BEFORE ACCEPTING IT**.
+   Beware, the JOSE standard is a bit buggy and allows users to specify `none` as the signature algorithm. YOU MUST VERIFY THE SIGNATURE ALGO AND ENSURE IT'S ECDSA.
+   
+   The signing key is at https://auth.japan-impact.ch/.id.pub and the certificate at https://auth.japan-impact.ch/public.cer.
+   
+ - `REFRESH_TOKEN`: the token you can use to redeem a new `ACCESS_TOKEN` once it's expired
+ - `EXP_TIME`: the time (in seconds) during which the token is valid. Should be `exp - iat`
+ 
+Voilà! Your user is authenticated. You can use the `ACCESS_TOKEN` against any other `authentified` API that accepts it without any
+additional login step. 
+
+## API authentication
+
+Any API that accepts these tokens proceeds them in the same way.
+
+To access these APIs MUST pass the token in the `Authorization` header, as follows: `Authorization: Bearer ${ACCESS_TOKEN}`.
+
+The API will reply with the following standard error codes:
+ - `401` if the ACCESS_TOKEN is not valid (you may want to refresh it)
+ - `403` if the ACCESS_TOKEN is valid but doesn't allow access to the resource.
+
+As a responsible developer, we recommend that all your APIs directly accept `ACCESS_TOKEN` in the way described before.
+
+## Common API datatypes
+
+- `UserProfile`: the profile of an user
+    - `id`: (`number`) the unique id of that user
+    - `email`: (`string`) the email address of that user
+    - `details`: (`UserDetails`)
+    - `address`: (`optional UserAddress`)
+    
+- `UserDetails`: the details about an user
+    - `firstName`: (`string`)
+    - `lastName`: (`string`)
+    - `phoneNumber`: (`optional string`)
+
+- `UserAddress`: the address of an user. Mostly raw data, not sanitized.
+    - `address`: (`string`)
+    - `addressComplement`: (`optional string`)
+    - `postCode`: (`string`) it's a string because of the variety of formats in the world
+    - `city`: (`city`)
+    - `country`: (`string`)    
+    
+## Public Backend APIs
+
+The following endpoints don't require your `Client-Secret`. They can therefore be called by any client, even a single page app or android app.
+
+### `GET /api/refresh/:refreshToken`
+
+Get a fresh new access token.
+
+- Parameters:
+    - `refreshToken` (string): a valid refresh token
+- Return type: (`json` object)
+    - `accesToken`: (`string`) the new valid access token
+    - `refreshToken`: (`string`) the refresh token (in the future, it may be different from the one you sent. You should always update your refresh token.)
+    - `duration`: (`number`) the duration (in second) during which the `accessToken` is valid
+- Errors:
+    - `401`: the refresh token is not valid
+    
+### `GET /api/user/`
+
+This endpoind requires an `ACCESS_TOKEN`. See the section on "API Authentication" for more details.
+    
+- Return type: `UserProfile`, the user profile of the token bearer
+- Errors:
+    - `401`: the access token is not valid or expired
+
+
+## Common backend APIs
+
+Here are some APIs that your app can use to get more infos about a user or refre
 
 These APIs are intended to be accessed only by the backend of the apps, and not any user facing script.
 
-The authentified endpoints require two headers to work:
+The endpoints are protected and require two headers to work:
 
  - `X-Client-Id` for the app client id
  - `X-Client-Secret` for the app client secret
@@ -45,7 +143,75 @@ If the headers are missing, the endpoints return:
     
 Random idea: an endpoint that takes a list of emails, and returns the ids of the accounts (allows easier migrations)
 
-##### (authentified) `GET /api/ticket/<ticket>`
+#### `GET /api/user/:userId`
+
+Gets the profile of an arbitrary user
+
+- Parameters:
+    - `userId` (number): the id of the user you want to query
+- Return type: `UserProfile`, the user profile you queried
+- Errors
+ - `400 BAD REQUEST` if not, with additional info:
+    - `errorCode`: int, in following set
+        - 101: missing data in the request, or invalid request
+        - 102: the clientID is not found (<=> no such app registered)        
+        - 103: the clientSecret is wrong for this clientID
+        - 201: user not found
+
+#### `GET /api/users/:userIds`
+
+Gets the profile of up to 100 users at once.
+
+Note that not found users are removed silently.
+
+- Parameters:
+    - `userIds` (CSV numbers): the ids of the users you want to query
+- Return type: `Map[UserId (string), UserProfile]`, the found user profiles
+- Errors
+ - `400 BAD REQUEST` if not, with additional info:
+    - `errorCode`: int, in following set
+        - 101: missing data in the request, or invalid request
+        - 102: the clientID is not found (<=> no such app registered)        
+        - 103: the clientSecret is wrong for this clientID
+
+#### `POST /api/groups/<group>/members`
+
+Adds a member to a group. The app owner needs to have a write permission on that group.
+
+Consumes:
+ - `userId`: `int`, the user to add to the group
+ 
+Returns:
+ - `200 OK` if it worked
+ - `400 BAD REQUEST` if not, with additional info:
+    - `errorCode`: int, in following set
+        - 101: missing data in the request, or invalid request
+        - 102: the clientID is not found (<=> no such app registered)        
+        - 103: the clientSecret is wrong for this clientID
+        - 201: the group was not found (doesn't exist, or can't be accessed by this app)
+        - 202: the user was not found 
+        - 203: the app cannot add users to the group (app owner doesn't have write permission) 
+        
+
+#### `DELETE /api/groups/<group>/members/<userId>`
+
+Removes <userId> from the group <group>. The app owner needs write permission on the group. If the user is an admin of the group,
+the app owner needs to be admin of the group as well. This endpoint cannot remove the owner of the group.
+ 
+Returns:
+ - `200 OK` if it worked
+ - `400 BAD REQUEST` if not, with additional info:
+    - `errorCode`: int, in following set
+        - 101: missing data in the request, or invalid request
+        - 102: the clientID is not found (<=> no such app registered)        
+        - 103: the clientSecret is wrong for this clientID
+        - 201: the group was not found (doesn't exist, or can't be accessed by this app)
+        - 202: the user was not found or not a member of the group
+        - 203: the app cannot remove this user (no write permission OR trying to remove an admin without admin permission OR trying to remove owner)
+        
+
+ 
+#### `GET /api/ticket/<ticket>` (deprecated)
 
 Gets the information contained on a ticket and **deletes** it.
 
@@ -66,7 +232,7 @@ Returns:
         - 201: the ticket is invalid, has expired, or is not allowed to be read by this app 
 
 
-##### (authentified) `GET /api/app_login/<other client ID>`
+#### `GET /api/app_login/<other client ID>` (deprecated)
 
 Generates a ticket for the app to use against the app identified by the provided "other client ID".
 
@@ -84,42 +250,22 @@ Returns:
         - 103: the clientSecret is wrong for this clientID
 
 
-##### (authentified) `POST /api/groups/<group>/members`
+## Old Protocols
 
-Adds a member to a group. The app owner needs to have a write permission on that group.
+**This section describes old protocols that are still supported but are deprecated and will be removed in the near future.**
 
-Consumes:
- - `userId`: `int`, the user to add to the group
+Because the CAS will be used on both public-facing SPA and internal standard/SP applications, we need to support two authentication modes.
+
+An accepted drawback of this system will be that a user logging in from the "public" mode will not be able to access the "private" mode without logging in again (and vice versa). 
+
+Note: apps are registered against the JI Auth Server with:
+ - `appID`: an internal ID for the app
+ - `clientID`: the public identification for the app (sent to clients) (could be the same as `appID`)
+ - `clientSecret`: the private identification for the app. Kept by it, sent with some requests but **NEVER** to clients.
+ - `emailCallback`: the URL where the user should be redirected when receiving the email confirmation (in public hidden mode)
+ - `callback`: the URL where the user should be redirected when successfully logging in
+ - `reCaptchaPkey`: the reCaptcha private key
  
-Returns:
- - `200 OK` if it worked
- - `400 BAD REQUEST` if not, with additional info:
-    - `errorCode`: int, in following set
-        - 101: missing data in the request, or invalid request
-        - 102: the clientID is not found (<=> no such app registered)        
-        - 103: the clientSecret is wrong for this clientID
-        - 201: the group was not found (doesn't exist, or can't be accessed by this app)
-        - 202: the user was not found 
-        - 203: the app cannot add users to the group (app owner doesn't have write permission) 
-        
-
-##### (authentified) `DELETE /api/groups/<group>/members/<userId>`
-
-Removes <userId> from the group <group>. The app owner needs write permission on the group. If the user is an admin of the group,
-the app owner needs to be admin of the group as well. This endpoint cannot remove the owner of the group.
- 
-Returns:
- - `200 OK` if it worked
- - `400 BAD REQUEST` if not, with additional info:
-    - `errorCode`: int, in following set
-        - 101: missing data in the request, or invalid request
-        - 102: the clientID is not found (<=> no such app registered)        
-        - 103: the clientSecret is wrong for this clientID
-        - 201: the group was not found (doesn't exist, or can't be accessed by this app)
-        - 202: the user was not found or not a member of the group
-        - 203: the app cannot remove this user (no write permission OR trying to remove an admin without admin permission OR trying to remove owner)
-        
-
 
 ### "public" Hidden Mode (implemented and deployed)
 
