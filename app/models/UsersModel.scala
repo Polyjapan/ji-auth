@@ -90,8 +90,10 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
 
   def update(id: Int, firstName: String, lastName: String, phone: String, addr: Address): Future[Boolean] = Future(
     db.withConnection { implicit c =>
-      SQL"UPDATE users SET first_name = $firstName, last_name = $lastName, phone_number = $phone WHERE id = $id".executeUpdate() > 0 &&
-        SqlUtils.insertOne("users_addresses", addr, upsert = true) > 0
+      val ok = SQL"UPDATE users SET first_name = $firstName, last_name = $lastName, phone_number = $phone WHERE id = $id".executeUpdate() > 0
+      SqlUtils.insertOne("users_addresses", addr, upsert = true)
+
+      ok
     }
   )
 
