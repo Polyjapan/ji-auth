@@ -8,6 +8,7 @@ import data.{RegisteredUser, RegisteredUserRowParser, Ticket, TicketRowParser, t
 import javax.inject.Inject
 import utils.RandomUtils
 import anorm._
+import anorm.SqlParser._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,6 +20,26 @@ class TicketsModel @Inject()(dbApi: play.api.db.DBApi, sessions: SessionsModel)(
 
 
   val rand = new SecureRandom()
+
+  def getCasTicket(token: String, service: Int): Future[Option[RegisteredUser]] = Future(db.withTransaction { implicit c =>
+    SQL"SELECT u.* FROM cas_tickets JOIN users u on cas_tickets.user_id = u.id WHERE ticket = $token"
+      .as(RegisteredUserRowParser.singleOpt)
+  })
+
+  /**
+   * Create a [[data.Ticket]] for a user
+   *
+   * @return a future holding the generated token for this ticket
+   */
+  def createCasTicketForUser(user: Int, service: Int): Future[String] = {
+    val token = RandomUtils.randomString(64)
+
+    Future(db.withConnection(implicit c => {
+      SQL"INSERT INTO cas_tickets(service_id, user_id, ticket) VALUES ($service, $user, $token)"
+        .execute()
+      token
+    }))
+  }
 
   /**
    * Create a [[data.Ticket]] for a user

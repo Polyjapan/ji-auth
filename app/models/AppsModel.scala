@@ -1,10 +1,11 @@
 package models
 
+import anorm.SqlParser._
 import anorm._
 import com.google.common.base.Preconditions
 import data._
 import javax.inject.Inject
-import utils.RandomUtils
+import utils.{CAS, RandomUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,6 +14,17 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContext) {
   private val db = dbApi database "default"
+
+  def getCasApp(url: String): Future[Option[CasService]] = {
+    CAS.getServiceDomain(url) match {
+      case Some(domain) => Future(db.withConnection {
+        implicit c =>
+          SQL"SELECT cs.service_id, cs.service_name FROM cas_domains JOIN cas_services cs on cas_domains.service_id = cs.service_id WHERE domain = $domain"
+            .as((int("service_id") ~ str("service_name")).map { case id ~ name => CasService(id, name) }.singleOpt)
+      })
+      case None => Future.successful(None)
+    }
+  }
 
   /**
    * Get an app registered in the system by its public clientId

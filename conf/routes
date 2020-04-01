@@ -23,6 +23,7 @@ POST           /hidden/forgot_password                  controllers.hidden.Hidde
 POST           /hidden/password_reset                   controllers.hidden.HiddenPasswordResetController.postPasswordReset
 
 GET            /api/ticket/:ticket                      controllers.api.AppTicketController.getAppTicket(ticket: String)
+GET            /validate                                controllers.api.AppTicketController.getCasV1Ticket(ticket: String, service: String)
 GET            /api/refresh/:refreshToken               controllers.api.TokenRefreshController.refreshToken(refreshToken: String)
 GET            /api/app_login/:targetClientId           controllers.api.AppLogInController.login(targetClientId: String)
 +nocsrf
@@ -38,7 +39,7 @@ GET            /api/users/$users<[0-9,]+>               controllers.api.AppProfi
 GET            /register                                controllers.explicit.RegisterController.registerGet(app: Option[String], tokenType: Option[String])
 POST           /register                                controllers.explicit.RegisterController.registerPost(app: Option[String], tokenType: Option[String])
 
-GET            /login                                   controllers.explicit.LoginController.loginGet(app: Option[String], tokenType: Option[String])
+GET            /login                                   controllers.explicit.LoginController.loginGet(app: Option[String], tokenType: Option[String], service: Option[String] ?= None)
 POST           /login                                   controllers.explicit.LoginController.loginPost(app: Option[String], tokenType: Option[String])
 
 GET            /update_info                             controllers.explicit.UpdateInfoController.updateGet(app: Option[String], tokenType: Option[String])

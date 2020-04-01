@@ -1,7 +1,8 @@
 package controllers.explicit
 
+import data._
 import javax.inject.Inject
-import models.{AppsModel, TicketsModel, UsersModel}
+import models.{AppsModel, UsersModel}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
@@ -11,14 +12,13 @@ import play.api.mvc._
 import play.twirl.api.HtmlFormat
 import services.{HashService, ReCaptchaService}
 import utils.Implicits._
-import data._
 import utils.ValidationUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * @author Louis Vialar
-  */
+ * @author Louis Vialar
+ */
 class RegisterController @Inject()(cc: MessagesControllerComponents,
                                    hashes: HashService, ExplicitTools: ExplicitTools,
                                    captcha: ReCaptchaService)(implicit ec: ExecutionContext, apps: AppsModel, users: UsersModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
@@ -39,11 +39,8 @@ class RegisterController @Inject()(cc: MessagesControllerComponents,
       "g-recaptcha-response" -> text)(Tuple11.apply)(Tuple11.unapply))
 
   private def displayForm(form: Form[_], app: Option[String], tokenType: Option[String])(implicit rq: RequestHeader): Future[HtmlFormat.Appendable] =
-    apps.getAppName(app).map(name =>
-      views.html.register.register(form, config.get[String]("recaptcha.siteKey"),
-        if (name.isDefined) app else None, // Don't re-use an invalid clientId :)
-        name, tokenType)
-    )
+    Future.successful(views.html.register.register(form, config.get[String]("recaptcha.siteKey"), app, tokenType))
+
 
   def registerGet(app: Option[String], tokenType: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
     ExplicitTools.ifLoggedOut(app, tokenType) {

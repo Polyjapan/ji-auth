@@ -1,7 +1,7 @@
 package controllers.explicit
 
 import ch.japanimpact.auth.api.{LoginSuccess, TicketType, TokenResponse}
-import data.{App, RegisteredUser, UserSession}
+import data.{App, CasService, RegisteredUser, UserSession}
 import data.UserSession._
 import javax.inject.Inject
 import models.{AppsModel, GroupsModel, SessionsModel, TicketsModel, UsersModel}
@@ -18,24 +18,32 @@ class ExplicitTools @Inject()(apps: AppsModel, tickets: TicketsModel, groups: Gr
 
   private[explicit] def produceRedirectUrl(app: Option[String], tokenType: Option[String], userId: Int): Future[String] = {
     if (app.nonEmpty) {
-      apps.getApp(app.get).flatMap {
-        case Some(App(Some(appId), _, _, _, _, redirectUrl, _, _)) =>
-          tokenType.getOrElse("ticket") match {
-            case "ticket" =>
-              tickets.createTicketForUser(userId, appId, TicketType.ExplicitGrantTicket).map(ticket => redirectUrl + "?ticket=" + ticket)
-            case "token" =>
-              groups
-                .getGroupsByMember(userId)
-                .flatMap(groups => sessions.createSession(userId).map(sessionId => (sessionId, groups)))
-                .map {
-                  case (sid, groups) =>
-                    val token = jwt.issueToken(userId, groups.map(_.name).toSet)
-                    val refresh = sid.toString
+      if (tokenType.exists(_.startsWith("cas"))) {
+        apps.getCasApp(app.get).flatMap {
+          case Some(CasService(serviceId, _)) =>
+            tickets.createCasTicketForUser(userId, serviceId)
+            .map(ticket => app.get + "?ticket=" + ticket)
+        }
+      } else {
+        apps.getApp(app.get).flatMap {
+          case Some(App(Some(appId), _, _, _, _, redirectUrl, _, _)) =>
+            tokenType.getOrElse("ticket") match {
+              case "ticket" =>
+                tickets.createTicketForUser(userId, appId, TicketType.ExplicitGrantTicket).map(ticket => redirectUrl + "?ticket=" + ticket)
+              case "token" =>
+                groups
+                  .getGroupsByMember(userId)
+                  .flatMap(groups => sessions.createSession(userId).map(sessionId => (sessionId, groups)))
+                  .map {
+                    case (sid, groups) =>
+                      val token = jwt.issueToken(userId, groups.map(_.name).toSet)
+                      val refresh = sid.toString
 
-                    redirectUrl + "?accessToken=" + token + "&refreshToken=" + refresh + "&duration=" + (jwt.ExpirationTimeMinutes * 60)
-                }
-          }
-        case _ => "/"
+                      redirectUrl + "?accessToken=" + token + "&refreshToken=" + refresh + "&duration=" + (jwt.ExpirationTimeMinutes * 60)
+                  }
+            }
+          case _ => "/"
+        }
       }
     } else "/"
   }

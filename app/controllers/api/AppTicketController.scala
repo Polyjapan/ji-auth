@@ -5,6 +5,7 @@ import java.util.{Date, UUID}
 import ch.japanimpact.auth.api
 import ch.japanimpact.auth.api.AppTicketResponse
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
+import data.CasService
 import javax.inject.Inject
 import models.{AppsModel, GroupsModel, TicketsModel, UsersModel}
 import play.api.Configuration
@@ -48,6 +49,16 @@ class AppTicketController @Inject()(cc: ControllerComponents,
           } // The ticket is valid, return the data
         case None => !InvalidTicket
       }
+    }
+  }
+
+  def getCasV1Ticket(ticket: String, service: String): Action[AnyContent] = Action.async { implicit rq =>
+    apps.getCasApp(service) flatMap {
+      case Some(CasService(serviceId, _)) =>
+        tickets.getCasTicket(ticket, serviceId) map {
+          case Some(user) => Ok("yes\n" + user.email + "\n")
+          case None => Ok("no\n\n")
+        }
     }
   }
 

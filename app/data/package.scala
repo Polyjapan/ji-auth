@@ -75,6 +75,9 @@ package object data {
    */
   case class App(appId: Option[Int], appCreatedBy: Int, clientId: String, clientSecret: String, appName: String, redirectUrl: String, emailCallbackUrl: String, recaptchaPrivateKey: Option[String])
 
+  case class CasService(serviceId: Int, serviceName: String)
+  case class CasV2Ticket(email: String, firstname: String, lastname: String, groups: Set[String])
+
   implicit val AppRowParser: RowParser[App] = Macro.namedParser[App](ColumnNaming.SnakeCase)
   implicit val AppParameterList: ToParameterList[App] = Macro.toParameters[App]()
 

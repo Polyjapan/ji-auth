@@ -24,7 +24,8 @@ object SqlUtils {
 
     SQL("INSERT INTO " + table + "(" + colNames + ") VALUES (" + placeholders + ")" + (if (upsert) " ON DUPLICATE KEY UPDATE " + updateData else ""))
       .bind(item)
-      .executeInsert(scalar[Int].single)
+      .executeInsert(scalar[Int].singleOpt)
+      .getOrElse(0)
   }
 
   /**

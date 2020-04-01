@@ -24,15 +24,10 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
   private val loginForm = Form(mapping("email" -> email, "password" -> nonEmptyText(8))(Tuple2.apply)(Tuple2.unapply))
 
   private def displayForm(form: Form[(String, String)], app: Option[String], tokenType: Option[String])(implicit rq: RequestHeader): Future[HtmlFormat.Appendable] =
-    apps.getAppName(app).map(name =>
-      views.html.login.login(form,
-        if (name.isDefined) app else None, // Don't re-use an invalid clientId :)
-        name, tokenType)
-    )
+    Future.successful(views.html.login.login(form, app, tokenType))
 
-
-  def loginGet(app: Option[String], tokenType: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut(app, tokenType) {
+  def loginGet(app: Option[String], tokenType: Option[String], service: Option[String] = None): Action[AnyContent] = Action.async { implicit rq =>
+    ExplicitTools.ifLoggedOut(app.orElse(service), tokenType.orElse(service.map(_ => "cas"))) {
       displayForm(loginForm, app, tokenType).map(f => Ok(f))
     }
   }
