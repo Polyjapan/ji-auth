@@ -24,6 +24,8 @@ POST           /hidden/password_reset                   controllers.hidden.Hidde
 
 GET            /api/ticket/:ticket                      controllers.api.AppTicketController.getAppTicket(ticket: String)
 GET            /validate                                controllers.api.AppTicketController.getCasV1Ticket(ticket: String, service: String)
+GET            /serviceValidate                         controllers.api.AppTicketController.getCasV2Ticket(ticket: String, service: String)
+GET            /proxyValidate                         controllers.api.AppTicketController.getCasV2Ticket(ticket: String, service: String)
 GET            /api/refresh/:refreshToken               controllers.api.TokenRefreshController.refreshToken(refreshToken: String)
 GET            /api/app_login/:targetClientId           controllers.api.AppLogInController.login(targetClientId: String)
 +nocsrf

@@ -13,7 +13,7 @@ import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import services.JWTService
 import utils.Implicits._
-import utils.RandomUtils
+import utils.{CAS, RandomUtils}
 
 import scala.concurrent.ExecutionContext
 
@@ -56,9 +56,34 @@ class AppTicketController @Inject()(cc: ControllerComponents,
     apps.getCasApp(service) flatMap {
       case Some(CasService(serviceId, _)) =>
         tickets.getCasTicket(ticket, serviceId) map {
-          case Some(user) => Ok("yes\n" + user.email + "\n")
-          case None => Ok("no\n\n")
+          case Some(user) =>
+            Ok("yes\n" + user.email + "\n")
+          case None =>
+            Ok("no\n\n")
         }
+      case None =>
+        BadRequest("no\n\n")
+    }
+  }
+
+  def getCasV2Ticket(ticket: String, service: String): Action[AnyContent] = Action.async { implicit rq =>
+    apps.getCasApp(service) flatMap {
+      case Some(CasService(serviceId, _)) =>
+        println(" Service " + serviceId + " found")
+        tickets.getCasTicket(ticket, serviceId) flatMap {
+          case Some(user) =>
+            val params = Map(
+              "email" -> user.email,
+              "name" -> (user.firstName + " " + user.lastName),
+              "cas:user" -> (user.firstName + user.lastName).replaceAll(" ", "")
+            )
+
+            Ok(CAS.getCasSuccessMessage(params))
+          case None =>
+            Ok(CAS.getCasErrorResponse(CAS.CASError.InvalidTicket, ticket))
+        }
+      case None =>
+        Ok(CAS.getCasErrorResponse(CAS.CASError.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
     }
   }
 

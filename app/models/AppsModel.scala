@@ -26,6 +26,14 @@ class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContex
     }
   }
 
+  def hasRequiredGroups(service: Int, userId: Int): Future[Boolean] = Future(db.withConnection { implicit c =>
+    val required = SQL"SELECT group_id FROM cas_required_groups WHERE service_id = $service".as(int("group_id").*).toSet
+    val allowed = SQL"SELECT group_id FROM cas_allowed_groups WHERE service_id = $service".as(int("group_id").*).toSet
+    val user = SQL"SELECT group_id FROM groups_members WHERE user_id = $userId".as(int("group_id").*).toSet
+
+    required.forall(gid => user(gid)) && (allowed.isEmpty || allowed.exists(gid => user(gid)))
+  })
+
   /**
    * Get an app registered in the system by its public clientId
    *

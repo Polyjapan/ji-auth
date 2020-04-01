@@ -27,8 +27,10 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
     Future.successful(views.html.login.login(form, app, tokenType))
 
   def loginGet(app: Option[String], tokenType: Option[String], service: Option[String] = None): Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut(app.orElse(service), tokenType.orElse(service.map(_ => "cas"))) {
-      displayForm(loginForm, app, tokenType).map(f => Ok(f))
+    val (_app, _tokenType) = (app.orElse(service), tokenType.orElse(service.map(_ => "cas")))
+
+    ExplicitTools.ifLoggedOut(_app, _tokenType) {
+      displayForm(loginForm, _app, _tokenType).map(f => Ok(f))
     }
   }
 

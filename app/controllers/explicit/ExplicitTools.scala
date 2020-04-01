@@ -21,8 +21,11 @@ class ExplicitTools @Inject()(apps: AppsModel, tickets: TicketsModel, groups: Gr
       if (tokenType.exists(_.startsWith("cas"))) {
         apps.getCasApp(app.get).flatMap {
           case Some(CasService(serviceId, _)) =>
-            tickets.createCasTicketForUser(userId, serviceId)
-            .map(ticket => app.get + "?ticket=" + ticket)
+            apps.hasRequiredGroups(serviceId, userId).flatMap(hasRequired => {
+              if (hasRequired) tickets.createCasTicketForUser(userId, serviceId).map(ticket => app.get + "?ticket=" + ticket)
+              else "/"
+            })
+          case None => "/"
         }
       } else {
         apps.getApp(app.get).flatMap {
