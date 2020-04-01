@@ -22,7 +22,9 @@ class ExplicitTools @Inject()(apps: AppsModel, tickets: TicketsModel, groups: Gr
         apps.getCasApp(app.get).flatMap {
           case Some(CasService(serviceId, _)) =>
             apps.hasRequiredGroups(serviceId, userId).flatMap(hasRequired => {
-              if (hasRequired) tickets.createCasTicketForUser(userId, serviceId).map(ticket => app.get + "?ticket=" + ticket)
+              val url = app.get
+              val symbol = if (url.contains("?")) "&" else "?"
+              if (hasRequired) tickets.createCasTicketForUser(userId, serviceId).map(ticket => url + symbol + "ticket=" + ticket)
               else "/"
             })
           case None => "/"

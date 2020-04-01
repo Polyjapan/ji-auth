@@ -21,9 +21,16 @@ class TicketsModel @Inject()(dbApi: play.api.db.DBApi, sessions: SessionsModel)(
 
   val rand = new SecureRandom()
 
-  def getCasTicket(token: String, service: Int): Future[Option[RegisteredUser]] = Future(db.withTransaction { implicit c =>
-    SQL"SELECT u.* FROM cas_tickets JOIN users u on cas_tickets.user_id = u.id WHERE ticket = $token AND expiration > CURRENT_TIMESTAMP"
+  def getCasTicket(token: String, service: Int): Future[Option[(RegisteredUser, Set[String])]] = Future(db.withTransaction { implicit c =>
+    val user = SQL"SELECT u.* FROM cas_tickets JOIN users u on cas_tickets.user_id = u.id WHERE ticket = $token AND expiration > CURRENT_TIMESTAMP"
       .as(RegisteredUserRowParser.singleOpt)
+
+    val groups = user.map(u => u.id.get).map(uid =>
+      SQL"SELECT g.name FROM groups_members JOIN `groups` g on groups_members.group_id = g.id WHERE user_id = $uid"
+      .as(str("name").*).toSet
+    )
+
+    user.zip(groups)
   })
 
   /**

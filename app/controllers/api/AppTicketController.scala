@@ -57,7 +57,7 @@ class AppTicketController @Inject()(cc: ControllerComponents,
       case Some(CasService(serviceId, _)) =>
         tickets.getCasTicket(ticket, serviceId) map {
           case Some(user) =>
-            Ok("yes\n" + user.email + "\n")
+            Ok("yes\n" + user._1.email + "\n")
           case None =>
             Ok("no\n\n")
         }
@@ -71,14 +71,15 @@ class AppTicketController @Inject()(cc: ControllerComponents,
       case Some(CasService(serviceId, _)) =>
         println(" Service " + serviceId + " found")
         tickets.getCasTicket(ticket, serviceId) flatMap {
-          case Some(user) =>
+          case Some((user, groups)) =>
             val params = Map(
               "email" -> user.email,
               "name" -> (user.firstName + " " + user.lastName),
-              "cas:user" -> (user.firstName + user.lastName).replaceAll(" ", "")
+              "firstname" -> user.firstName,
+              "lastname" -> user.lastName
             )
 
-            Ok(CAS.getCasSuccessMessage(params))
+            Ok(CAS.getCasSuccessMessage(params, user.email, groups))
           case None =>
             Ok(CAS.getCasErrorResponse(CAS.CASError.InvalidTicket, ticket))
         }
