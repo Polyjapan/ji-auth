@@ -28,13 +28,13 @@ class GroupCRUDController @Inject()(cc: MessagesControllerComponents,
     "displayName" -> nonEmptyText(5, 100))(Tuple2.apply)(Tuple2.unapply))
 
   def createGroupForm: Action[AnyContent] = Action.async { implicit rq =>
-    ManagementTools.ifPermission(UserSession.CreateGroup) { session =>
+    ManagementTools.ifPermission(UserSession.ManageGroups) { session =>
       Future(Ok(views.html.management.groups.createUpdate(session, form)))
     }
   }
 
   def createGroup: Action[AnyContent] = Action.async { implicit rq =>
-    ManagementTools.ifPermission(UserSession.CreateGroup) { implicit session =>
+    ManagementTools.ifPermission(UserSession.ManageGroups) { implicit session =>
       form.bindFromRequest().fold(withErrors => {
         BadRequest(views.html.management.groups.createUpdate(session, withErrors))
       }, data => {

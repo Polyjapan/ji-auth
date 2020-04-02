@@ -1,0 +1,109 @@
+@import data.{UserSession, _}
+@import helper._
+
+@(user: UserSession, app: CasService, domains: Set[String], reqGroups: Set[String], allowGroups: Set[String])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
+
+@views.html.management.managementTemplate("Service CAS " + app.serviceName, user) {
+    <div class="row">
+        <div class="col-lg-12">
+
+            <h2>Service CAS @app.serviceName</h2>
+
+            <h3>Propriétés</h3>
+
+            <ul>
+                <li>Nom : <code>@app.serviceName</code></li>
+                <li>URL de redirection facultative : <code>@app.serviceRedirectUrl</code></li>
+                <li><a href="@controllers.management.routes.CasAppsCRUDController.updateApp(app.serviceId)">Modifier le service</a></li>
+            </ul>
+
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Domaines compatibles</h5>
+                        <h6 class="card-subtitle text-muted mb-1">Ces domaines peuvent utiliser ce profil CAS</h6>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @for(domain <- domains) {
+                            <li class="list-group-item">
+                                @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainDelete(app.serviceId), 'style -> "display: inline; float: right;") {
+                                    @CSRF.formField
+                                    <input type="hidden" name="domain" value="@domain">
+                                    <button class="btn btn-danger" type="submit">&cross;</button>
+                                }
+                                @domain
+                            </li>
+                        }
+
+                        <li class="list-group-item">
+                        @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainPost(app.serviceId), 'class -> "form-inline") {
+                            @CSRF.formField
+                            <input type="text" name="domain" class="form-control" required placeholder="Nom de domaine">
+                            <button class="btn btn-success" type="submit">&plus;</button>
+                        }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Groupes requis</h5>
+                        <h6 class="card-subtitle text-muted mb-1">Un utilisateur doit être membre de tous ces groupes</h6>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @for(group <- reqGroups) {
+                            <li class="list-group-item">
+                                @form(action = controllers.management.routes.CasAppsCRUDController.groupsDeletePost(app.serviceId, required = true), 'style -> "display: inline; float: right;") {
+                                    @CSRF.formField
+                                    <input type="hidden" name="group" value="@group">
+                                    <button class="btn btn-danger" type="submit">&cross;</button>
+                                }
+                                @group
+                            </li>
+                        }
+
+                        <li class="list-group-item">
+                        @form(action = controllers.management.routes.CasAppsCRUDController.groupsAddPost(app.serviceId, required = true), 'class -> "form-inline") {
+                            @CSRF.formField
+                            <input type="text" name="group" class="form-control" required placeholder="Nom du groupe">
+                            <button class="btn btn-success" type="submit">&plus;</button>
+                        }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Groupes autorisés</h5>
+                        <h6 class="card-subtitle text-muted mb-1">Un utilisateur doit être membre d'au moins un de ces groupes</h6>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @for(group <- allowGroups) {
+                            <li class="list-group-item">
+                                @form(action = controllers.management.routes.CasAppsCRUDController.groupsDeletePost(app.serviceId, required = false), 'style -> "display: inline; float: right;") {
+                                    @CSRF.formField
+                                    <input type="hidden" name="group" value="@group">
+                                    <button class="btn btn-danger" type="submit">&cross;</button>
+                                }
+                                @group
+                            </li>
+                        }
+
+                        <li class="list-group-item">
+                        @form(action = controllers.management.routes.CasAppsCRUDController.groupsAddPost(app.serviceId, required = false), 'class -> "form-inline") {
+                            @CSRF.formField
+                            <input type="text" name="group" class="form-control" required placeholder="Nom du groupe">
+                            <button class="btn btn-success" type="submit">&plus;</button>
+                        }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+}

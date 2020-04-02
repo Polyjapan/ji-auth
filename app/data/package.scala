@@ -72,6 +72,10 @@ package object data {
   case class ApiKey(appId: Option[Int], appCreatedBy: Int, clientSecret: String, appName: String)
 
   case class CasService(serviceId: Int, serviceName: String, serviceRedirectUrl: Option[String] = None)
+
+  implicit val CasServiceRowParser: RowParser[CasService] = Macro.namedParser[CasService](ColumnNaming.SnakeCase)
+  implicit val CasServiceParameterList: ToParameterList[CasService] = Macro.toParameters[CasService]()
+
   case class CasV2Ticket(email: String, firstname: String, lastname: String, groups: Set[String])
 
   implicit val AppRowParser: RowParser[ApiKey] = Macro.namedParser[ApiKey](ColumnNaming.SnakeCase)

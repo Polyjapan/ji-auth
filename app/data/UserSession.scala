@@ -7,24 +7,26 @@ import play.api.mvc.{RequestHeader, Session}
   */
 case class UserSession(id: Int, email: String, adminLevel: Int) {
   def hasPermission(perm: Int): Boolean = (adminLevel & perm) != 0
-  lazy val canCreateApp: Boolean = hasPermission(UserSession.CreateApp)
-  lazy val canCreateGroup: Boolean = hasPermission(UserSession.CreateGroup)
+  lazy val canCreateApiKey: Boolean = hasPermission(UserSession.ManageApiKeys)
+  lazy val canCreateCasApp: Boolean = hasPermission(UserSession.ManageCasApps)
+  lazy val canCreateInternalApp: Boolean = hasPermission(UserSession.ManageInternalApps)
   lazy val canManageGroups: Boolean = hasPermission(UserSession.ManageGroups)
   lazy val canChangePerms: Boolean = hasPermission(UserSession.ChangeOtherPermissions)
   lazy val canBrowseUsers: Boolean = hasPermission(UserSession.BrowseUsers)
   lazy val isSuperAdmin: Boolean = hasPermission(UserSession.SuperAdmin)
 
   lazy val isAdmin: Boolean = {
-     canCreateApp || canCreateGroup || canManageGroups || canChangePerms || canBrowseUsers || isSuperAdmin
+     canCreateApiKey || canCreateCasApp || canCreateInternalApp || canManageGroups || canChangePerms || canBrowseUsers || isSuperAdmin
   }
 }
 
 object UserSession {
-  val SuperAdmin: Int = 32 // Cannot be edited with a simple flag ChangeOtherPermissions
-  val ChangeOtherPermissions: Int = 16
-  val ManageGroups: Int = 8 // Delete others' groups
-  val CreateApp: Int = 4
-  val CreateGroup: Int = 2
+  val SuperAdmin: Int = 64 // Cannot be edited with a simple flag ChangeOtherPermissions
+  val ChangeOtherPermissions: Int = 32
+  val ManageInternalApps: Int = 16
+  val ManageApiKeys: Int = 8
+  val ManageCasApps: Int = 4
+  val ManageGroups: Int = 2
   val BrowseUsers: Int = 1
 
   def apply(ru: RegisteredUser): List[(String, String)] =

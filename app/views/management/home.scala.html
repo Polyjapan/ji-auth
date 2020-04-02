@@ -1,7 +1,8 @@
-@import data.{Group, UserSession}
+@import data.{Group, UserSession, CasService}
+@import helper._
 
 @import views.html.management.managementTemplate
-@(user: UserSession, groups: Set[Group], apps: Set[data.ApiKey])
+@(user: UserSession, groups: Set[Group], apps: Set[data.ApiKey], internalApps: List[String], casServices: List[CasService])(implicit request: RequestHeader)
 
 @header = {
     <p class="card-text">Bonjour, <b>@{user.email} !</b> Votre identifiant est le <b>#@{user.id}</b>. Vous êtes bien
@@ -23,7 +24,7 @@
 
 @managementTemplate("Console de gestion", user, header) {
     <div class="row">
-        @if(groups.nonEmpty || user.canCreateGroup || user.canManageGroups) {
+        @if(groups.nonEmpty || user.canManageGroups) {
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
@@ -34,11 +35,9 @@
                             <li class="list-group-item"><a href="@controllers.management.routes.GroupCRUDController.getGroup(group.name)">@group.displayName (@group.name)</a></li>
                         }
 
-                        @if(user.canCreateGroup) {
-                            <li class="list-group-item"><a href="@controllers.management.routes.GroupCRUDController.createGroup()">Créer un groupe</a></li>
-                        }
-
                         @if(user.canManageGroups) {
+                            <li class="list-group-item"><a href="@controllers.management.routes.GroupCRUDController.createGroup()">Créer un groupe</a></li>
+
                             <li class="list-group-item"><a href="#">Gérer d'autres groupes</a></li>
                         }
                     </ul>
@@ -46,22 +45,70 @@
             </div>
         }
 
-        @if(apps.nonEmpty || user.canCreateApp) {
+        @if(apps.nonEmpty || user.canCreateApiKey || user.canCreateInternalApp || user.canCreateCasApp) {
             <div class="col-lg-6">
-                <div class="card">
-                    <div class="card-header">
-                        Mes clés d'API
-                    </div>
-                    <ul class="list-group list-group-flush">
-                        @for(app <- apps) {
-                            <li class="list-group-item"><a href="@controllers.management.routes.ApiKeysCRUDController.getApp(app.appId.get)">@app.appName</a></li>
-                        }
+                @if(apps.nonEmpty || user.canCreateApiKey) {
+                    <div class="card">
 
-                        @if(user.canCreateApp) {
-                            <li class="list-group-item"><a href="@controllers.management.routes.ApiKeysCRUDController.createApp()">Créer une application</a></li>
-                        }
-                    </ul>
-                </div>
+                        <div class="card-header">
+                            <h5 class="card-title">Mes clés d'API</h5>
+                            <h6 class="card-subtitle text-muted mb-1">Pour utiliser l'API Auth</h6>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            @for(app <- apps) {
+                                <li class="list-group-item"><a href="@controllers.management.routes.ApiKeysCRUDController.getApp(app.appId.get)">@app.appName</a></li>
+                            }
+
+                            @if(user.canCreateApiKey) {
+                                <li class="list-group-item"><a href="@controllers.management.routes.ApiKeysCRUDController.createApp()">Créer une application</a></li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+
+                @if(user.canCreateInternalApp) {
+                    <br>
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Applications internes</h5>
+                            <h6 class="card-subtitle text-muted mb-1">Pour l'utilisation des tokens JWT</h6>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            @for(app <- internalApps) {
+                                <li class="list-group-item">
+                                   @form(action = controllers.management.routes.InternalAppsCRUDController.whitelistDomainDelete(), 'style -> "display: inline; float: right;") {
+                                       @CSRF.formField
+                                       <input type="hidden" name="domain" value="@app">
+                                       <button class="btn btn-danger" type="submit">&cross;</button>
+                                    }
+                                  @app
+                                </li>
+                            }
+
+                            <li class="list-group-item"><a href="@controllers.management.routes.InternalAppsCRUDController.whitelistDomainGet()">Créer une application interne</a></li>
+                        </ul>
+                    </div>
+                }
+
+                @if(user.canCreateCasApp) {
+                    <br>
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Services CAS</h5>
+                            <h6 class="card-subtitle text-muted mb-1">Pour le protocole Legacy et les apps externes</h6>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            @for(app <- casServices) {
+                                <li class="list-group-item">
+                                    <a href="@controllers.management.routes.CasAppsCRUDController.getApp(app.serviceId)">@app.serviceName</a>
+                                </li>
+                            }
+
+                            <li class="list-group-item"><a href="@controllers.management.routes.CasAppsCRUDController.createApp()">Créer un service CAS</a></li>
+                        </ul>
+                    </div>
+                }
             </div>
         }
     </div>

@@ -2,10 +2,10 @@ package models
 
 import anorm.SqlParser._
 import anorm._
-import com.google.common.base.Preconditions
+import java.sql.Connection
 import data._
 import javax.inject.Inject
-import utils.{CAS, RandomUtils}
+import utils.CAS
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,8 +19,8 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
     CAS.getServiceDomain(url) match {
       case Some(domain) => Future(db.withConnection {
         implicit c =>
-          SQL"SELECT cs.service_id, cs.service_name FROM cas_domains JOIN cas_services cs on cas_domains.service_id = cs.service_id WHERE domain = $domain"
-            .as((int("service_id") ~ str("service_name")).map { case id ~ name => CasService(id, name) }.singleOpt)
+          SQL"SELECT cs.* FROM cas_domains JOIN cas_services cs on cas_domains.service_id = cs.service_id WHERE domain = $domain"
+            .as(CasServiceRowParser.singleOpt)
       })
       case None => Future.successful(None)
     }
@@ -34,92 +34,104 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
     required.forall(gid => user(gid)) && (allowed.isEmpty || allowed.exists(gid => user(gid)))
   })
 
-  /*
-  /**
-   * Get an app registered in the system by its public clientId
-   *
-   * @param clientId the clientId of the app
-   * @return the app
-   */
-  def getApp(clientId: String): Future[Option[App]] = Future(db.withConnection { implicit conn =>
-    SQL"SELECT * FROM apps WHERE client_id = $clientId"
-      .as(AppRowParser.singleOpt)
-  })
 
-  /**
-   * Get an app registered in the system by its internal id and its owner
-   *
-   * @param appId   the id of the app
-   * @param ownerId the id of the owner of the app
-   * @return the app, if found
-   */
-  def getAppByIdAndOwner(appId: Int, ownerId: Int): Future[Option[App]] = Future(db.withConnection { implicit c =>
-    SQL"SELECT * FROM apps WHERE app_id = $appId AND app_created_by = $ownerId"
-      .as(AppRowParser.singleOpt)
-  })
+  def getCasServices: Future[List[CasService]] = {
+    Future(db.withConnection { implicit c =>
+      SQL"SELECT cs.* FROM cas_services cs".as(CasServiceRowParser.*)
+    })
+  }
 
 
-  /**
-   * Get an app registered in the system by its private clientSecret
-   *
-   * @param clientSecret the clkientSecret to look for
-   * @return an optional app with the same clientId and clientSecret as requested
-   */
-  def getAuthentifiedApp(clientSecret: String): Future[Option[App]] = Future(db.withConnection { implicit c =>
-    SQL"SELECT * FROM apps WHERE client_secret = $clientSecret"
-      .as(AppRowParser.singleOpt)
-  })
+  case class ServiceData(service: CasService, requiredGroups: Set[String], allowedGroups: Set[String], domains: Set[String])
 
-  /**
-   * Get the name of an app, given a clientId
-   *
-   * @param clientId an optional clientId. If empty, the app name will be empty too.
-   * @return the name of the app, or None if this app doesn't exist
-   */
-  def getAppName(clientId: Option[String]): Future[Option[String]] = {
-    clientId match {
-      case Some(clientId) => getApp(clientId).map(opt => opt.map(_.appName))
-      case None => Future(None)
+  def getServiceById(id: Int): Future[Option[ServiceData]] = {
+    Future(db.withConnection { implicit c =>
+      val service = SQL"SELECT * FROM cas_services WHERE service_id = $id".as(CasServiceRowParser.singleOpt)
+      val reqGroups = SQL"SELECT g.name FROM cas_required_groups JOIN `groups` g on cas_required_groups.group_id = g.id WHERE service_id = $id".as(str("name").*).toSet
+      val allowGroups = SQL"SELECT g.name FROM cas_allowed_groups JOIN `groups` g on cas_allowed_groups.group_id = g.id WHERE service_id = $id".as(str("name").*).toSet
+      val domains = SQL"SELECT domain FROM cas_domains WHERE service_id = $id".as(str("domain").*).toSet
+
+      service.map(s => ServiceData(s, reqGroups, allowGroups, domains))
+    })
+  }
+
+
+  def getCasServiceById(id: Int): Future[Option[CasService]] = {
+    Future(db.withConnection { implicit c =>
+      SQL"SELECT * FROM cas_services WHERE service_id = $id".as(CasServiceRowParser.singleOpt)
+    })
+  }
+
+  def createApp(name: String, redirection: Option[String]): Future[Int] =
+    Future(db.withConnection { implicit c =>
+      SQL"INSERT INTO cas_services(service_name, service_redirect_url) VALUES ($name, $redirection)"
+        .executeInsert[Int](scalar[Int].single)
+    })
+
+  def updateApp(app: CasService): Future[Int] =
+    Future(db.withConnection(implicit c => SqlUtils.replaceOne("cas_services", app, "serviceId")))
+
+
+  def addDomain(service: Int, url: String): Future[Boolean] = {
+    CAS.getServiceDomain(url) match {
+      case Some(domain) => Future(db.withConnection {
+        implicit c =>
+          SQL"INSERT INTO cas_domains(service_id, domain) VALUES ($service, $domain)"
+            .execute()
+
+          true
+      })
+      case None => Future.successful(false)
     }
   }
 
-  /**
-   * Create an app
-   *
-   * @param app the app to create
-   * @return a future hodling the id of the inserted app
-   */
-  def createApp(app: App): Future[Int] = Future(db.withConnection(implicit c => SqlUtils.insertOne("apps", app)))
-
-  /*
-
-  def createApp(name: String, redirectUrl: String, user: Int): Future[Int] =
-    createApp(App(None, user, RandomUtils.randomString(32), RandomUtils.randomString(32), name, redirectUrl))
-
-   */
-
-  def createApp(name: String, user: Int): Future[Int] =
-    createApp(App(None, user, clientSecret = RandomUtils.randomString(32), name))
-
-
-  /**
-   * Updates an app whose id is set
-   *
-   * @param app the app to update/insert
-   * @return the number of updated rows in a future
-   */
-  def updateApp(app: App): Future[Int] = {
-    Preconditions.checkArgument(app.appId.isDefined)
-
-    Future(db.withConnection(implicit c => SqlUtils.replaceOne("apps", app, "appId")))
+  def removeDomain(service: Int, url: String): Future[Boolean] = {
+    CAS.getServiceDomain(url) match {
+      case Some(domain) => Future(db.withConnection {
+        implicit c =>
+          SQL"DELETE FROM cas_domains WHERE service_id = $service AND domain = $domain"
+            .execute()
+      })
+      case None => Future.successful(false)
+    }
   }
 
-  /**
-   * Get all the apps owned by a specific user
-   *
-   * @param owner the owner of the apps
-   * @return all the apps owned by the given user
-   */
-  def getAppsByOwner(owner: Int): Future[Seq[App]] = Future(db.withConnection(implicit c =>
-    SQL"SELECT * FROM apps WHERE app_created_by = $owner".as(AppRowParser.*)))*/
+  private def getGroup(group: String)(implicit c: Connection): Option[Int] = {
+    SQL"SELECT `groups`.id FROM `groups` WHERE name = $group"
+      .as(int("id").singleOpt)
+  }
+
+  def addGroup(service: Int, group: String, required: Boolean): Future[Boolean] = {
+    Future(db.withConnection {
+      implicit c =>
+        val targetTable = if (required) "cas_required_groups" else "cas_allowed_groups"
+
+        getGroup(group) match {
+          case Some(gid) => SQL("INSERT INTO " + targetTable + "(service_id, group_id) VALUES ({sid}, {gid})")
+            .on("sid" -> service, "gid" -> gid)
+            .execute()
+
+            true
+          case None =>
+            false
+        }
+    })
+  }
+
+  def removeGroup(service: Int, group: String, required: Boolean): Future[Boolean] = {
+    Future(db.withConnection {
+      implicit c =>
+        val targetTable = if (required) "cas_required_groups" else "cas_allowed_groups"
+
+        getGroup(group) match {
+          case Some(gid) => SQL("DELETE FROM " + targetTable + " WHERE service_id = {sid} AND group_id = {gid}")
+            .on("sid" -> service, "gid" -> gid)
+            .execute()
+
+            true
+          case None =>
+            false
+        }
+    })
+  }
 }

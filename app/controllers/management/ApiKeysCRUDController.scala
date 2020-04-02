@@ -26,13 +26,13 @@ class ApiKeysCRUDController @Inject()(cc: MessagesControllerComponents,
   )
 
   def createAppForm: Action[AnyContent] = Action.async { implicit rq =>
-    ManagementTools.ifPermission(UserSession.CreateApp) { session =>
+    ManagementTools.ifPermission(UserSession.ManageApiKeys) { session =>
       Future(Ok(views.html.management.apikeys.createUpdate(session, form)))
     }
   }
 
   def createApp: Action[AnyContent] = Action.async { implicit rq =>
-    ManagementTools.ifPermission(UserSession.CreateApp) { implicit session =>
+    ManagementTools.ifPermission(UserSession.ManageApiKeys) { implicit session =>
       form.bindFromRequest().fold(withErrors => {
         BadRequest(views.html.management.apikeys.createUpdate(session, withErrors))
       }, name => {
