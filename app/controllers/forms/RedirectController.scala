@@ -36,10 +36,17 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
           if (hasRequired) {
             val symbol = if (url.contains("?")) "&" else "?"
 
-            tickets
+            val redirectUrl = tickets
               .createCasTicketForUser(userId, serviceId)
               .map(ticket => url + symbol + "ticket=" + ticket)
-              .map(url => Redirect(url))
+
+
+            if (!url.startsWith("https://")) {
+              // Security for weird redirects, specially for android apps
+              redirectUrl.map(url => Ok(views.html.redirectConfirm(url)))
+            } else {
+              redirectUrl.map(url => Redirect(url))
+            }
           } else {
             Forbidden(views.html.errorPage("Permissions manquantes", Html("<p>L'accès à cette application nécessite d'être membre de certains groupes.</p>")))
           }
@@ -54,7 +61,13 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
 
               redirectUrl + "?accessToken=" + token + "&refreshToken=" + refresh + "&duration=" + (jwt.ExpirationTimeMinutes * 60)
           }
-          .map(url => Redirect(url))
+          .map(url => {
+            if (!url.startsWith("https://")) {
+              Ok(views.html.redirectConfirm(url))
+            } else {
+              Redirect(url)
+            }
+          })
 
     }).map(result => result.removingFromSession(AuthenticationInstance.SessionKey))
   }
