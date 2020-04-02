@@ -16,7 +16,7 @@ class GroupsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCont
   private val db = dbApi database "default"
 
 
-  def getGroups(app: data.App, userId: Int): Future[Set[String]] = Future(db.withConnection { implicit c =>
+  def getGroups(app: data.ApiKey, userId: Int): Future[Set[String]] = Future(db.withConnection { implicit c =>
     SQL"""SELECT name FROM `groups`
       JOIN groups_members gm1 on `groups`.id = gm1.group_id and gm1.can_read_members = TRUE and gm1.user_id = ${app.appCreatedBy}
       JOIN groups_members gm2 on `groups`.id = gm2.group_id and gm2.user_id = ${userId}

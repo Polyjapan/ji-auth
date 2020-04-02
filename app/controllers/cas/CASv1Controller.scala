@@ -2,7 +2,7 @@ package controllers.cas
 
 import data.CasService
 import javax.inject.Inject
-import models.{AppsModel, TicketsModel}
+import models.{ServicesModel, TicketsModel}
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -10,10 +10,10 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-class CASv1Controller @Inject()(cc: ControllerComponents, apps: AppsModel, tickets: TicketsModel)(implicit ec: ExecutionContext) extends AbstractController(cc) {
+class CASv1Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, tickets: TicketsModel)(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
   def validate(ticket: String, service: String): Action[AnyContent] = Action.async { implicit rq =>
-    apps.getCasApp(service) flatMap {
+    apps.getCasService(service) flatMap {
       case Some(CasService(serviceId, _, _)) =>
         tickets.getCasTicket(ticket, serviceId) map {
           case Some(user) =>

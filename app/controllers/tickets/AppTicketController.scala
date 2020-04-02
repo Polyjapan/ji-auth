@@ -5,7 +5,7 @@ import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import ch.japanimpact.auth.api.{AppTicketResponse, TicketType}
 import data.CasService
 import javax.inject.Inject
-import models.{AppsModel, GroupsModel, TicketsModel, UsersModel}
+import models.{ServicesModel, GroupsModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.libs.mailer.MailerClient
@@ -22,16 +22,16 @@ class AppTicketController @Inject()(cc: ControllerComponents,
                                     groups: GroupsModel,
                                     users: UsersModel
 
-                                   )(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                   )(implicit ec: ExecutionContext, apps: ServicesModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
 
-  private def withApp(body: CasService => Future[Result])(implicit apps: AppsModel, request: RequestHeader, ec: ExecutionContext): Future[Result] = {
+  private def withApp(body: CasService => Future[Result])(implicit apps: ServicesModel, request: RequestHeader, ec: ExecutionContext): Future[Result] = {
     val h = request.headers
 
     if (!h.hasHeader("X-Client-Id")) {
       Results.Unauthorized(Json.toJson[RequestError](MissingData))
     } else {
-      apps.getCasApp(h("X-Client-Id")) flatMap {
+      apps.getCasService(h("X-Client-Id")) flatMap {
         case Some(app) => body(app)
         case None => !InvalidAppSecret
       }

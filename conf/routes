@@ -8,8 +8,6 @@ OPTIONS        /*url                                    controllers.OptionsContr
 
 # API
 
-# deprecated
-GET            /api/app_login/:targetClientId           controllers.api.AppLogInController.login(targetClientId: String)
 +nocsrf
 POST           /api/groups/:name/members                controllers.api.AppGroupsController.addMemberToGroup(name: String)
 GET            /api/groups/:name/members                controllers.api.AppGroupsController.getGroupMembers(name: String)
@@ -86,11 +84,11 @@ GET            /groups/:name/members/:id/update         controllers.management.G
 POST           /groups/:name/members/:id/update         controllers.management.GroupMembersCRUDController.updateMember(name: String, id: Int)
 POST           /groups/:name/members/:id/delete         controllers.management.GroupMembersCRUDController.deleteMember(name: String, id: Int)
 
-GET            /apps/create                             controllers.management.AppsCRUDController.createAppForm
-POST           /apps/create                             controllers.management.AppsCRUDController.createApp
-GET            /apps/:id                                controllers.management.AppsCRUDController.getApp(id: Int)
-GET            /apps/:id/update                         controllers.management.AppsCRUDController.updateAppForm(id: Int)
-POST           /apps/:id/update                         controllers.management.AppsCRUDController.updateApp(id: Int)
+GET            /apikeys/create                          controllers.management.ApiKeysCRUDController.createAppForm
+POST           /apikeys/create                          controllers.management.ApiKeysCRUDController.createApp
+GET            /apikeys/:id                             controllers.management.ApiKeysCRUDController.getApp(id: Int)
+GET            /apikeys/:id/update                      controllers.management.ApiKeysCRUDController.updateAppForm(id: Int)
+POST           /apikeys/:id/update                      controllers.management.ApiKeysCRUDController.updateApp(id: Int)
 
 
 

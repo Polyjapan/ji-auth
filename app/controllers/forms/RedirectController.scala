@@ -22,7 +22,7 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
                                   (implicit ec: ExecutionContext, config: Configuration,
                                    users: UsersModel, tickets: TicketsModel, groups: GroupsModel,
                                    sessions: SessionsModel, jwt: JWTService,
-                                   apps: AppsModel) extends MessagesAbstractController(cc) with I18nSupport {
+                                   apps: ServicesModel) extends MessagesAbstractController(cc) with I18nSupport {
 
 
   private def produceRedirection(user: RegisteredUser, address: Address, authInstance: Option[AuthenticationInstance])(implicit rq: RequestHeader): Future[Result] = {

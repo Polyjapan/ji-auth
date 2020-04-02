@@ -69,49 +69,13 @@ package object data {
    * @param clientSecret        the client secret to authenticate secret (backend to backend) requests
    * @param appName             the name of the app
    */
-  case class App(appId: Option[Int], appCreatedBy: Int, clientSecret: String, appName: String)
+  case class ApiKey(appId: Option[Int], appCreatedBy: Int, clientSecret: String, appName: String)
 
   case class CasService(serviceId: Int, serviceName: String, serviceRedirectUrl: Option[String] = None)
   case class CasV2Ticket(email: String, firstname: String, lastname: String, groups: Set[String])
 
-  implicit val AppRowParser: RowParser[App] = Macro.namedParser[App](ColumnNaming.SnakeCase)
-  implicit val AppParameterList: ToParameterList[App] = Macro.toParameters[App]()
-
-  val ticketTypes: Map[TicketType, String] = Map(
-    LoginTicket -> "T_LOGIN",
-    RegisterTicket -> "T_REGISTER",
-    DoubleRegisterTicket -> "T_DOUBLE_REGISTER",
-    EmailConfirmTicket -> "T_EMAIL_CONFIRM",
-    PasswordResetTicket -> "T_PASSWORD_RESET",
-    ExplicitGrantTicket -> "T_EXPLICIT_GRANT",
-    AppTicket -> "T_APP"
-  )
-
-  val enumToTicketTypes = ticketTypes.map { case (k, v) => v -> k }
-
-  implicit def StatusColumn: Column[TicketType] =
-    Column.columnToString.map { str => enumToTicketTypes(str) }
-
-  implicit val StatusStatement: ToStatement[TicketType] = (s: PreparedStatement, index: Int, v: TicketType) =>
-    s.setString(index, ticketTypes(v))
-
-
-  /**
-   * Represents a ticket that is returned to the user by the CAS, and that the user has to "use" against the service it
-   * was emitted for, in order to gain access to that service. That service will use this ticket to get some info about
-   * the user (it will then be invalidated) as well as the type of action the ticket was emitted for, and then maybe
-   * create a session for the user in the way prefered by the service.
-   *
-   * @param token      the unique token returned to the user
-   * @param userId     the user this token bounds to
-   * @param appId      the app this token was emitted for
-   * @param validTo    the last timestamp this ticket can be used
-   * @param `type` the type of ticket (see [[TicketType]])
-   */
-  case class Ticket(token: String, userId: Int, appId: Int, validTo: Date, `type`: TicketType)
-
-  implicit val TicketRowParser: RowParser[Ticket] = Macro.namedParser[Ticket](ColumnNaming.SnakeCase)
-  implicit val TicketParameterList: ToParameterList[Ticket] = Macro.toParameters[Ticket]()
+  implicit val AppRowParser: RowParser[ApiKey] = Macro.namedParser[ApiKey](ColumnNaming.SnakeCase)
+  implicit val AppParameterList: ToParameterList[ApiKey] = Macro.toParameters[ApiKey]()
 
   /**
    * Represents a group of users

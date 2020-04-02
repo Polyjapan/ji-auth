@@ -3,7 +3,7 @@ package controllers.internal
 import ch.japanimpact.auth.api.TokenResponse
 import data._
 import javax.inject.Inject
-import models.{AppsModel, SessionsModel}
+import models.{ServicesModel, SessionsModel}
 import play.api.Configuration
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
@@ -18,7 +18,7 @@ import scala.concurrent.ExecutionContext
 class TokenRefreshController @Inject()(cc: ControllerComponents,
                                        sessions: SessionsModel, jwt: JWTService
 
-                                   )(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                   )(implicit ec: ExecutionContext, apps: ServicesModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
   def refreshToken(refreshToken: String): Action[AnyContent] = Action.async { implicit rq =>
     try {

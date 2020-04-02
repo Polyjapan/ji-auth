@@ -2,7 +2,7 @@ package controllers.explicit
 
 import data._
 import javax.inject.Inject
-import models.{AppsModel, UsersModel}
+import models.{ServicesModel, UsersModel}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author Louis Vialar
  */
 class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: HashService, captcha: ReCaptchaService)
-                                  (implicit ec: ExecutionContext, apps: AppsModel, users: UsersModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
+                                  (implicit ec: ExecutionContext, apps: ServicesModel, users: UsersModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
 
   private val registerForm = Form(
     mapping(

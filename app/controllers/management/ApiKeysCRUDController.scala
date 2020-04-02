@@ -2,13 +2,12 @@ package controllers.management
 
 import data.{GroupMember, RegisteredUser, UserSession}
 import javax.inject.Inject
-import models.{AppsModel, TicketsModel}
+import models.{ApiKeysModel, ServicesModel, TicketsModel}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
-
 import utils.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,9 +15,9 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * @author Louis Vialar
   */
-class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
-                                   tickets: TicketsModel,
-                                   apps: AppsModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) {
+class ApiKeysCRUDController @Inject()(cc: MessagesControllerComponents,
+                                      tickets: TicketsModel,
+                                      apps: ApiKeysModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) {
   private val form = Form(
     mapping(
       "name" -> nonEmptyText(5, 100),
@@ -28,34 +27,34 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
 
   def createAppForm: Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifPermission(UserSession.CreateApp) { session =>
-      Future(Ok(views.html.management.apps.createUpdate(session, form)))
+      Future(Ok(views.html.management.apikeys.createUpdate(session, form)))
     }
   }
 
   def createApp: Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifPermission(UserSession.CreateApp) { implicit session =>
       form.bindFromRequest().fold(withErrors => {
-        BadRequest(views.html.management.apps.createUpdate(session, withErrors))
+        BadRequest(views.html.management.apikeys.createUpdate(session, withErrors))
       }, name => {
 
-        apps.createApp(name, session.id).map(
-          id => Redirect(routes.AppsCRUDController.getApp(id)))
+        apps.createApiKey(name, session.id).map(
+          id => Redirect(routes.ApiKeysCRUDController.getApp(id)))
       })
     }
   }
 
   def updateApp(id: Int): Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifLoggedIn { implicit session =>
-      apps.getAppByIdAndOwner(id, session.id).flatMap {
+      apps.getApiKeyByIdAndOwner(id, session.id).flatMap {
         case Some(app) =>
           form.bindFromRequest().fold(
             withErrors => {
-              BadRequest(views.html.management.apps.createUpdate(session, withErrors, Some(id)))
+              BadRequest(views.html.management.apikeys.createUpdate(session, withErrors, Some(id)))
             }, name => {
             apps
-              .updateApp(app.copy(appName = name))
+              .updateApiKey(app.copy(appName = name))
               .map(
-                _ => Redirect(routes.AppsCRUDController.getApp(id)))
+                _ => Redirect(routes.ApiKeysCRUDController.getApp(id)))
           })
         case None => NotFound(ManagementTools.error("Application introuvable", "L'application recherchée n'existe pas, ou ne vous est pas accessible."))
       }
@@ -64,9 +63,9 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
 
   def updateAppForm(id: Int): Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifLoggedIn { implicit session =>
-      apps.getAppByIdAndOwner(id, session.id).flatMap {
+      apps.getApiKeyByIdAndOwner(id, session.id).flatMap {
         case Some(app) =>
-          Ok(views.html.management.apps.createUpdate(session, form.fill(app.appName), Some(id)))
+          Ok(views.html.management.apikeys.createUpdate(session, form.fill(app.appName), Some(id)))
         case None => NotFound(ManagementTools.error("Application introuvable", "L'application recherchée n'existe pas, ou ne vous est pas accessible."))
       }
     }
@@ -74,9 +73,9 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
 
   def getApp(id: Int): Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifLoggedIn { implicit session =>
-      apps.getAppByIdAndOwner(id, session.id).flatMap {
+      apps.getApiKeyByIdAndOwner(id, session.id).flatMap {
         case Some(app) =>
-          Ok(views.html.management.apps.view(session, app))
+          Ok(views.html.management.apikeys.view(session, app))
         case None => NotFound(ManagementTools.error("Application introuvable", "L'application recherchée n'existe pas, ou ne vous est pas accessible."))
       }
     }

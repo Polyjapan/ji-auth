@@ -2,7 +2,7 @@ package controllers.explicit
 
 import data.UserSession
 import javax.inject.Inject
-import models.{AppsModel, UsersModel}
+import models.{ServicesModel, UsersModel}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
@@ -18,7 +18,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration,
                                                                   users: UsersModel,
-                                                                  apps: AppsModel) extends MessagesAbstractController(cc) with I18nSupport {
+                                                                  apps: ServicesModel) extends MessagesAbstractController(cc) with I18nSupport {
 
 
   private val loginForm = Form(mapping("email" -> email, "password" -> nonEmptyText(8))(Tuple2.apply)(Tuple2.unapply))

@@ -1,7 +1,7 @@
 package controllers.management
 
 import javax.inject.Inject
-import models.{AppsModel, GroupsModel, TicketsModel}
+import models.{ServicesModel, GroupsModel, TicketsModel}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms.{email, mapping}
@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
 class GroupMembersCRUDController @Inject()(cc: MessagesControllerComponents,
                                            tickets: TicketsModel,
                                            groups: GroupsModel,
-                                           apps: AppsModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) {
+                                           apps: ServicesModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) {
 
 
   private val addMemberForm = Form(mapping("email" -> email)(e => e)(Option.apply))

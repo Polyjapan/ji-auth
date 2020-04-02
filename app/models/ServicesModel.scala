@@ -12,10 +12,10 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author zyuiop
  */
-class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContext) {
+class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContext) {
   private val db = dbApi database "default"
 
-  def getCasApp(url: String): Future[Option[CasService]] = {
+  def getCasService(url: String): Future[Option[CasService]] = {
     CAS.getServiceDomain(url) match {
       case Some(domain) => Future(db.withConnection {
         implicit c =>
@@ -23,17 +23,6 @@ class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContex
             .as((int("service_id") ~ str("service_name")).map { case id ~ name => CasService(id, name) }.singleOpt)
       })
       case None => Future.successful(None)
-    }
-  }
-
-  def isInternalApp(url: String): Future[Boolean] = {
-    CAS.getServiceDomain(url) match {
-      case Some(domain) => Future(db.withConnection {
-        implicit c =>
-          SQL"SELECT COUNT(*) FROM internal_domains WHERE domain_name = $domain"
-            .as(scalar[Int].single) > 0
-      })
-      case None => Future.successful(false)
     }
   }
 
@@ -45,6 +34,7 @@ class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContex
     required.forall(gid => user(gid)) && (allowed.isEmpty || allowed.exists(gid => user(gid)))
   })
 
+  /*
   /**
    * Get an app registered in the system by its public clientId
    *
@@ -131,5 +121,5 @@ class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContex
    * @return all the apps owned by the given user
    */
   def getAppsByOwner(owner: Int): Future[Seq[App]] = Future(db.withConnection(implicit c =>
-    SQL"SELECT * FROM apps WHERE app_created_by = $owner".as(AppRowParser.*)))
+    SQL"SELECT * FROM apps WHERE app_created_by = $owner".as(AppRowParser.*)))*/
 }

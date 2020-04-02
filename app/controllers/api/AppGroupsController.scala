@@ -4,7 +4,7 @@ import ch.japanimpact.auth.api.UserProfile
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import data.GroupMember
 import javax.inject.Inject
-import models.{AppsModel, GroupsModel, TicketsModel, UsersModel}
+import models.{ApiKeysModel, GroupsModel, ServicesModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.mailer.MailerClient
@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
 class AppGroupsController @Inject()(cc: ControllerComponents,
                                     tickets: TicketsModel,
                                     users: UsersModel,
-                                    groups: GroupsModel)(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                    groups: GroupsModel)(implicit ec: ExecutionContext, apps: ApiKeysModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
 
   def getGroupMembers(groupName: String) = Action.async { implicit rq =>

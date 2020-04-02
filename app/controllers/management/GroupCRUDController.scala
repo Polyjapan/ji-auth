@@ -2,7 +2,7 @@ package controllers.management
 
 import data.{GroupMember, RegisteredUser, UserSession}
 import javax.inject.Inject
-import models.{AppsModel, GroupsModel, TicketsModel}
+import models.{ServicesModel, GroupsModel, TicketsModel}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class GroupCRUDController @Inject()(cc: MessagesControllerComponents,
                                     tickets: TicketsModel,
                                     groups: GroupsModel,
-                                    apps: AppsModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) {
+                                    apps: ServicesModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) {
 
   private val nameConstraint = Constraints.pattern("^[a-zA-Z0-9_-]+$".r,
     error = "L'identifiant ne peut contenir que des caractères alphanumériques ainsi que des _ et -")

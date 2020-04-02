@@ -4,7 +4,7 @@ import ch.japanimpact.auth.api.AuthorizationUtils._
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import ch.japanimpact.auth.api.{UserProfile, _}
 import javax.inject.Inject
-import models.{AppsModel, GroupsModel, TicketsModel, UsersModel}
+import models.{ApiKeysModel, GroupsModel, ServicesModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.libs.mailer.MailerClient
@@ -20,7 +20,7 @@ class AppProfileController @Inject()(cc: ControllerComponents,
                                      tickets: TicketsModel,
                                      users: UsersModel,
                                      groups: GroupsModel,
-                                     userAction: UserAction)(implicit ec: ExecutionContext, apps: AppsModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                     userAction: UserAction)(implicit ec: ExecutionContext, apps: ApiKeysModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
   private def fetchUserProfile(user: Int) = users.getUserProfile(id = user).map {
     case Some((user, address)) =>

@@ -5,7 +5,7 @@ import java.util.Date
 
 import data.RegisteredUser
 import javax.inject.Inject
-import models.{AppsModel, TicketsModel, UsersModel}
+import models.{ServicesModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}

@@ -5,7 +5,7 @@ import java.net.URLDecoder
 import data.UserSession._
 import data.{RegisteredUser, UserSession}
 import javax.inject.Inject
-import models.{AppsModel, TicketsModel, UsersModel}
+import models.{ServicesModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._

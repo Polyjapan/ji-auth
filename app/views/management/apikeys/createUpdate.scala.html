@@ -6,9 +6,9 @@
 
 @title = @{
     if(update.isEmpty) {
-        "Création d'application"
+        "Création de clé d'API"
     } else {
-        "Modification d'application"
+        "Modification de clé d'API"
     }
 }
 
@@ -22,9 +22,9 @@
 
 @target = @{
     if(update.isEmpty) {
-        controllers.management.routes.AppsCRUDController.createApp()
+        controllers.management.routes.ApiKeysCRUDController.createApp()
     } else {
-        controllers.management.routes.AppsCRUDController.updateApp(update.get)
+        controllers.management.routes.ApiKeysCRUDController.updateApp(update.get)
     }
 }
 
