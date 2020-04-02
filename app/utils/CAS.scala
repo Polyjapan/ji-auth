@@ -25,12 +25,16 @@ object CAS {
         <cas:user>{username}</cas:user>
         {
           properties.map { case (k, v) => Elem(null, k, Null, TopScope, false, Text(v)) }
+        }
+        {
           groups.map(g => Elem(null, "groups", Null, TopScope, false, Text(g)))
         }
 
         <cas:attributes>
           {
             properties.map { case (k, v) => Elem("cas", k, Null, TopScope, false, Text(v)) }
+          }
+          {
             groups.map(g => Elem("cas", "groups", Null, TopScope, false, Text(g)))
           }
         </cas:attributes>

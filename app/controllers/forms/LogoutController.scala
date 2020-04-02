@@ -13,10 +13,10 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author Louis Vialar
  */
 class LogoutController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext, cas: ServicesModel, internal: InternalAppsModel, config: Configuration) extends AbstractController(cc) {
-  def logout(app: Option[String], redirect: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
+  def logout(app: Option[String], redirect: Option[String], service: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
     def redirectUrl: Future[String] = {
-      if (app.nonEmpty) {
-        cas.getCasService(app.get).map {
+      if (app.orElse(service).nonEmpty) {
+        cas.getCasService(app.orElse(service).get).map {
           case Some(CasService(_, _, Some(url))) => url + "?logout"
           case Some(_) => app.get + "?logout"
           case None => "/login"

@@ -14,11 +14,11 @@ import scala.concurrent.ExecutionContext
 class InternalLoginController @Inject()(cc: ControllerComponents, apps: InternalAppsModel)(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
   def loginGet(service: String): Action[AnyContent] = Action.async { implicit rq =>
-    apps.isInternalApp(service).map {
-      case true =>
+    apps.isInternalAppSafe(service).map {
+      case Some(safe) =>
         Redirect(controllers.routes.RedirectController.redirectGet())
-          .addingToSession(TokensInstance(redirectUrl = service).pair)
-      case false => Ok(views.html.errorPage("Service interne introuvable", Html("<p>Le service spécifié est introuvable. Merci de signaler cette erreur au créateur du site dont vous provenez.")));
+          .addingToSession(TokensInstance(redirectUrl = service, safe = safe).pair)
+      case None => Ok(views.html.errorPage("Service interne introuvable", Html("<p>Le service spécifié est introuvable. Merci de signaler cette erreur au créateur du site dont vous provenez.")));
     }
   }
 }

@@ -63,7 +63,7 @@ POST           /password_reset                             controllers.forms.Pas
 
 GET            /email_confirm/:email/:code                 controllers.forms.EmailConfirmController.emailConfirmGet(email: String, code: String)
 
-GET            /logout                                     controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None)
+GET            /logout                                     controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
 
 GET            /assets/*file                               controllers.Assets.at(file)
 

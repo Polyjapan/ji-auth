@@ -24,6 +24,17 @@ class InternalAppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: Executi
     }
   }
 
+  def isInternalAppSafe(url: String): Future[Option[Boolean]] = {
+    CAS.getServiceDomain(url) match {
+      case Some(domain) => Future(db.withConnection {
+        implicit c =>
+          SQL"SELECT safe_redirection FROM internal_domains WHERE domain_name = $domain"
+            .as(bool("safe_redirection").singleOpt)
+      })
+      case None => Future.successful(None)
+    }
+  }
+
   def getInternalApps = Future(db.withConnection {
     implicit c =>
       SQL"SELECT * FROM internal_domains"

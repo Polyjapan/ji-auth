@@ -50,7 +50,7 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
             Forbidden(views.html.errorPage("Permissions manquantes", Html("<p>L'accès à cette application nécessite d'être membre de certains groupes.</p>")))
           }
         })
-      case TokensInstance(redirectUrl) =>
+      case TokensInstance(redirectUrl, safe) =>
         groups.getGroupsByMember(userId)
           .flatMap(groups => sessions.createSession(userId).map(sessionId => (sessionId, groups)))
           .map {
@@ -61,7 +61,7 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
               redirectUrl + "?accessToken=" + token + "&refreshToken=" + refresh + "&duration=" + (jwt.ExpirationTimeMinutes * 60)
           }
           .map(url => {
-            if (!url.startsWith("https://")) {
+            if (!url.startsWith("https://") || !safe) {
               Ok(views.html.redirectConfirm(url))
             } else {
               Redirect(url)

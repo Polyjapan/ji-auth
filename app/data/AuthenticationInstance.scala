@@ -41,5 +41,5 @@ sealed trait AuthenticationInstance {
 
 case class CASInstance(url: String, serviceId: Int) extends AuthenticationInstance
 
-case class TokensInstance(redirectUrl: String) extends AuthenticationInstance
+case class TokensInstance(redirectUrl: String, safe: Boolean) extends AuthenticationInstance
 
