@@ -1,11 +1,11 @@
-package controllers.explicit
+package controllers.forms
 
 import java.net.URLDecoder
 import java.util.Date
 
 import data.RegisteredUser
 import javax.inject.Inject
-import models.{ServicesModel, TicketsModel, UsersModel}
+import models.UsersModel
 import play.api.Configuration
 import play.api.data.Forms._
 import play.api.data.{Form, Mapping}
@@ -31,13 +31,13 @@ class PasswordResetController @Inject()(cc: MessagesControllerComponents, captch
 
 
   def passwordResetGet: Action[AnyContent] = Action.async { implicit rq: Request[_] =>
-    ExplicitTools.ifLoggedOut {
+    AuthTools.ifLoggedOut {
       Ok(views.html.passwordreset.forgotPassword(resetStart, captcha.AuthSiteKey))
     }
   }
 
   def passwordResetPost: Action[AnyContent] = Action.async { implicit rq: Request[_] =>
-    ExplicitTools.ifLoggedOut {
+    AuthTools.ifLoggedOut {
       resetStart.bindFromRequest().fold(withErrors => {
         BadRequest(views.html.passwordreset.forgotPassword(withErrors, captcha.AuthSiteKey))
       }, data => {
@@ -52,7 +52,7 @@ class PasswordResetController @Inject()(cc: MessagesControllerComponents, captch
           else {
             users
               .resetPassword(email, (email, code) =>
-                controllers.explicit.routes.PasswordResetController.passwordResetChangeGet(email, code).absoluteURL(true)
+                controllers.forms.routes.PasswordResetController.passwordResetChangeGet(email, code).absoluteURL(true)
               )
               .map(_ => Ok(views.html.passwordreset.forgotPasswordOk()))
 
@@ -87,7 +87,7 @@ class PasswordResetController @Inject()(cc: MessagesControllerComponents, captch
 
   def passwordResetChangeGet(emailEnc: String, codeEnc: String): Action[AnyContent] = Action.async {
     implicit rq: Request[_] =>
-      ExplicitTools.ifLoggedOut {
+      AuthTools.ifLoggedOut {
         getResetRequest(emailEnc, codeEnc).map {
           case Some(_) =>
             Ok(views.html.passwordreset.changePassword(resetComplete.fill(("", "", emailEnc, codeEnc))))
@@ -100,7 +100,7 @@ class PasswordResetController @Inject()(cc: MessagesControllerComponents, captch
 
   def passwordResetChangePost: Action[AnyContent] = Action.async {
     implicit rq: Request[_] =>
-      ExplicitTools.ifLoggedOut {
+      AuthTools.ifLoggedOut {
         resetComplete.bindFromRequest().fold(withErrors => {
           BadRequest(views.html.passwordreset.changePassword(withErrors))
         }, data => {
@@ -112,7 +112,7 @@ class PasswordResetController @Inject()(cc: MessagesControllerComponents, captch
               val updated = user.copy(password = hashPass, passwordAlgo = algo, passwordReset = None, passwordResetEnd = None)
 
               users.updateUser(updated).map(_ =>
-                Redirect(controllers.explicit.routes.LoginController.loginGet(None, None))
+                Redirect(controllers.forms.routes.LoginController.loginGet(None, None))
               )
             case None =>
               Future.successful(BadRequest(views.html.passwordreset.forgotPasswordNotFound()))

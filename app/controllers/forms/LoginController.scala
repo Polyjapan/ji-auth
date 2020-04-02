@@ -1,4 +1,4 @@
-package controllers.explicit
+package controllers.forms
 
 import data.UserSession
 import javax.inject.Inject
@@ -41,7 +41,7 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
       } else {
 
         // END Adapter for old services
-        ExplicitTools.ifLoggedOut {
+        AuthTools.ifLoggedOut {
           Future.successful(Ok(displayForm(loginForm)))
         }
       }
@@ -49,7 +49,7 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
   }
 
   def loginPost: Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut {
+    AuthTools.ifLoggedOut {
       loginForm.bindFromRequest().fold(withErrors => {
         Future.successful(BadRequest(displayForm(withErrors)))
       }, data => {
@@ -62,7 +62,7 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
           case users.EmailNotConfirmed =>
             BadRequest(displayForm(loginForm.withGlobalError("Vous devez confirmer votre adresse email pour pouvoir vous connecter")))
           case users.LoginSuccess(user) =>
-            Redirect(controllers.forms.routes.RedirectController.redirectGet()).addingToSession(UserSession(user): _*)
+            Redirect(controllers.routes.RedirectController.redirectGet()).addingToSession(UserSession(user): _*)
         }
       })
     }

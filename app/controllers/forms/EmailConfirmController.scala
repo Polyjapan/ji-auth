@@ -1,11 +1,10 @@
-package controllers.explicit
+package controllers.forms
 
 import java.net.URLDecoder
 
-import data.UserSession._
-import data.{RegisteredUser, UserSession}
+import data.UserSession
 import javax.inject.Inject
-import models.{ServicesModel, TicketsModel, UsersModel}
+import models.UsersModel
 import play.api.Configuration
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
@@ -19,7 +18,7 @@ import scala.concurrent.ExecutionContext
 class EmailConfirmController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration, users: UsersModel) extends AbstractController(cc) {
 
   def emailConfirmGet(email: String, code: String): Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut {
+    AuthTools.ifLoggedOut {
       val decode = (s: String) => URLDecoder.decode(s, "UTF-8")
 
       users.confirmEmail(decode(email), decode(code)).flatMap {

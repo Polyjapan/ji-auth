@@ -42,28 +42,28 @@ GET            /api/ticket/:ticket                         controllers.tickets.A
 
 # General redirection
 
-GET            /redirect                                   controllers.forms.RedirectController.redirectGet
+GET            /redirect                                   controllers.RedirectController.redirectGet
 
 # UI
 
-GET            /register                                   controllers.explicit.RegisterController.registerGet
-POST           /register                                   controllers.explicit.RegisterController.registerPost
+GET            /register                                   controllers.forms.RegisterController.registerGet
+POST           /register                                   controllers.forms.RegisterController.registerPost
 
-GET            /login                                      controllers.explicit.LoginController.loginGet(app: Option[String] ?= None, tokenType: Option[String] ?= None, service: Option[String] ?= None)
-POST           /login                                      controllers.explicit.LoginController.loginPost
+GET            /login                                      controllers.forms.LoginController.loginGet(app: Option[String] ?= None, tokenType: Option[String] ?= None, service: Option[String] ?= None)
+POST           /login                                      controllers.forms.LoginController.loginPost
 
-GET            /update_info                                controllers.explicit.UpdateInfoController.updateGet
-POST           /update_info                                controllers.explicit.UpdateInfoController.updatePost
+GET            /update_info                                controllers.forms.UpdateInfoController.updateGet
+POST           /update_info                                controllers.forms.UpdateInfoController.updatePost
 
-GET            /forgot_password                            controllers.explicit.PasswordResetController.passwordResetGet
-POST           /forgot_password                            controllers.explicit.PasswordResetController.passwordResetPost
+GET            /forgot_password                            controllers.forms.PasswordResetController.passwordResetGet
+POST           /forgot_password                            controllers.forms.PasswordResetController.passwordResetPost
 
-GET            /password_reset/:email/:code                controllers.explicit.PasswordResetController.passwordResetChangeGet(email: String, code: String)
-POST           /password_reset                             controllers.explicit.PasswordResetController.passwordResetChangePost
+GET            /password_reset/:email/:code                controllers.forms.PasswordResetController.passwordResetChangeGet(email: String, code: String)
+POST           /password_reset                             controllers.forms.PasswordResetController.passwordResetChangePost
 
-GET            /email_confirm/:email/:code                 controllers.explicit.EmailConfirmController.emailConfirmGet(email: String, code: String)
+GET            /email_confirm/:email/:code                 controllers.forms.EmailConfirmController.emailConfirmGet(email: String, code: String)
 
-GET            /logout                                     controllers.explicit.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None)
+GET            /logout                                     controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None)
 
 GET            /assets/*file                               controllers.Assets.at(file)
 

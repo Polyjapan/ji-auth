@@ -1,4 +1,4 @@
-package controllers.explicit
+package controllers.forms
 
 import data._
 import javax.inject.Inject
@@ -38,7 +38,7 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents, hashes: H
     views.html.updateInfo.updateInfo(form)
 
   def updateGet: Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedIn { user: UserSession =>
+    AuthTools.ifLoggedIn { user: UserSession =>
       users.getUserProfile(user.id).map {
         case Some((user, address)) =>
           (user.firstName, user.lastName, user.phoneNumber.getOrElse(""),
@@ -53,7 +53,7 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents, hashes: H
   }
 
   def updatePost: Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedIn { user =>
+    AuthTools.ifLoggedIn { user =>
       registerForm.bindFromRequest().fold(withErrors => {
         println(withErrors.errors)
         displayForm(withErrors).map(f => BadRequest(f))
@@ -63,7 +63,7 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents, hashes: H
         val addr = Address(user.id, address, addressComplement, postCode, city, country)
 
         users.update(user.id, firstName, lastName, phone, addr).flatMap(succ =>
-          if (succ) Redirect(controllers.forms.routes.RedirectController.redirectGet())
+          if (succ) Redirect(controllers.routes.RedirectController.redirectGet())
           else displayForm(registerForm.withGlobalError("Erreur inconnue de base de données")).map(f => InternalServerError(f))
         )
       })

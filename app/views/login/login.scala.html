@@ -17,7 +17,7 @@
             <p class="lead">Pour poursuivre, connectez vous à votre compte Japan Impact.</p>
 
 
-            <a class="mb-3" href="@controllers.explicit.routes.RegisterController.registerGet()">
+            <a class="mb-3" href="@controllers.forms.routes.RegisterController.registerGet()">
                 Je n'ai pas encore de compte</a>
 
             <hr>
@@ -28,7 +28,7 @@
         <div class="row justify-content-md-center">
             <div class="col-md-8">
 
-            @form(action = controllers.explicit.routes.LoginController.loginPost()) {
+            @form(action = controllers.forms.routes.LoginController.loginPost()) {
                 @CSRF.formField
 
                 @if(userForm.hasGlobalErrors) {
@@ -44,7 +44,7 @@
                 <br>
                 <p class="mb-3 text-muted">
                     Vous ne vous souvenez plus de votre mot de passe ?
-                    <a href="@controllers.explicit.routes.PasswordResetController.passwordResetGet()">
+                    <a href="@controllers.forms.routes.PasswordResetController.passwordResetGet()">
                         Mot de passe oublié</a>
                 </p>
 
@@ -54,7 +54,7 @@
                 <hr>
 
                 <p class="mb-3 text-muted">Pas encore de compte ? Créez en un en quelques instants !</p>
-                <a href="@controllers.explicit.routes.RegisterController.registerGet()" class="btn btn-secondary btn-lg btn-block" >Créer un compte</a>
+                <a href="@controllers.forms.routes.RegisterController.registerGet()" class="btn btn-secondary btn-lg btn-block" >Créer un compte</a>
             </div>
         </div>
 

@@ -1,6 +1,5 @@
-package controllers.forms
+package controllers
 
-import ch.japanimpact.auth.api.TicketType
 import data.UserSession._
 import data.{Address, AuthenticationInstance, CASInstance, RegisteredUser, TokensInstance}
 import javax.inject.Inject
@@ -87,10 +86,10 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
 
           this.produceRedirection(user, address, authInstance)
         case _ =>
-          Redirect(controllers.explicit.routes.UpdateInfoController.updateGet())
+          Redirect(controllers.forms.routes.UpdateInfoController.updateGet())
       }
     } else {
-      Redirect(controllers.explicit.routes.LoginController.loginGet())
+      Redirect(controllers.forms.routes.LoginController.loginGet())
     }
   }
 

@@ -22,7 +22,7 @@
         <div class="row justify-content-md-center">
             <div class="col-md-8">
 
-            @form(action = controllers.explicit.routes.UpdateInfoController.updatePost()) {
+            @form(action = controllers.forms.routes.UpdateInfoController.updatePost()) {
                 @CSRF.formField
 
                 @if(userForm.hasGlobalErrors) {

@@ -1,4 +1,4 @@
-package controllers.explicit
+package controllers.forms
 
 import data._
 import javax.inject.Inject
@@ -41,13 +41,13 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
 
 
   def registerGet: Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut {
+    AuthTools.ifLoggedOut {
       Future.successful(Ok(displayForm(registerForm)))
     }
   }
 
   def registerPost: Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut {
+    AuthTools.ifLoggedOut {
       registerForm.bindFromRequest().fold(withErrors => {
         println(withErrors.errors)
         Future.successful(BadRequest(displayForm(withErrors)))
@@ -60,7 +60,7 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),
-          profile, Some(addr), (email, code) => controllers.explicit.routes.EmailConfirmController.emailConfirmGet(email, code).absoluteURL(true)
+          profile, Some(addr), (email, code) => controllers.forms.routes.EmailConfirmController.emailConfirmGet(email, code).absoluteURL(true)
         ).map {
           case users.BadCaptcha =>
             BadRequest(displayForm(registerForm.withGlobalError("Captcha incorrect")))
