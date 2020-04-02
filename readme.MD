@@ -15,7 +15,9 @@ You can provide a specific configuration file using the `-Dconfig.file=path` swi
 
 [https://github.com/Polyjapan/ji-auth-framework] is a cool client written in scala for the JVM :)
 
-## Protocol
+## Protocol for internal apps
+
+> :information_source: Internal apps are apps that share the same session (JWT). 
 
 The login process is quite simple: 
 1. Redirect the user to a special URL
@@ -26,25 +28,22 @@ Let's now dig into the details!
 
 ### 1. Registering the app
 
-To use JI-Auth, you first need to register your app to the service. You need to be an administrator of the service in order to do that.
-When registering the app, you'll need to provide a callback url. This is the URL to which the user will be redirected after logging in.
+To use JI-Auth, you first need to whitelist the domain for internal use.
 
 ### 2. Sending the user
-
-After registering the app, you'll get
- - a public `Client-Id`
- - a private `Client-Secret`
  
-To log an user in, redirect him to `https://${API_DOMAIN}/login?app=${Client-Id}&tokenType=token`
+To log an user in, redirect him to `https://${API_DOMAIN}/internal/login?service=<FULL_CALLBACK_URL>`.
 
 Let's see what's in this URL:
  - `API_DOMAIN`, the server on which this API runs (usually `auth.japan-impact.ch`)
- - `tokenType=token` if you omit this parameter, it will default to `ticket`, which correspond to the deprecated old ticket protocol.
+ - `FULL_CALLBACK_URL`, the url to which the user will be redirected.
+ 
+> :warning: The user will be redirected with NO INTERACTION. Your service should not login users from any URL.
  
 ### 3. Checking the token
 
 After logging in, the user will get redirected to:
-`${CALLBACK URL}?access_token=${ACCESS_TOKEN}&refresh_token=${REFRESH_TOKEN}&duration=${EXP_TIME}`
+`${FULL_CALLBACK_URL}?access_token=${ACCESS_TOKEN}&refresh_token=${REFRESH_TOKEN}&duration=${EXP_TIME}`
 
 The GET parameters are the following:
  - `ACCESS_TOKEN`: your main access token. It's a [JWT](https://jwt.io/) that you can paste on https://jwt.io for details. 
@@ -127,14 +126,12 @@ This endpoind requires an `ACCESS_TOKEN`. See the section on "API Authentication
 
 ## Common backend APIs
 
-Here are some APIs that your app can use to get more infos about a user or refre
-
 These APIs are intended to be accessed only by the backend of the apps, and not any user facing script.
 
-The endpoints are protected and require two headers to work:
-
- - `X-Client-Id` for the app client id
+The endpoints are protected and require the following header to work:
  - `X-Client-Secret` for the app client secret
+
+To get a client secret, you need to register a new app on the server.
  
 If the headers are missing, the endpoints return:
 
@@ -253,9 +250,9 @@ Returns:
 
 JI Auth supports CAS v1, v2 and v3. The implementation is sparse. Here are the main endpoints:
 
-- `/login?service=service_url` to log in. The domain of `service_url` must be registered as a cas_service
-- `/validate`: the standard CAS v1 validation endpoint
-- `/proxyValidate` and `/serviceValidate`: the sparsely implemented serviceValidate CAS v2/v3 endpoint.
+- `/cas/login?service=service_url` to log in. The domain of `service_url` must be registered as a cas_service
+- `/cas/v1/validate`: the standard CAS v1 validation endpoint
+- `/cas/v2/proxyValidate` and `/cas/v2/serviceValidate`: the sparsely implemented serviceValidate CAS v2/v3 endpoint.
 
 ## Old Protocol
 
