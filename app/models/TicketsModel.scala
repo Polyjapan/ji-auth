@@ -37,7 +37,7 @@ class TicketsModel @Inject()(dbApi: play.api.db.DBApi, sessions: SessionsModel)(
    * @return a future holding the generated token for this ticket
    */
   def createCasTicketForUser(user: Int, service: Int): Future[String] = {
-    val token = RandomUtils.randomString(64)
+    val token = "ST-" + RandomUtils.randomString(64)
 
     Future(db.withConnection(implicit c => {
       SQL"INSERT INTO cas_tickets(service_id, user_id, ticket) VALUES ($service, $user, $token)"
