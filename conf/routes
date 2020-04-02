@@ -7,21 +7,6 @@ OPTIONS        /                                        controllers.OptionsContr
 OPTIONS        /*url                                    controllers.OptionsController.options(url: String)
 
 
-+nocsrf
-POST           /hidden/login                            controllers.hidden.HiddenLogInController.postLogin(tokenType: Option[String])
-
-+nocsrf
-POST           /hidden/register                         controllers.hidden.HiddenRegisterController.postRegister
-
-+nocsrf
-POST           /hidden/email_confirm                    controllers.hidden.HiddenEmailConfirmController.postEmailConfirm
-
-+nocsrf
-POST           /hidden/forgot_password                  controllers.hidden.HiddenForgotPasswordController.postForgotPassword
-
-+nocsrf
-POST           /hidden/password_reset                   controllers.hidden.HiddenPasswordResetController.postPasswordReset
-
 GET            /api/ticket/:ticket                      controllers.api.AppTicketController.getAppTicket(ticket: String)
 GET            /validate                                controllers.api.AppTicketController.getCasV1Ticket(ticket: String, service: String)
 GET            /serviceValidate                         controllers.api.AppTicketController.getCasV2Ticket(ticket: String, service: String)

@@ -31,7 +31,7 @@ class ExplicitTools @Inject()(apps: AppsModel, tickets: TicketsModel, groups: Gr
         }
       } else {
         apps.getApp(app.get).flatMap {
-          case Some(App(Some(appId), _, _, _, _, redirectUrl, _, _)) =>
+          case Some(App(Some(appId), _, _, _, _, redirectUrl)) =>
             tokenType.getOrElse("ticket") match {
               case "ticket" =>
                 tickets.createTicketForUser(userId, appId, TicketType.ExplicitGrantTicket).map(ticket => redirectUrl + "?ticket=" + ticket)

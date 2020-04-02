@@ -18,9 +18,6 @@ class ReCaptchaService @Inject()(ws: WSClient)(implicit ec: ExecutionContext, co
   lazy val AuthSiteKey: String = config.get[String]("recaptcha.siteKey")
   lazy val AuthSecretKey: String = config.get[String]("recaptcha.secretKey")
 
-  def checkCaptcha(app: data.App, response: String): Future[ReCaptchaResponse] =
-    doCheckCaptcha(app.recaptchaPrivateKey, response)
-
   def doCheckCaptcha(optKey: Option[String], response: String): Future[ReCaptchaResponse] = optKey match {
     case Some(secretKey) =>
       val params = Map[String, String]("secret" -> secretKey, "response" -> response)
@@ -35,9 +32,6 @@ class ReCaptchaService @Inject()(ws: WSClient)(implicit ec: ExecutionContext, co
 
     case None => Future(ReCaptchaResponse(true, Some(new DateTime(System.currentTimeMillis())), Some("nocaptcha.void")))
   }
-
-  def checkCaptchaWithExpiration(app: data.App, response: String, hours: Int = 6): Future[ReCaptchaResponse] =
-    doCheckCaptchaWithExpiration(app.recaptchaPrivateKey, response, hours)
 
   def doCheckCaptchaWithExpiration(secretKey: Option[String], response: String, hours: Int = 6): Future[ReCaptchaResponse] = {
     val nowMinus6 = new Date(System.currentTimeMillis() - (6 * 60 * 60 * 1000))

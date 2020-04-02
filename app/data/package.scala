@@ -70,10 +70,8 @@ package object data {
    * @param clientSecret        the client secret to authenticate secret (backend to backend) requests
    * @param appName             the name of the app
    * @param redirectUrl         the URL where the user should be redirected after logging in
-   * @param emailCallbackUrl    the URL that should be embedded in email confirmation emails sent in hidden mode
-   * @param recaptchaPrivateKey the private key used by recaptcha, unique to the app
    */
-  case class App(appId: Option[Int], appCreatedBy: Int, clientId: String, clientSecret: String, appName: String, redirectUrl: String, emailCallbackUrl: String, recaptchaPrivateKey: Option[String])
+  case class App(appId: Option[Int], appCreatedBy: Int, clientId: String, clientSecret: String, appName: String, redirectUrl: String)
 
   case class CasService(serviceId: Int, serviceName: String)
   case class CasV2Ticket(email: String, firstname: String, lastname: String, groups: Set[String])

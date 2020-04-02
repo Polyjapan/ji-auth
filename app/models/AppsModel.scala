@@ -91,8 +91,8 @@ class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContex
    */
   def createApp(app: App): Future[Int] = Future(db.withConnection(implicit c => SqlUtils.insertOne("apps", app)))
 
-  def createApp(name: String, redirectUrl: String, emailCallbackUrl: String, captcha: Option[String], user: Int): Future[Int] =
-    createApp(App(None, user, RandomUtils.randomString(32), RandomUtils.randomString(32), name, redirectUrl, emailCallbackUrl, captcha))
+  def createApp(name: String, redirectUrl: String, user: Int): Future[Int] =
+    createApp(App(None, user, RandomUtils.randomString(32), RandomUtils.randomString(32), name, redirectUrl))
 
   /**
    * Updates an app whose id is set
