@@ -52,40 +52,5 @@ class AppTicketController @Inject()(cc: ControllerComponents,
     }
   }
 
-  def getCasV1Ticket(ticket: String, service: String): Action[AnyContent] = Action.async { implicit rq =>
-    apps.getCasApp(service) flatMap {
-      case Some(CasService(serviceId, _)) =>
-        tickets.getCasTicket(ticket, serviceId) map {
-          case Some(user) =>
-            Ok("yes\n" + user._1.email + "\n")
-          case None =>
-            Ok("no\n\n")
-        }
-      case None =>
-        BadRequest("no\n\n")
-    }
-  }
-
-  def getCasV2Ticket(ticket: String, service: String): Action[AnyContent] = Action.async { implicit rq =>
-    apps.getCasApp(service) flatMap {
-      case Some(CasService(serviceId, _)) =>
-        println(" Service " + serviceId + " found")
-        tickets.getCasTicket(ticket, serviceId) flatMap {
-          case Some((user, groups)) =>
-            val params = Map(
-              "email" -> user.email,
-              "name" -> (user.firstName + " " + user.lastName),
-              "firstname" -> user.firstName,
-              "lastname" -> user.lastName
-            )
-
-            Ok(CAS.getCasSuccessMessage(params, user.email, groups))
-          case None =>
-            Ok(CAS.getCasErrorResponse(CAS.CASError.InvalidTicket, ticket))
-        }
-      case None =>
-        Ok(CAS.getCasErrorResponse(CAS.CASError.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
-    }
-  }
 
 }

@@ -1,4 +1,4 @@
-@(userForm: Form[_], app: Option[String], tokenType: Option[String])(implicit request: RequestHeader, messageProvider: MessagesProvider)
+@(userForm: Form[_])(implicit request: RequestHeader, messageProvider: MessagesProvider)
 
     @import helper._
     @import views.forms.FormFieldTemplate._
@@ -22,7 +22,7 @@
         <div class="row justify-content-md-center">
             <div class="col-md-8">
 
-            @form(action = controllers.explicit.routes.UpdateInfoController.updatePost(app, tokenType)) {
+            @form(action = controllers.explicit.routes.UpdateInfoController.updatePost()) {
                 @CSRF.formField
 
                 @if(userForm.hasGlobalErrors) {

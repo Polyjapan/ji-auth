@@ -16,18 +16,15 @@ import scala.concurrent.ExecutionContext
 /**
   * @author Louis Vialar
   */
-class EmailConfirmController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration, ExplicitTools: ExplicitTools, users: UsersModel) extends AbstractController(cc) {
+class EmailConfirmController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration, users: UsersModel) extends AbstractController(cc) {
 
-  def emailConfirmGet(email: String, code: String, app: Option[String], tokenType: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut(app, tokenType) {
+  def emailConfirmGet(email: String, code: String): Action[AnyContent] = Action.async { implicit rq =>
+    ExplicitTools.ifLoggedOut {
       val decode = (s: String) => URLDecoder.decode(s, "UTF-8")
-
-      def ok(user: RegisteredUser, redirect: String): Result =
-        Ok(views.html.register.emailconfirmok(redirect)).withSession(UserSession(user): _*)
 
       users.confirmEmail(decode(email), decode(code)).flatMap {
         case Some(user) =>
-          ExplicitTools.produceRedirectOrCompleteInfo(app, tokenType, user.id.get).map(url => ok(user, url))
+          Ok(views.html.register.emailconfirmok()).addingToSession(UserSession(user): _*)
         case None =>
           BadRequest(views.html.register.emailconfirmfail())
       }

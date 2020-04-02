@@ -11,7 +11,6 @@ import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import play.twirl.api.HtmlFormat
 import services.{HashService, ReCaptchaService}
-import utils.Implicits._
 import utils.ValidationUtils
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -19,9 +18,8 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-class RegisterController @Inject()(cc: MessagesControllerComponents,
-                                   hashes: HashService, ExplicitTools: ExplicitTools,
-                                   captcha: ReCaptchaService)(implicit ec: ExecutionContext, apps: AppsModel, users: UsersModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
+class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: HashService, captcha: ReCaptchaService)
+                                  (implicit ec: ExecutionContext, apps: AppsModel, users: UsersModel, mailer: MailerClient, config: Configuration) extends MessagesAbstractController(cc) with I18nSupport {
 
   private val registerForm = Form(
     mapping(
@@ -38,21 +36,21 @@ class RegisterController @Inject()(cc: MessagesControllerComponents,
 
       "g-recaptcha-response" -> text)(Tuple11.apply)(Tuple11.unapply))
 
-  private def displayForm(form: Form[_], app: Option[String], tokenType: Option[String])(implicit rq: RequestHeader): Future[HtmlFormat.Appendable] =
-    Future.successful(views.html.register.register(form, config.get[String]("recaptcha.siteKey"), app, tokenType))
+  private def displayForm(form: Form[_])(implicit rq: RequestHeader): HtmlFormat.Appendable =
+    views.html.register.register(form, config.get[String]("recaptcha.siteKey"))
 
 
-  def registerGet(app: Option[String], tokenType: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut(app, tokenType) {
-      displayForm(registerForm, app, tokenType).map(f => Ok(f))
+  def registerGet: Action[AnyContent] = Action.async { implicit rq =>
+    ExplicitTools.ifLoggedOut {
+      Future.successful(Ok(displayForm(registerForm)))
     }
   }
 
-  def registerPost(app: Option[String], tokenType: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
-    ExplicitTools.ifLoggedOut(app, tokenType) {
+  def registerPost: Action[AnyContent] = Action.async { implicit rq =>
+    ExplicitTools.ifLoggedOut {
       registerForm.bindFromRequest().fold(withErrors => {
         println(withErrors.errors)
-        displayForm(withErrors, app, tokenType).map(f => BadRequest(f))
+        Future.successful(BadRequest(displayForm(withErrors)))
       }, data => {
         val (email, password, firstName, lastName, phone, address, addressComplement, postCode, city, country, captchaResponse) = data
 
@@ -62,13 +60,13 @@ class RegisterController @Inject()(cc: MessagesControllerComponents,
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),
-          profile, Some(addr), (email, code) => controllers.explicit.routes.EmailConfirmController.emailConfirmGet(email, code, app, tokenType).absoluteURL(true)
-        ).flatMap({
+          profile, Some(addr), (email, code) => controllers.explicit.routes.EmailConfirmController.emailConfirmGet(email, code).absoluteURL(true)
+        ).map {
           case users.BadCaptcha =>
-            displayForm(registerForm.withGlobalError("Captcha incorrect"), app, tokenType).map(f => BadRequest(f))
+            BadRequest(displayForm(registerForm.withGlobalError("Captcha incorrect")))
           case _ =>
             Ok(views.html.register.registerok(email))
-        })
+        }
       })
     }
   }
