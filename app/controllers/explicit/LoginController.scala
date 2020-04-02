@@ -1,6 +1,6 @@
 package controllers.explicit
 
-import data.{AuthenticationInstance, TicketsInstance, TokensInstance, UserSession}
+import data.UserSession
 import javax.inject.Inject
 import models.{AppsModel, UsersModel}
 import play.api.Configuration
@@ -31,23 +31,12 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
       Future.successful(Redirect(controllers.cas.routes.CASLoginController.loginGet(service.get)))
     } else {
       if (app.nonEmpty) {
-        apps.getApp(app.get).flatMap {
-          case Some(app) =>
-            val sess: AuthenticationInstance = tokenType match {
-              case Some("token") => TokensInstance(app.redirectUrl)
-              case _ => TicketsInstance(app.appId.get, app.redirectUrl)
-            }
-
-
-            // TODO: Treat tickets service as a CAS
-
-            // TODO: move in own place
-
-            ExplicitTools.ifLoggedOut {
-              Future.successful(Ok(displayForm(loginForm)))
-            }.map(r => r.addingToSession(sess.pair))
-          case None =>
-            Future.successful(NotFound(views.html.errorPage("Application introuvable", Html("<p>L'application spécifiée est introuvable. Merci de signaler cette erreur au créateur du site dont vous provenez."))))
+        tokenType match {
+          case Some("token") =>
+            Future.successful(NotFound(views.html.errorPage("Protocole non supporté", Html("<p>Le protocole recherché n'existe plus.</p>"))))
+          case _ =>
+            // Ticket type: CAS-like redirection
+            Future.successful(Redirect(controllers.cas.routes.CASLoginController.loginGet(app.get)))
         }
       } else {
 
@@ -66,7 +55,7 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
       }, data => {
         val (email, password) = data
 
-        users.login(email, password).map{
+        users.login(email, password).map {
 
           case users.BadLogin =>
             BadRequest(displayForm(loginForm.withGlobalError("Email ou mot de passe incorrect")))

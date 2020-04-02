@@ -22,8 +22,8 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
   private val form = Form(
     mapping(
       "name" -> nonEmptyText(5, 100),
-      "redirect_url" -> text
-    )(Tuple2.apply)(Tuple2.unapply)
+//      "redirect_url" -> text
+    )(t => t)(t => Some(t))
   )
 
   def createAppForm: Action[AnyContent] = Action.async { implicit rq =>
@@ -36,10 +36,9 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
     ManagementTools.ifPermission(UserSession.CreateApp) { implicit session =>
       form.bindFromRequest().fold(withErrors => {
         BadRequest(views.html.management.apps.createUpdate(session, withErrors))
-      }, data => {
-        val (name, redirect) = data
+      }, name => {
 
-        apps.createApp(name, redirect, session.id).map(
+        apps.createApp(name, session.id).map(
           id => Redirect(routes.AppsCRUDController.getApp(id)))
       })
     }
@@ -52,11 +51,9 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
           form.bindFromRequest().fold(
             withErrors => {
               BadRequest(views.html.management.apps.createUpdate(session, withErrors, Some(id)))
-            }, data => {
-            val (name, redirect) = data
-
+            }, name => {
             apps
-              .updateApp(app.copy(appName = name, redirectUrl = redirect))
+              .updateApp(app.copy(appName = name))
               .map(
                 _ => Redirect(routes.AppsCRUDController.getApp(id)))
           })
@@ -69,7 +66,7 @@ class AppsCRUDController @Inject()(cc: MessagesControllerComponents,
     ManagementTools.ifLoggedIn { implicit session =>
       apps.getAppByIdAndOwner(id, session.id).flatMap {
         case Some(app) =>
-          Ok(views.html.management.apps.createUpdate(session, form.fill((app.appName, app.redirectUrl)), Some(id)))
+          Ok(views.html.management.apps.createUpdate(session, form.fill(app.appName), Some(id)))
         case None => NotFound(ManagementTools.error("Application introuvable", "L'application recherchée n'existe pas, ou ne vous est pas accessible."))
       }
     }

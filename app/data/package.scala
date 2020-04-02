@@ -62,18 +62,16 @@ package object data {
 
 
   /**
-   * Represents an app allowed to authenticate users in the system
+   * Represents an app allowed to make API calls on the system
    *
    * @param appId               an internal id for the app
    * @param appCreatedBy        the id of the user who created the app
-   * @param clientId            the clientID to provide in requests
    * @param clientSecret        the client secret to authenticate secret (backend to backend) requests
    * @param appName             the name of the app
-   * @param redirectUrl         the URL where the user should be redirected after logging in
    */
-  case class App(appId: Option[Int], appCreatedBy: Int, clientId: String, clientSecret: String, appName: String, redirectUrl: String)
+  case class App(appId: Option[Int], appCreatedBy: Int, clientSecret: String, appName: String)
 
-  case class CasService(serviceId: Int, serviceName: String)
+  case class CasService(serviceId: Int, serviceName: String, serviceRedirectUrl: Option[String] = None)
   case class CasV2Ticket(email: String, firstname: String, lastname: String, groups: Set[String])
 
   implicit val AppRowParser: RowParser[App] = Macro.namedParser[App](ColumnNaming.SnakeCase)

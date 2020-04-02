@@ -18,8 +18,7 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: AppsModel, ticke
 
   def serviceValidate(ticket: String, service: String): Action[AnyContent] = Action.async { implicit rq =>
     apps.getCasApp(service) flatMap {
-      case Some(CasService(serviceId, _)) =>
-        println(" Service " + serviceId + " found")
+      case Some(CasService(serviceId, _, _)) =>
         tickets.getCasTicket(ticket, serviceId) flatMap {
           case Some((user, groups)) =>
             val params = Map(

@@ -1,6 +1,6 @@
 package controllers.explicit
 
-import data.App
+import data.CasService
 import javax.inject.Inject
 import models.AppsModel
 import play.api.Configuration
@@ -10,15 +10,21 @@ import utils.Implicits._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * @author Louis Vialar
-  */
+ * @author Louis Vialar
+ */
 class LogoutController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext, apps: AppsModel, config: Configuration) extends AbstractController(cc) {
-  def logout(app: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
+  def logout(app: Option[String], redirect: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
     def redirectUrl: Future[String] = {
       if (app.nonEmpty) {
-        apps.getApp(app.get).flatMap {
-          case Some(a) => a.redirectUrl + "?logout"
-          case _ => "/login"
+        apps.getCasApp(app.get).map {
+          case Some(CasService(_, _, Some(url))) => url + "?logout"
+          case Some(_) => app.get + "?logout"
+          case None => "/login"
+        }
+      } else if (redirect.nonEmpty) {
+        apps.isInternalApp(redirect.get).map {
+          case true => redirect.get + "?logout"
+          case false => "/login"
         }
       } else "/login"
     }

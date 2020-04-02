@@ -7,7 +7,6 @@ object AuthenticationInstance {
 
 
   private implicit val casInstanceFormat = Json.format[CASInstance]
-  private implicit val ticketsInstanceFormat = Json.format[TicketsInstance]
   private implicit val tokensInstanceFormat = Json.format[TokensInstance]
   implicit val authenticationInstanceFormat = Json.format[AuthenticationInstance]
 
@@ -15,7 +14,6 @@ object AuthenticationInstance {
   def unapply(instance: AuthenticationInstance): Option[(String, JsValue)] = {
     val (prod: Product, sub) = instance match {
       case b: CASInstance => (b, Json.toJson(b)(casInstanceFormat))
-      case b: TicketsInstance => (b, Json.toJson(b)(ticketsInstanceFormat))
       case b: TokensInstance => (b, Json.toJson(b)(tokensInstanceFormat))
     }
     Some(prod.productPrefix -> sub)
@@ -24,7 +22,6 @@ object AuthenticationInstance {
   def apply(instanceType: String, constraint: JsValue): AuthenticationInstance = {
     (instanceType match {
       case "CASInstance" => Json.fromJson[CASInstance](constraint)
-      case "TicketsInstance" => Json.fromJson[TicketsInstance](constraint)
       case "TokensInstance" => Json.fromJson[TokensInstance](constraint)
       case other =>
         println(other)
@@ -43,8 +40,6 @@ sealed trait AuthenticationInstance {
 }
 
 case class CASInstance(url: String, serviceId: Int) extends AuthenticationInstance
-
-case class TicketsInstance(appId: Int, redirectUrl: String) extends AuthenticationInstance
 
 case class TokensInstance(redirectUrl: String) extends AuthenticationInstance
 

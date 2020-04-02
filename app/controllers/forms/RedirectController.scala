@@ -1,11 +1,10 @@
 package controllers.forms
 
 import ch.japanimpact.auth.api.TicketType
-import controllers.explicit.ExplicitTools
 import data.UserSession._
-import data.{Address, AuthenticationInstance, CASInstance, RegisteredUser, TicketsInstance, TokensInstance}
+import data.{Address, AuthenticationInstance, CASInstance, RegisteredUser, TokensInstance}
 import javax.inject.Inject
-import models.{AppsModel, GroupsModel, SessionsModel, TicketsModel, UsersModel}
+import models._
 import play.api.Configuration
 import play.api.i18n.I18nSupport
 import play.api.libs.json.Json
@@ -57,12 +56,7 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
           }
           .map(url => Redirect(url))
 
-      case TicketsInstance(appId, redirectUrl) =>
-        tickets.createTicketForUser(user.id.get, appId, TicketType.ExplicitGrantTicket)
-          .map(ticket => redirectUrl + "?ticket=" + ticket)
-          .map(url => Redirect(url))
-
-    }).map(result => result.withSession(rq.session - AuthenticationInstance.SessionKey))
+    }).map(result => result.removingFromSession(AuthenticationInstance.SessionKey))
   }
 
   def redirectGet: Action[AnyContent] = Action.async { implicit rq =>

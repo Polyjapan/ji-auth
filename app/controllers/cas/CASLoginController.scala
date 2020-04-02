@@ -16,7 +16,8 @@ class CASLoginController @Inject()(cc: ControllerComponents, apps: AppsModel)(im
   def loginGet(service: String): Action[AnyContent] = Action.async { implicit rq =>
     apps.getCasApp(service).map {
       case Some(casService) =>
-        Redirect(controllers.forms.routes.RedirectController.redirectGet()).addingToSession(CASInstance(service, casService.serviceId).pair)
+        Redirect(controllers.forms.routes.RedirectController.redirectGet())
+          .addingToSession(CASInstance(url = casService.serviceRedirectUrl.getOrElse(service), casService.serviceId).pair)
       case None => Ok(views.html.errorPage("Service introuvable", Html("<p>Le service spécifié est introuvable. Merci de signaler cette erreur au créateur du site dont vous provenez.")));
     }
   }

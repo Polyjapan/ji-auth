@@ -8,8 +8,7 @@ OPTIONS        /*url                                    controllers.OptionsContr
 
 # API
 
-GET            /api/ticket/:ticket                      controllers.api.AppTicketController.getAppTicket(ticket: String)
-GET            /api/refresh/:refreshToken               controllers.api.TokenRefreshController.refreshToken(refreshToken: String)
+# deprecated
 GET            /api/app_login/:targetClientId           controllers.api.AppLogInController.login(targetClientId: String)
 +nocsrf
 POST           /api/groups/:name/members                controllers.api.AppGroupsController.addMemberToGroup(name: String)
@@ -31,6 +30,17 @@ GET            /cas/v1/login                            controllers.cas.CASLogin
 GET            /cas/v2/serviceValidate                  controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String)
 GET            /cas/v2/proxyValidate                    controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String)
 GET            /cas/v2/login                            controllers.cas.CASLoginController.loginGet(service: String)
+
+# Internal
+
+GET            /internal/login                          controllers.internal.InternalLoginController.loginGet(service: String)
+GET            /internal/refresh/:refreshToken          controllers.internal.TokenRefreshController.refreshToken(refreshToken: String)
+GET            /api/refresh/:refreshToken               controllers.internal.TokenRefreshController.refreshToken(refreshToken: String)
+
+# Tickets (deprecated)
+
+GET            /api/ticket/:ticket                      controllers.tickets.AppTicketController.getAppTicket(ticket: String)
+
 
 # General redirection
 
@@ -55,7 +65,7 @@ POST           /password_reset                          controllers.explicit.Pas
 
 GET            /email_confirm/:email/:code              controllers.explicit.EmailConfirmController.emailConfirmGet(email: String, code: String)
 
-GET            /logout                                  controllers.explicit.LogoutController.logout(app: Option[String])
+GET            /logout                                  controllers.explicit.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None)
 
 GET            /assets/*file                            controllers.Assets.at(file)
 

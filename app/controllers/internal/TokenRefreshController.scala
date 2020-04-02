@@ -1,12 +1,9 @@
-package controllers.api
+package controllers.internal
 
-import java.util.Date
-
-import ch.japanimpact.auth.api
-import ch.japanimpact.auth.api.{AppTicketResponse, TokenResponse}
-import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
+import ch.japanimpact.auth.api.TokenResponse
+import data._
 import javax.inject.Inject
-import models.{AppsModel, GroupsModel, SessionsModel, TicketsModel, UsersModel}
+import models.{AppsModel, SessionsModel}
 import play.api.Configuration
 import play.api.libs.mailer.MailerClient
 import play.api.mvc._
@@ -14,7 +11,6 @@ import services.JWTService
 import utils.Implicits._
 
 import scala.concurrent.ExecutionContext
-import data._
 
 /**
   * @author Louis Vialar

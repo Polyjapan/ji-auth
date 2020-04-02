@@ -26,6 +26,17 @@ class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContex
     }
   }
 
+  def isInternalApp(url: String): Future[Boolean] = {
+    CAS.getServiceDomain(url) match {
+      case Some(domain) => Future(db.withConnection {
+        implicit c =>
+          SQL"SELECT COUNT(*) FROM internal_domains WHERE domain_name = $domain"
+            .as(scalar[Int].single) > 0
+      })
+      case None => Future.successful(false)
+    }
+  }
+
   def hasRequiredGroups(service: Int, userId: Int): Future[Boolean] = Future(db.withConnection { implicit c =>
     val required = SQL"SELECT group_id FROM cas_required_groups WHERE service_id = $service".as(int("group_id").*).toSet
     val allowed = SQL"SELECT group_id FROM cas_allowed_groups WHERE service_id = $service".as(int("group_id").*).toSet
@@ -59,14 +70,13 @@ class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContex
 
 
   /**
-   * Get an app registered in the system by its public clientId and private clientSecret
+   * Get an app registered in the system by its private clientSecret
    *
-   * @param clientId     the clientId to look for
    * @param clientSecret the clkientSecret to look for
    * @return an optional app with the same clientId and clientSecret as requested
    */
-  def getAuthentifiedApp(clientId: String, clientSecret: String): Future[Option[App]] = Future(db.withConnection { implicit c =>
-    SQL"SELECT * FROM apps WHERE client_id = $clientId AND client_secret = $clientSecret"
+  def getAuthentifiedApp(clientSecret: String): Future[Option[App]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT * FROM apps WHERE client_secret = $clientSecret"
       .as(AppRowParser.singleOpt)
   })
 
@@ -91,8 +101,16 @@ class AppsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContex
    */
   def createApp(app: App): Future[Int] = Future(db.withConnection(implicit c => SqlUtils.insertOne("apps", app)))
 
+  /*
+
   def createApp(name: String, redirectUrl: String, user: Int): Future[Int] =
     createApp(App(None, user, RandomUtils.randomString(32), RandomUtils.randomString(32), name, redirectUrl))
+
+   */
+
+  def createApp(name: String, user: Int): Future[Int] =
+    createApp(App(None, user, clientSecret = RandomUtils.randomString(32), name))
+
 
   /**
    * Updates an app whose id is set
