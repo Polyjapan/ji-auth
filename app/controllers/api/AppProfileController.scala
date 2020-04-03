@@ -1,6 +1,6 @@
 package controllers.api
 
-import ch.japanimpact.auth.api.AuthorizationUtils._
+import ch.japanimpact.auth.api.internal.AuthorizationUtils._
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import ch.japanimpact.auth.api.{UserProfile, _}
 import javax.inject.Inject

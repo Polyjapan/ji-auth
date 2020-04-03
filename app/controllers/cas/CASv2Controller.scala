@@ -1,5 +1,6 @@
 package controllers.cas
 
+import ch.japanimpact.auth.api.cas.{CASError, CASErrorType}
 import data.CasService
 import javax.inject.Inject
 import models.{ServicesModel, TicketsModel}
@@ -61,9 +62,9 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
     if (!pgtPattern.matches(pgt)) {
       Future.successful(if (json)
-        Ok(CAS.getCasErrorResponseJson(CAS.CASError.InvalidTicketSpec, pgt))
+        Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidTicketSpec, pgt))
       else
-        Ok(CAS.getProxyErrorResponseXML(CAS.CASError.InvalidTicketSpec, pgt)))
+        Ok(CAS.getProxyErrorResponseXML(CASErrorType.InvalidTicketSpec, pgt)))
     } else {
       apps.getCasService(service) flatMap {
         case Some(CasService(serviceId, _, _)) =>
@@ -79,29 +80,29 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
                   else
                     Ok(CAS.getProxySuccessXML(pt))
                 case false =>
-                  if (json) Ok(CAS.getCasErrorResponseJson(CAS.CASError.InternalError, pgt))
-                  else Ok(CAS.getCasErrorResponseXML(CAS.CASError.InternalError, pgt))
+                  if (json) Ok(CAS.getCasErrorResponseJson(CASErrorType.InternalError, pgt))
+                  else Ok(CAS.getCasErrorResponseXML(CASErrorType.InternalError, pgt))
               }
             case None =>
               Future.successful(
-                if (json) Ok(CAS.getCasErrorResponseJson(CAS.CASError.InvalidTicket, pgt))
-                else Ok(CAS.getCasErrorResponseXML(CAS.CASError.InvalidTicket, pgt))
+                if (json) Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidTicket, pgt))
+                else Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidTicket, pgt))
               )
           }
 
         case _ =>
           Future.successful(
             if (json)
-              Ok(CAS.getCasErrorResponseJson(CAS.CASError.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
+              Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
             else
-              Ok(CAS.getProxyErrorResponseXML(CAS.CASError.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
+              Ok(CAS.getProxyErrorResponseXML(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
           )
       }
     }
   }
 
-  private def createProxyTicket(pgtUrl: String, service: Int, user: Int): Future[Either[CAS.CASError.CASErrorType, Option[String]]] = {
-    if (!pgtUrl.startsWith("https://")) Future.successful(Left(CAS.CASError.UnauthorizedServiceProxy))
+  private def createProxyTicket(pgtUrl: String, service: Int, user: Int): Future[Either[CASErrorType, Option[String]]] = {
+    if (!pgtUrl.startsWith("https://")) Future.successful(Left(CASErrorType.UnauthorizedServiceProxy))
     else apps.getCasService(pgtUrl) flatMap {
       case Some(_) =>
         val pgtIou = "PGTIOU-" + RandomUtils.randomString(64)
@@ -113,7 +114,7 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
           // Insert PGT
           tickets.insertCasProxyTicket(pgtId, user, service).map(_ => Right(Some(pgtIou)))
         }.fallbackTo(Future.successful(Right(None)))
-      case None => Future(Left(CAS.CASError.UnauthorizedServiceProxy))
+      case None => Future(Left(CASErrorType.UnauthorizedServiceProxy))
     }
   }
 
@@ -122,9 +123,9 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
     if (!pattern.matches(ticket)) {
       Future.successful(if (json)
-        Ok(CAS.getCasErrorResponseJson(CAS.CASError.InvalidTicketSpec, ticket))
+        Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidTicketSpec, ticket))
       else
-        Ok(CAS.getCasErrorResponseXML(CAS.CASError.InvalidTicketSpec, ticket)))
+        Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidTicketSpec, ticket)))
     } else {
       apps.getCasService(service) flatMap {
         case Some(CasService(serviceId, _, _)) =>
@@ -156,14 +157,14 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
             case None =>
               Future.successful(
-                if (json) Ok(CAS.getCasErrorResponseJson(CAS.CASError.InvalidTicket, ticket))
-                else Ok(CAS.getCasErrorResponseXML(CAS.CASError.InvalidTicket, ticket)))
+                if (json) Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidTicket, ticket))
+                else Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidTicket, ticket)))
           }
 
         case None =>
           tickets.invalidateCasTicket(ticket).map(_ =>
-            if (json) Ok(CAS.getCasErrorResponseJson(CAS.CASError.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
-            else Ok(CAS.getCasErrorResponseXML(CAS.CASError.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
+            if (json) Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
+            else Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
           )
       }
     }
