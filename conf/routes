@@ -108,5 +108,8 @@ POST           /casapps/:id/domains/delete                 controllers.managemen
 POST           /casapps/:id/groups/:required               controllers.management.CasAppsCRUDController.groupsAddPost(id: Int, required: Boolean)
 POST           /casapps/:id/groups/:required/delete        controllers.management.CasAppsCRUDController.groupsDeletePost(id: Int, required: Boolean)
 
+POST           /casapps/:id/allowProxy                     controllers.management.CasAppsCRUDController.allowedAppsAdd(id: Int)
+POST           /casapps/:id/allowProxy/delete              controllers.management.CasAppsCRUDController.allowedAppsDelete(id: Int)
+
 
 

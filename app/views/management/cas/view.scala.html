@@ -1,7 +1,7 @@
 @import data.{UserSession, _}
 @import helper._
 
-@(user: UserSession, app: CasService, domains: Set[String], reqGroups: Set[String], allowGroups: Set[String])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
+@(user: UserSession, app: CasService, domains: Set[String], reqGroups: Set[String], allowGroups: Set[String], accessFrom: List[(Int, String)])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
 
 @views.html.management.managementTemplate("Service CAS " + app.serviceName, user) {
     <div class="row">
@@ -18,37 +18,11 @@
             </ul>
 
         </div>
-
+    </div>
+        <h3>Contrôle d'accès</h3>
+        <br>
         <div class="row">
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Domaines compatibles</h5>
-                        <h6 class="card-subtitle text-muted mb-1">Ces domaines peuvent utiliser ce profil CAS</h6>
-                    </div>
-                    <ul class="list-group list-group-flush">
-                        @for(domain <- domains) {
-                            <li class="list-group-item">
-                                @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainDelete(app.serviceId), 'style -> "display: inline; float: right;") {
-                                    @CSRF.formField
-                                    <input type="hidden" name="domain" value="@domain">
-                                    <button class="btn btn-danger" type="submit">&cross;</button>
-                                }
-                                @domain
-                            </li>
-                        }
-
-                        <li class="list-group-item">
-                        @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainPost(app.serviceId), 'class -> "form-inline") {
-                            @CSRF.formField
-                            <input type="text" name="domain" class="form-control" required placeholder="Nom de domaine">
-                            <button class="btn btn-success" type="submit">&plus;</button>
-                        }
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title">Groupes requis</h5>
@@ -76,7 +50,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title">Groupes autorisés</h5>
@@ -98,6 +72,66 @@
                         @form(action = controllers.management.routes.CasAppsCRUDController.groupsAddPost(app.serviceId, required = false), 'class -> "form-inline") {
                             @CSRF.formField
                             <input type="text" name="group" class="form-control" required placeholder="Nom du groupe">
+                            <button class="btn btn-success" type="submit">&plus;</button>
+                        }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <h3>Paramètres d'API CAS</h3>
+        <br>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Domaines compatibles</h5>
+                        <h6 class="card-subtitle text-muted mb-1">Ces domaines peuvent utiliser ce profil CAS</h6>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @for(domain <- domains) {
+                            <li class="list-group-item">
+                                @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainDelete(app.serviceId), 'style -> "display: inline; float: right;") {
+                                    @CSRF.formField
+                                    <input type="hidden" name="domain" value="@domain">
+                                    <button class="btn btn-danger" type="submit">&cross;</button>
+                                }
+                                @domain
+                            </li>
+                        }
+
+                        <li class="list-group-item">
+                        @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainPost(app.serviceId), 'class -> "form-inline") {
+                            @CSRF.formField
+                            <input type="text" name="domain" class="form-control" required placeholder="Nom de domaine">
+                            <button class="btn btn-success" type="submit">&plus;</button>
+                        }
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Proxy autorisé depuis</h5>
+                        <h6 class="card-subtitle text-muted mb-1">Les services suivants peuvent accéder à ce service par proxying</h6>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @for(pair <- accessFrom) {
+                            <li class="list-group-item">
+                                @form(action = controllers.management.routes.CasAppsCRUDController.allowedAppsDelete(app.serviceId), 'style -> "display: inline; float: right;") {
+                                    @CSRF.formField
+                                    <input type="hidden" name="allowedApp" value="@pair._1">
+                                    <button class="btn btn-danger" type="submit">&cross;</button>
+                                }
+                                @pair._2
+                            </li>
+                        }
+
+                        <li class="list-group-item">
+                        @form(action = controllers.management.routes.CasAppsCRUDController.allowedAppsAdd(app.serviceId), 'class -> "form-inline") {
+                            @CSRF.formField
+                            <input type="text" name="allowedApp" class="form-control" required placeholder="ID du service CAS">
                             <button class="btn btn-success" type="submit">&plus;</button>
                         }
                         </li>

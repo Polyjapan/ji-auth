@@ -37,6 +37,12 @@ class CasAppsCRUDController @Inject()(cc: MessagesControllerComponents,
     )(p => p)(p => Some(p))
   )
 
+  private val allowedForm = Form(
+    mapping(
+      "allowedApp" -> number
+    )(p => p)(p => Some(p))
+  )
+
   def createAppForm: Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifPermission(UserSession.ManageCasApps) { session =>
       Future(Ok(views.html.management.cas.createUpdate(session, createUpdateForm)))
@@ -83,8 +89,8 @@ class CasAppsCRUDController @Inject()(cc: MessagesControllerComponents,
   def getApp(id: Int): Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifPermission(UserSession.ManageCasApps) { implicit session =>
       apps.getServiceById(id).flatMap {
-        case Some(apps.ServiceData(service, requiredGroups, allowedGroups, domains)) =>
-          Ok(views.html.management.cas.view(session, service, domains, requiredGroups, allowedGroups))
+        case Some(apps.ServiceData(service, requiredGroups, allowedGroups, domains, accessFrom)) =>
+          Ok(views.html.management.cas.view(session, service, domains, requiredGroups, allowedGroups, accessFrom))
         case None => NotFound(ManagementTools.error("Application introuvable", "L'application recherchée n'existe pas, ou ne vous est pas accessible."))
       }
     }
@@ -129,6 +135,28 @@ class CasAppsCRUDController @Inject()(cc: MessagesControllerComponents,
         Redirect(controllers.management.routes.CasAppsCRUDController.getApp(id))
       }, name => {
         apps.removeGroup(id, name, required)
+          .map { _ => Redirect(controllers.management.routes.CasAppsCRUDController.getApp(id)) }
+      })
+    }
+  }
+
+  def allowedAppsAdd(id: Int): Action[AnyContent] = Action.async { implicit rq =>
+    ManagementTools.ifPermission(UserSession.ManageCasApps) { implicit session =>
+      allowedForm.bindFromRequest().fold(withErrors => {
+        Redirect(controllers.management.routes.CasAppsCRUDController.getApp(id))
+      }, allowed => {
+        apps.addAllowedService(id, allowed)
+          .map { _ => Redirect(controllers.management.routes.CasAppsCRUDController.getApp(id)) }
+      })
+    }
+  }
+
+  def allowedAppsDelete(id: Int): Action[AnyContent] = Action.async { implicit rq =>
+    ManagementTools.ifPermission(UserSession.ManageCasApps) { implicit session =>
+      allowedForm.bindFromRequest().fold(withErrors => {
+        Redirect(controllers.management.routes.CasAppsCRUDController.getApp(id))
+      }, allowed => {
+        apps.removeAllowedService(id, allowed)
           .map { _ => Redirect(controllers.management.routes.CasAppsCRUDController.getApp(id)) }
       })
     }

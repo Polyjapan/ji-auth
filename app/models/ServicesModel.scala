@@ -1,8 +1,9 @@
 package models
 
+import java.sql.Connection
+
 import anorm.SqlParser._
 import anorm._
-import java.sql.Connection
 import data._
 import javax.inject.Inject
 import utils.CAS
@@ -42,7 +43,7 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
   }
 
 
-  case class ServiceData(service: CasService, requiredGroups: Set[String], allowedGroups: Set[String], domains: Set[String])
+  case class ServiceData(service: CasService, requiredGroups: Set[String], allowedGroups: Set[String], domains: Set[String], accessFrom: List[(Int, String)])
 
   def getServiceById(id: Int): Future[Option[ServiceData]] = {
     Future(db.withConnection { implicit c =>
@@ -50,8 +51,10 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
       val reqGroups = SQL"SELECT g.name FROM cas_required_groups JOIN `groups` g on cas_required_groups.group_id = g.id WHERE service_id = $id".as(str("name").*).toSet
       val allowGroups = SQL"SELECT g.name FROM cas_allowed_groups JOIN `groups` g on cas_allowed_groups.group_id = g.id WHERE service_id = $id".as(str("name").*).toSet
       val domains = SQL"SELECT domain FROM cas_domains WHERE service_id = $id".as(str("domain").*).toSet
+      val allowAccessFrom = SQL"SELECT cs.* FROM cas_proxy_allow JOIN cas_services cs on cas_proxy_allow.allowed_service = cs.service_id WHERE cas_proxy_allow.target_service = $id"
+          .as((int("service_id") ~ str("service_name")).map { case k ~ v => (k, v)}.*)
 
-      service.map(s => ServiceData(s, reqGroups, allowGroups, domains))
+      service.map(s => ServiceData(s, reqGroups, allowGroups, domains, allowAccessFrom))
     })
   }
 
@@ -94,6 +97,21 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
       })
       case None => Future.successful(false)
     }
+  }
+
+  def addAllowedService(service: Int, allowAccessFrom: Int): Future[Boolean] =
+    Future(db.withConnection {
+      implicit c =>
+        SQL"INSERT INTO cas_proxy_allow(target_service, allowed_service) VALUES ($service, $allowAccessFrom)"
+          .execute()
+    })
+
+  def removeAllowedService(service: Int, allowed: Int): Future[Boolean] = {
+    Future(db.withConnection {
+      implicit c =>
+        SQL"DELETE FROM cas_proxy_allow WHERE target_service = $service AND allowed_service = $allowed"
+          .execute()
+    })
   }
 
   private def getGroup(group: String)(implicit c: Connection): Option[Int] = {
