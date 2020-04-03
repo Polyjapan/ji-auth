@@ -57,11 +57,11 @@ object CAS {
   def getCasSuccessMessageXML(properties: Map[String, String], attributes: Map[String, String], username: String, groups: Set[String]): Elem = {
     <cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
       <cas:authenticationSuccess>
-        <cas:user>
-          {username}
-        </cas:user>{properties.map { case (k, v) => Elem("cas", k, Null, TopScope, false, Text(v)) }}<cas:attributes>
-        {attributes.map { case (k, v) => Elem("cas", k, Null, TopScope, false, Text(v)) }}{groups.map(g => Elem("cas", "groups", Null, TopScope, false, Text(g)))}
-      </cas:attributes>
+        <cas:user>{username}</cas:user>
+        {properties.map { case (k, v) => Elem("cas", k, Null, TopScope, false, Text(v)) }}
+        <cas:attributes>
+          {attributes.map { case (k, v) => Elem("cas", k, Null, TopScope, false, Text(v)) }}{groups.map(g => Elem("cas", "groups", Null, TopScope, false, Text(g)))}
+        </cas:attributes>
       </cas:authenticationSuccess>
     </cas:serviceResponse>
   }

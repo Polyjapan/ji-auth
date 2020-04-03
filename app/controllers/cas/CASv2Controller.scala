@@ -150,8 +150,8 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
                     case None => Map.empty[String, String]
                   }
 
-                  if (json) Ok(CAS.getCasSuccessMessageJson(properties, attributes, user.email, groups))
-                  else Ok(CAS.getCasSuccessMessageXML(properties, attributes, user.email, groups))
+                  if (json) Ok(CAS.getCasSuccessMessageJson(properties, attributes, user.id.get + "", groups))
+                  else Ok(CAS.getCasSuccessMessageXML(properties, attributes, user.id.get + "", groups))
               }
 
             case None =>

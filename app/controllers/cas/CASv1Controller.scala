@@ -17,7 +17,7 @@ class CASv1Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
       case Some(CasService(serviceId, _, _)) =>
         tickets.getCasTicket(ticket, serviceId) map {
           case Some(user) =>
-            Ok("yes\n" + user._1.email + "\n")
+            Ok("yes\n" + user._1.id.get + "\n")
           case None =>
             Ok("no\n\n")
         }
