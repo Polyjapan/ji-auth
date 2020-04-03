@@ -265,7 +265,7 @@ Terms:
  - Frontend: a CAS service on which users are redirected (at `https://backend.app/`)
  - User: an example user, that hsa an account on our CAS
  
-The idea of proxy authentication is to allow Backend to authentify User (a bit like the old protocol App Login).
+The idea of proxy authentication is to allow Backend to authentify User.
 
 The flow is the following:
  1. User goes to Frontend
@@ -298,108 +298,7 @@ Notes:
  - the response at 4.ii also includes proper user data, enough to log the user in
  - JI Auth implements a security: a service A can generate a PT for a service B iff B allows A to proxy access to it.
 
-## Old Protocol
 
-**This section describes old protocols that are still supported but are deprecated and will be removed in the near future.**
-
-Because the CAS will be used on both public-facing SPA and internal standard/SP applications, we need to support two authentication modes.
-
-An accepted drawback of this system will be that a user logging in from the "public" mode will not be able to access the "private" mode without logging in again (and vice versa). 
-
-Note: apps are registered against the JI Auth Server with:
- - `appID`: an internal ID for the app
- - `clientID`: the public identification for the app (sent to clients) (could be the same as `appID`)
- - `clientSecret`: the private identification for the app. Kept by it, sent with some requests but **NEVER** to clients.
- - `emailCallback`: the URL where the user should be redirected when receiving the email confirmation (in public hidden mode)
- - `callback`: the URL where the user should be redirected when successfully logging in
- - `reCaptchaPkey`: the reCaptcha private key
- 
-### "private" Explicit Mode
-
-This mode is closer to a standard CAS protocol. When accessing a protected app for the first time, the user logs in
-against the CAS. Then, the CAS creates a session for the user, as well as a ticket (as before), and redirects him to the
-client app. When accessing other apps, the CAS session will be used to redirect him immediately.
-
-The main difference with CAS is that the endpoint to get the user data corresponding to the ticket is protected.
-
-#### Demo
-
-
-User wants to login against the app
-```    
-    Browser                  JI Auth Server                        App
-       
-    (1) #--- GET Access to protected resource --------------------->#
-                                                                    | 
-    (2) #<-- Redirect to authServer/login?app=app_id ---------------#
-        |
-        #--- GET login?app=app_id ->#
-                                    | GET with no session, return form
-        #<-- Login Form ------------# 
-        |
-        | User fills form
-        |                            
-    (3) #--- POST login?app=app_id >#
-                                    | Login the user
-                                    | Generate a CAS session
-                                    | Generate [app_ticket] (user, T_EXPLICIT_GRANT) and stores it with the appID and an 
-                                    | expiration date, set 24h in the future
-    (4) #<-- Redirect* -------------#
-        | * The redirect contains a CAS session
-        |   User is redirected to app.callback_url?ticket={app_ticket}
-        |                           
-    (5) #--- GET callback_url?ticket={app_ticket}------------------># app_ticket
-                                                                    | 
-    (6)                             #<-- GET /api/get_user ---------# (app_ticket, clientSecret)
-         Server checks app_ticket   |                  
-         and clientSecret           |
-    (7)                             #--- OK -----------------------># userId + email + T_EXPLICIT_GRANT
-                                                                    | Check ticket type is T_EXPLICIT_GRANT 
-                                                                    | Create session for user
-    (8) #<-- Web page with session ---------------------------------# 
-```
-
-For the next apps, user will already hold a CAS session.
-
-
-```    
-    Browser                  JI Auth Server                        App
-       
-    (1) #--- GET Access to protected resource --------------------->#
-                                                                    | 
-    (2) #<-- Redirect to authServer/login?app=app_id ---------------#
-        |
-        #--- GET login?app=app_id ->#
-                                    | GET with session, fast login
-                                    | Generate [app_ticket] (user, T_EXPLICIT_GRANT) and stores it with the appID and an 
-                                    | expiration date, set 24h in the future
-    (4) #<-- Redirect* -------------#
-        |   User is redirected to app.callback_url?ticket={app_ticket}
-        |                           
-    (5) #--- GET callback_url?ticket={app_ticket}------------------># app_ticket
-                                                                    | 
-    (6)                             #<-- GET /api/get_user ---------# (app_ticket, clientSecret)
-         Server checks app_ticket   |                  
-         and clientSecret           |
-    (7)                             #--- OK -----------------------># userId + email + T_EXPLICIT_GRANT
-                                                                    | Check ticket type is T_EXPLICIT_GRANT 
-                                                                    | Create session for user
-    (8) #<-- Web page with session ---------------------------------# 
-```
-
-
-#### Endpoints
-
-No real endpoint here. Send the user to `auth_server_url/login?app={app client id}`. Once registered and logged in, the
-user will be redirected to `your_app_callback_url?ticket={ticket}`. You can verify the ticket using
-the endpoint described before.
-
-You can also log the user out of the CAS by redirecting him to `auth_server_url/logout?app={app client id}`. He will
-then be redirected to `your_app_callback_url?logout`.
-
-### Manager mode
-
-We will also have to provide a small management console, to allow some authorized persons to register their own app.
 
 ## Groups
 

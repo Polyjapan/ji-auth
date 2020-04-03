@@ -3,8 +3,7 @@ import java.util.{Base64, Date}
 
 import anorm.Macro.ColumnNaming
 import anorm.{Column, Macro, RowParser, ToParameterList, ToStatement}
-import ch.japanimpact.auth.api.TicketType.{AppTicket, DoubleRegisterTicket, EmailConfirmTicket, ExplicitGrantTicket, LoginTicket, PasswordResetTicket, RegisterTicket}
-import ch.japanimpact.auth.api.{TicketType, UserAddress, UserDetails}
+import ch.japanimpact.auth.api.{UserAddress, UserDetails}
 
 /**
  * @author Louis Vialar

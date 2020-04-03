@@ -36,10 +36,6 @@ GET            /internal/login                             controllers.internal.
 GET            /internal/refresh/:refreshToken             controllers.internal.TokenRefreshController.refreshToken(refreshToken: String)
 GET            /api/refresh/:refreshToken                  controllers.internal.TokenRefreshController.refreshToken(refreshToken: String)
 
-# Tickets (deprecated)
-
-GET            /api/ticket/:ticket                         controllers.tickets.AppTicketController.getAppTicket(ticket: String)
-
 
 # General redirection
 
