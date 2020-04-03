@@ -145,13 +145,13 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
                   if (json) Ok(CAS.getCasErrorResponseJson(err, pgtUrl.get))
                   else Ok(CAS.getCasErrorResponseXML(err, pgtUrl.get))
                 case Right(pgt) =>
-                  val properties = pgt match {
+                  val properties = (pgt match {
                     case Some(t) => Map("proxyGrantingTicket" -> t)
                     case None => Map.empty[String, String]
-                  }
+                  }) + ("user" -> s"${user.id.get}")
 
-                  if (json) Ok(CAS.getCasSuccessMessageJson(properties, attributes, user.id.get + "", groups))
-                  else Ok(CAS.getCasSuccessMessageXML(properties, attributes, user.id.get + "", groups))
+                  if (json) Ok(CAS.getCasSuccessMessageJson(properties, attributes, groups))
+                  else Ok(CAS.getCasSuccessMessageXML(properties, attributes, groups))
               }
 
             case None =>
