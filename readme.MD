@@ -253,6 +253,50 @@ JI Auth supports CAS v1, v2 and v3. The implementation is sparse. Here are the m
 - `/cas/login?service=service_url` to log in. The domain of `service_url` must be registered as a cas_service
 - `/cas/v1/validate`: the standard CAS v1 validation endpoint
 - `/cas/v2/proxyValidate` and `/cas/v2/serviceValidate`: the sparsely implemented serviceValidate CAS v2/v3 endpoint.
+- `/cas/v2/proxy` to get a proxy ticket
+
+### Proxy authentication
+
+CAS defines *Proxy Authentication*, a way for a backend service to request user data from CAS.
+
+Terms:
+ - CAS: the authentication server, here JI Auth (at `https://auth.japan-impact.ch/`)
+ - Backend: a CAS service to which no user is ever redirected (at `https://frontend.app/`)
+ - Frontend: a CAS service on which users are redirected (at `https://backend.app/`)
+ - User: an example user, that hsa an account on our CAS
+ 
+The idea of proxy authentication is to allow Backend to authentify User (a bit like the old protocol App Login).
+
+The flow is the following:
+ 1. User goes to Frontend
+ 2. Frontend redirects to CAS
+ 3. User logs in on CAS and is redirected to Frontend callback
+ 4. Frontend requests a `PGT` by providing its own pgCallback url
+    1. CAS makes a request to pgCallback, providing `pgtId` and `pgtIou` as GET parameters
+    2. CAS replies to the request by giving back the `pgtIou`
+    3. Frontend can then guess the `pgtId`, as it received a request to pgCallback
+ 5. Frontend requests a `PT` by calling the endpoint and giving the `pgtId` token
+ 6. Frontend sends the `PT` to backend
+ 7. Backend requests the user data associated with the `PT` to CAS
+ 
+Details, with endpoints:
+ 1. _nothing to add_
+ 2. `https://auth.japan-impact.ch/cas/login?service=https://frontend.app/callback`
+ 3. Redirected to `https://frontend.app/callback?ticket=<serviceTicket>`
+ 4. Request to `https://auth.japan-impact.ch/cas/v2/serviceValidate?service=frontend.app&ticket=<serviceTicket>&pgtUrl=https://frontend.app/pgCallback`.
+    1. CAS requests `https://frontend.app/pgCallback?pgtId=<pgtId>&pgtIou=<pgtIou>` (pgtId is the PGT: Proxy Granting Ticket). Frontend remembers the mapping `pgtIou -> pgtId` (only required for a short time)
+    2. CAS replies a standard XML https://apereo.github.io/cas/6.0.x/protocol/CAS-Protocol-Specification.html#262-response with `proxyGrantingTicket` set to `pgtIou`
+    3. Frontend uses the mapping to get the `pgtId` (PGT)
+ 5. Request to `https://auth.japan-impact.ch/cas/v2/proxy?service=backend.app&pgt=<pgtId>`, reply with standard XML https://apereo.github.io/cas/6.0.x/protocol/CAS-Protocol-Specification.html#272-response containing `proxyTicket` (PT)
+ 6. Send to backend the PT (for example `https://backend.app/login?ticket=<pt>`, but doesn't even require HTTP(s))
+ 7. Backend requests `https://auth.japan-impact.ch/cas/v2/proxyValidate?service=backend.app&ticket=<pt>`
+ 
+Notes:
+ - the `service` in steps (5) and (7) needs to be the same. i.e. a PT can only be used for the service to which it was issued.
+ - the PT is only usable ONCE. If you need to use it multiple times, repeat steps 5-7
+ - the serviceTicket is only usable ONCE. 
+ - the response at 4.ii also includes proper user data, enough to log the user in
+ - JI Auth implements a security: a service A can generate a PT for a service B iff B allows A to proxy access to it.
 
 ## Old Protocol
 
