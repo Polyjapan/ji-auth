@@ -12,6 +12,7 @@ import scala.util.matching.Regex
 
 /**
  * Implemented as per `https://apereo.github.io/cas/6.0.x/protocol/CAS-Protocol-Specification.html#27-proxy-cas-20`
+ *
  * @author Louis Vialar
  */
 class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, tickets: TicketsModel, ws: WSClient)(implicit ec: ExecutionContext) extends AbstractController(cc) {
@@ -22,11 +23,12 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
   /**
    * Validate a ticket and return the associated data. <br>
-   *   proxyValidate accepts both service tickets (ST-) and proxy tickets (PT-)
-   * @param ticket a service or proxy ticket
+   * proxyValidate accepts both service tickets (ST-) and proxy tickets (PT-)
+   *
+   * @param ticket  a service or proxy ticket
    * @param service the service to access
-   * @param format the format of the reply (default XML, avail. JSON)
-   * @param pgtUrl the URL of the proxy to grant a PGT to
+   * @param format  the format of the reply (default XML, avail. JSON)
+   * @param pgtUrl  the URL of the proxy to grant a PGT to
    * @return
    */
   def proxyValidate(ticket: String, service: String, format: Option[String], pgtUrl: Option[String]): Action[AnyContent] =
@@ -34,11 +36,12 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
   /**
    * Validate a ticket and return the associated data. <br>
-   *   serviceValidate accepts only service tickets (ST-)
-   * @param ticket a service or proxy ticket
+   * serviceValidate accepts only service tickets (ST-)
+   *
+   * @param ticket  a service or proxy ticket
    * @param service the service to access
-   * @param format the format of the reply (default XML, avail. JSON)
-   * @param pgtUrl the URL of the proxy to grant a PGT to
+   * @param format  the format of the reply (default XML, avail. JSON)
+   * @param pgtUrl  the URL of the proxy to grant a PGT to
    * @return
    */
   def serviceValidate(ticket: String, service: String, format: Option[String], pgtUrl: Option[String]): Action[AnyContent] =
@@ -46,7 +49,8 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
   /**
    * Generate a proxyTicket from a PGT
-   * @param pgt the pgt
+   *
+   * @param pgt     the pgt
    * @param service the service to which the PT should be bound
    * @param format
    * @return
@@ -63,18 +67,26 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
     } else {
       apps.getCasService(service) flatMap {
         case Some(CasService(serviceId, _, _)) =>
-          tickets.getProxyTicket(pgt, serviceId) map {
+          tickets.getProxyTicket(pgt, serviceId) flatMap {
             case Some((userId, true)) =>
-              val pt = "PT-" + RandomUtils.randomString(64)
-              tickets.insertCasTicket(pt, userId, serviceId)
+              apps.hasRequiredGroups(serviceId, userId).map {
+                case true =>
+                  val pt = "PT-" + RandomUtils.randomString(64)
+                  tickets.insertCasTicket(pt, userId, serviceId)
 
-              if (json)
-                Ok(CAS.getProxySuccessJson(pt))
-              else
-                Ok(CAS.getProxySuccessXML(pt))
+                  if (json)
+                    Ok(CAS.getProxySuccessJson(pt))
+                  else
+                    Ok(CAS.getProxySuccessXML(pt))
+                case false =>
+                  if (json) Ok(CAS.getCasErrorResponseJson(CAS.CASError.InternalError, pgt))
+                  else Ok(CAS.getCasErrorResponseXML(CAS.CASError.InternalError, pgt))
+              }
             case None =>
+              Future.successful(
                 if (json) Ok(CAS.getCasErrorResponseJson(CAS.CASError.InvalidTicket, pgt))
                 else Ok(CAS.getCasErrorResponseXML(CAS.CASError.InvalidTicket, pgt))
+              )
           }
 
         case _ =>
