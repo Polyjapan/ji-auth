@@ -6,7 +6,6 @@ import anorm.SqlParser._
 import anorm._
 import data.{RegisteredUser, RegisteredUserRowParser}
 import javax.inject.Inject
-import utils.RandomUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,21 +27,48 @@ class TicketsModel @Inject()(dbApi: play.api.db.DBApi, sessions: SessionsModel)(
         .as(str("name").*).toSet
     )
 
+    // CAS: ticket should be invalidated anyway
+    SQL"DELETE FROM cas_tickets WHERE ticket = $token".execute()
+
     user.zip(groups)
   })
 
-  /**
-   * Create a ticket for a user
-   *
-   * @return a future holding the generated token for this ticket
-   */
-  def createCasTicketForUser(user: Int, service: Int): Future[String] = {
-    val token = "ST-" + RandomUtils.randomString(64)
+  def getProxyTicket(token: String, targetService: Int): Future[Option[(Int, Boolean)]] = Future(db.withTransaction { implicit c =>
+    val ret = SQL"SELECT user_id, service_id FROM cas_proxy_tickets WHERE ticket = $token"
+      .as((int("user_id") ~ int("service_id"))
+        .map { case uid ~ sid => (uid, sid) }
+        .singleOpt)
 
+    ret.map {
+      case (userId, serviceId) =>
+        val canIssueToken = SQL"SELECT COUNT(*) FROM cas_proxy_allow WHERE target_service = $targetService AND allowed_service = $serviceId"
+          .as(scalar[Int].single) > 0
+
+        (userId, canIssueToken)
+    }
+  })
+
+  def invalidateCasTicket(token: String) = Future(db.withTransaction { implicit c =>
+    SQL"DELETE FROM cas_tickets WHERE ticket = $token".execute()
+  })
+
+  def insertCasTicket(token: String, user: Int, service: Int) =
     Future(db.withConnection(implicit c => {
       SQL"INSERT INTO cas_tickets(service_id, user_id, ticket) VALUES ($service, $user, $token)"
         .execute()
-      token
     }))
-  }
+
+  def insertCasProxyTicket(token: String, user: Int, service: Int) =
+    Future(db.withConnection(implicit c => {
+      SQL"INSERT INTO cas_proxy_tickets(user_id, service_id, ticket) VALUES ($user, $service, $token)"
+        .execute()
+    }))
+
+  def logout(user: Int) =
+    Future(db.withConnection(implicit c => {
+      SQL"DELETE FROM cas_proxy_tickets WHERE user_id = $user"
+        .execute()
+      SQL"DELETE FROM cas_tickets WHERE user_id = $user"
+        .execute()
+    }))
 }

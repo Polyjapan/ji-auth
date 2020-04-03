@@ -1,10 +1,12 @@
 package controllers.forms
 
 import data.CasService
+import data.UserSession._
 import javax.inject.Inject
-import models.{InternalAppsModel, ServicesModel}
+import models.{InternalAppsModel, ServicesModel, SessionsModel, TicketsModel}
 import play.api.Configuration
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
+import play.twirl.api.Html
 import utils.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,7 +14,10 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-class LogoutController @Inject()(cc: ControllerComponents)(implicit ec: ExecutionContext, cas: ServicesModel, internal: InternalAppsModel, config: Configuration) extends AbstractController(cc) {
+class LogoutController @Inject()(cc: ControllerComponents)
+                                (implicit ec: ExecutionContext, cas: ServicesModel, internal: InternalAppsModel,
+                                 config: Configuration, tickets: TicketsModel, sessions: SessionsModel) extends AbstractController(cc) {
+
   def logout(app: Option[String], redirect: Option[String], service: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
     def redirectUrl: Future[String] = {
       if (app.orElse(service).nonEmpty) {
@@ -29,6 +34,14 @@ class LogoutController @Inject()(cc: ControllerComponents)(implicit ec: Executio
       } else "/login"
     }
 
-    redirectUrl.map(url => Redirect(url).withNewSession)
+    if (rq.hasUserSession) {
+      val userId = rq.userSession.id
+      tickets.logout(userId)
+        .flatMap(_ => sessions.logout(userId))
+        .flatMap(_ => redirectUrl)
+        .map(url => Redirect(url).withNewSession)
+    } else {
+      Unauthorized(views.html.errorPage("Non connecté", Html("<p>Impossible de vous déconnecter : vous n'êtes pas connecté.</p>")))
+    }
   }
 }

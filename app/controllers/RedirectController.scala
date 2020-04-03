@@ -11,6 +11,7 @@ import play.api.mvc._
 import play.twirl.api.Html
 import services.JWTService
 import utils.Implicits._
+import utils.RandomUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,10 +36,11 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
           if (hasRequired) {
             val symbol = if (url.contains("?")) "&" else "?"
 
-            val redirectUrl = tickets
-              .createCasTicketForUser(userId, serviceId)
-              .map(ticket => url + symbol + "ticket=" + ticket)
+            val ticket = "ST-" + RandomUtils.randomString(64)
 
+            val redirectUrl = tickets
+              .insertCasTicket(ticket, userId, serviceId)
+              .map(_ => url + symbol + "ticket=" + ticket)
 
             if (!url.startsWith("https://")) {
               // Security for weird redirects, specially for android apps

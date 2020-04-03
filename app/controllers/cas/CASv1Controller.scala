@@ -22,7 +22,7 @@ class CASv1Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
             Ok("no\n\n")
         }
       case None =>
-        Future.successful(BadRequest("no\n\n"))
+        tickets.invalidateCasTicket(ticket).map(_ => BadRequest("no\n\n"))
     }
   }
 }

@@ -27,4 +27,11 @@ class SessionsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
       case (id, _) => (id, lst.map(_._2).toSet)
     }
   })
+
+
+  def logout(user: Int) =
+    Future(db.withConnection(implicit c => {
+      SQL"DELETE FROM sessions WHERE user_id = $user"
+        .execute()
+    }))
 }
