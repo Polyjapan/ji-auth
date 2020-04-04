@@ -26,7 +26,7 @@ class TokenRefreshController @Inject()(cc: ControllerComponents,
 
       sessions.getSession(sesId).map {
         case Some((uid, groups)) =>
-          val newToken = jwt.issueToken(uid, groups)
+          val newToken = jwt.issueInternalToken(uid, groups)
 
           TokenResponse(newToken, refreshToken, jwt.ExpirationTimeMinutes * 60)
         case None =>

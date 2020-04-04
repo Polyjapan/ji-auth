@@ -27,6 +27,12 @@ class ApiKeysModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCon
   })
 
 
+  def getAllowedScopes(apiKey: Int): Future[Set[String]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT scope FROM api_keys_allowed_scopes WHERE api_key_id = $apiKey"
+      .as(SqlParser.str("scope").*)
+      .toSet
+  })
+
   /**
    * Get an app registered in the system by its private clientSecret
    *

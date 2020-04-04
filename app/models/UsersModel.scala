@@ -76,6 +76,11 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
       SQL"UPDATE users SET phone_number = $phone WHERE id = ${addr.userId}".executeUpdate() > 0
   })
 
+  def getAllowedScopes(user: Int): Future[Set[String]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT scope FROM users_allowed_scopes WHERE user_id = $user UNION SELECT scope FROM groups_allowed_scopes JOIN `groups` g on groups_allowed_scopes.group_id = g.id JOIN groups_members gm on g.id = gm.group_id WHERE gm.user_id = $user"
+      .as(SqlParser.str("scope").*)
+      .toSet
+  })
 
   /**
    * Updates a user whose id is set

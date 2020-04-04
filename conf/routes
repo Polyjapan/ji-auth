@@ -18,6 +18,11 @@ GET            /api/user                                   controllers.api.AppPr
 GET            /api/user/search/:query                     controllers.api.AppProfileController.searchUsers(query: String)
 GET            /api/users/$users<[0-9,]+>                  controllers.api.AppProfileController.getUserProfiles(users: String)
 
++nocsrf
+POST           /api/token/user                             controllers.api.ApiTokensController.userToken
++nocsrf
+POST           /api/token/app                              controllers.api.ApiTokensController.appToken
+
 # CAS
 
 GET            /cas/login                                  controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)

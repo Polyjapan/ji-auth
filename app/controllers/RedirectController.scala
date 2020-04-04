@@ -57,7 +57,7 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
           .flatMap(groups => sessions.createSession(userId).map(sessionId => (sessionId, groups)))
           .map {
             case (sid, groups) =>
-              val token = jwt.issueToken(userId, groups.map(_.name).toSet)
+              val token = jwt.issueInternalToken(userId, groups.map(_.name).toSet)
               val refresh = sid.toString
 
               redirectUrl + "?accessToken=" + token + "&refreshToken=" + refresh + "&duration=" + (jwt.ExpirationTimeMinutes * 60)
