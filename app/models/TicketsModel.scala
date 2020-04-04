@@ -34,7 +34,7 @@ class TicketsModel @Inject()(dbApi: play.api.db.DBApi, sessions: SessionsModel)(
   })
 
   def getProxyTicket(token: String, targetService: Int): Future[Option[(Int, Boolean)]] = Future(db.withTransaction { implicit c =>
-    val ret = SQL"SELECT user_id, service_id FROM cas_proxy_tickets WHERE ticket = $token"
+    val ret = SQL"SELECT user_id, service_id FROM cas_proxy_tickets WHERE expiration > CURRENT_TIMESTAMP AND ticket = $token"
       .as((int("user_id") ~ int("service_id"))
         .map { case uid ~ sid => (uid, sid) }
         .singleOpt)
