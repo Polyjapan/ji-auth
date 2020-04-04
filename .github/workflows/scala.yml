@@ -21,7 +21,7 @@ jobs:
       run: sbt dist ; sbt packageBin ; sbt packageDoc
     
     - name: Copy files
-      run: mkdir jars ; cp api/target/scala-*/
+      run: mkdir jars ; cp api/target/scala-*/*.jar jars/
     - name: Upload API
       uses: actions/upload-artifact@v1.0.0
       with:
