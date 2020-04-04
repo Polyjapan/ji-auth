@@ -1,12 +1,15 @@
 package ch.japanimpact.auth.api
 
-import play.api.libs.json.{Format, JsResult, JsSuccess, JsValue, Json, Reads}
+import play.api.libs.json._
+
+import scala.util.Try
 
 package object apitokens {
 
   abstract class Principal(id: Int, val name: String) {
     def toSubject = s"$name|$id"
   }
+
 
   case class User(id: Int) extends Principal(id, "user")
 
@@ -17,6 +20,16 @@ package object apitokens {
       "user" -> User.apply,
       "app" -> App.apply
     )
+
+    private val PrincipalIdPattern = "^([a-z0-9.]+)\\|([0-9]+)$".r
+
+    def fromSubject(subject: String) = subject match {
+      case PrincipalIdPattern(tpe, id) =>
+        Try {
+          fromName(tpe)(id.toInt)
+        }.toOption
+      case _ => None
+    }
   }
 
   case class AuthentifiedPrincipal(principal: Principal, scopes: Set[String]) {
@@ -43,22 +56,22 @@ package object apitokens {
   sealed trait TokenRequest
 
   /**
-    * A request to obtain a token for an user
-    *
-    * @param ticket    the CAS service ticket to trade for a token
-    * @param scopes    the scopes in which the token should be valid
-    * @param audiences the target services that can accept this token
-    * @param duration  the maximal duration for this token, in seconds
-    */
+   * A request to obtain a token for an user
+   *
+   * @param ticket    the CAS service ticket to trade for a token
+   * @param scopes    the scopes in which the token should be valid
+   * @param audiences the target services that can accept this token
+   * @param duration  the maximal duration for this token, in seconds
+   */
   case class UserTokenRequest(ticket: String, scopes: Set[String], audiences: Set[String], duration: Long) extends TokenRequest
 
   /**
-    * A request to obtain a token for your app
-    *
-    * @param scopes    the scopes in which the token should be valid
-    * @param audiences the target services that can accept this token
-    * @param duration  the maximal duration for this token, in seconds
-    */
+   * A request to obtain a token for your app
+   *
+   * @param scopes    the scopes in which the token should be valid
+   * @param audiences the target services that can accept this token
+   * @param duration  the maximal duration for this token, in seconds
+   */
   case class AppTokenRequest(scopes: Set[String], audiences: Set[String], duration: Long) extends TokenRequest
 
   implicit val userTokenRequestMapper: Format[UserTokenRequest] = Json.format[UserTokenRequest]
@@ -66,22 +79,22 @@ package object apitokens {
 
 
   /**
-    * A successful response to a token request
-    *
-    * @param token     the returned API token
-    * @param scopes    the scopes in which this token will be valid
-    *                  it may be different from the scopes in the request, if some of them were not allowed for the user/app
-    * @param audiences the audiences in which the token will be valid
-    * @param duration  the time during which this token will be valid, in seconds
-    */
+   * A successful response to a token request
+   *
+   * @param token     the returned API token
+   * @param scopes    the scopes in which this token will be valid
+   *                  it may be different from the scopes in the request, if some of them were not allowed for the user/app
+   * @param audiences the audiences in which the token will be valid
+   * @param duration  the time during which this token will be valid, in seconds
+   */
   case class TokenResponse(token: String, scopes: Set[String], audiences: Set[String], duration: Long)
 
   /**
-    * An unsuccessful response to a token request
-    *
-    * @param error   the name of the error
-    * @param message the message associated with the error
-    */
+   * An unsuccessful response to a token request
+   *
+   * @param error   the name of the error
+   * @param message the message associated with the error
+   */
   case class ErrorResponse(error: String, message: String)
 
   implicit val tokenResponseMapper: Format[TokenResponse] = Json.format[TokenResponse]

@@ -22,7 +22,6 @@ class APITokensValidationService @Inject()(implicit executionContext: ExecutionC
 
   private lazy val audience: String = config.get[String]("jwt.audience")
   private lazy val issuer: String = config.getOptional[String]("jwt.issuer").getOrElse("auth")
-  private val principalIdPattern = "^([a-z0-9.]+)\\|([0-9]+)$".r
 
   def decodeToken(token: String): Try[AuthentifiedPrincipal] =
     JwtJson.decode(token, pk.publicKey, JwtAlgorithm.allECDSA(), JwtOptions(signature = true, expiration = true, notBefore = true))
@@ -34,10 +33,8 @@ class APITokensValidationService @Inject()(implicit executionContext: ExecutionC
 
         val scopes = (Json.parse(claim.content) \ "scopes").asOpt[Set[String]]
 
-        (claim.subject, scopes) match {
-          case (Some(principalIdPattern(tpe, id)), Some(scopes)) =>
-            // will throw an exception if the tpe is not found or if id cannot be an int
-            val principal = Principal.fromName(tpe)(id.toInt)
+        (claim.subject.flatMap(Principal.fromSubject), scopes) match {
+          case (Some(principal), Some(scopes)) =>
             AuthentifiedPrincipal(principal, scopes)
 
           case _ => throw new JwtValidationException("missing or invalid data in token")

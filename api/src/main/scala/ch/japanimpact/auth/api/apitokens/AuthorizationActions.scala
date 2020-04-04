@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AuthorizationActions @Inject()(val parser: BodyParsers.Default, jwt: APITokensValidationService)(implicit val executionContext: ExecutionContext) {
 
-  class AuthorizationActionBuilder(requiredScopes: Set[String], principalValidator: PrincipalFilter = _ => true) extends ActionBuilder[AuthorizedRequest, AnyContent]
+  class AuthorizationActionBuilder(requiredScopes: Principal => Set[String], principalValidator: PrincipalFilter = _ => true) extends ActionBuilder[AuthorizedRequest, AnyContent]
     with ActionRefiner[Request, AuthorizedRequest] {
     override protected def refine[A](request: Request[A]): Future[Either[Result, AuthorizedRequest[A]]] = Future.successful {
       val principal = request.headers.get("Authorization").filter(_.startsWith("Bearer"))
@@ -21,7 +21,7 @@ class AuthorizationActions @Inject()(val parser: BodyParsers.Default, jwt: APITo
           // No principal in the request
           Left(Unauthorized)
 
-        case Some(user) if (requiredScopes.forall(user.hasScope) && principalValidator(user.principal)) =>
+        case Some(user) if (principalValidator(user.principal) && requiredScopes(user.principal).forall(user.hasScope)) =>
           // Principal with access to the scope
           Right(new AuthorizedRequest(user, request))
 
@@ -41,23 +41,29 @@ class AuthorizationActions @Inject()(val parser: BodyParsers.Default, jwt: APITo
   /**
     * Create an action that only ensures a valid token is present
     */
-  def apply() = new AuthorizationActionBuilder(Set.empty)
+  def apply() = new AuthorizationActionBuilder(_ => Set.empty)
 
   /**
     * Create an action that ensures that a valid token is present and that it contains specific scope(s)
     */
-  def apply(requiredScopes: String*) = new AuthorizationActionBuilder(Set(requiredScopes:_*))
+  def apply(requiredScopes: String*) = new AuthorizationActionBuilder(_ => Set(requiredScopes:_*))
 
   /**
     * Create an action that ensures that a valid token is present, that it contains specific scope(s), and that it
     * matches a condition regarding its principal (i.e. bot only)
     */
-  def apply(principalFilter: PrincipalFilter, requiredScopes: String*) = new AuthorizationActionBuilder(Set(requiredScopes:_*), principalFilter)
+  def apply(principalFilter: PrincipalFilter, requiredScopes: String*) = new AuthorizationActionBuilder(_ => Set(requiredScopes:_*), principalFilter)
+
+  /**
+    * Create an action that ensures that a valid token is present, that it contains specific scope(s), and that it
+    * matches a condition regarding its principal (i.e. bot only)
+    */
+  def apply(principalFilter: PrincipalFilter, requiredScopes: Principal => Set[String]) = new AuthorizationActionBuilder(requiredScopes, principalFilter)
 
   /**
     * Create an action that ensures that a valid token is present and that its principal matches a condition
     */
-  def apply(principalFilter: PrincipalFilter) = new AuthorizationActionBuilder(Set.empty, principalFilter)
+  def apply(principalFilter: PrincipalFilter) = new AuthorizationActionBuilder(_ => Set.empty, principalFilter)
 }
 
 object AuthorizationActions {

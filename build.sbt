@@ -1,8 +1,8 @@
 import sbt.Keys.{libraryDependencies, resolvers}
 
 
-ThisBuild / organization := "ch.japan-impact"
-ThisBuild / version      := "1.0"
+ThisBuild / organization := "ch.japanimpact"
+ThisBuild / version := "1.0"
 ThisBuild / scalaVersion := "2.13.1"
 ThisBuild / libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.8.1",
@@ -11,6 +11,7 @@ ThisBuild / libraryDependencies ++= Seq(
 )
 
 lazy val api = (project in file("api"))
+  .settings(version := "1.0-SNAPSHOT")
 
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala, DebianPlugin, JDebPackaging, SystemdPlugin)
