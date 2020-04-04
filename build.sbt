@@ -1,5 +1,7 @@
 import sbt.Keys.{libraryDependencies, resolvers}
 
+lazy val api = (project in file("api"))
+
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala, DebianPlugin, JDebPackaging, SystemdPlugin)
   .settings(
@@ -43,6 +45,7 @@ lazy val root = (project in file("."))
     publishArtifact in(Compile, packageDoc) := false
 
   )
+  .dependsOn(api)
 
 
       

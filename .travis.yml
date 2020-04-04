@@ -1,0 +1,15 @@
+language: scala
+scala:
+- 2.12.2
+script:
+- sbt packageBin
+- pwd
+- cp -v target/scala-2.12/jiauthframework_2.12-0.2-SNAPSHOT.jar /tmp/jiauthframework.jar
+
+deploy:
+  provider: releases
+  api_key:
+    secure: rsK0BwQdJKfRPjrczNP9iuWpibjlHE7etrtxAIVxrS3sfg33a9X0iU7sRDCVvu0oNNvNuUgv14JI5fgJMqBYjJ7qvZBLT7iMHsX+Af6qn1mBzK/6k0A8+UVyrTW8FhFdZ1pZPMto53pN8G0Pt1tTx9kBwDqeCwrP+W4AMtmkzXjkAH7oHsAwGefCFWCHjNqcU6UJzwkb/PD6o1DI5kRVRpILmFrfJaD0YX8TcsGI9dqgTmOqvWmOVEaY9QXareskb+kDtwJBBrj4l/CelmBGqZZV3TVQLa5BibL8wDacur6F42w8p1VvDPOUX9RyLkW9ugQu0FILe/l5UkpvSkjYJRKgj43z4kVUR38iJao7PxsZ5XWxe41ZhmZyo/xSlTHZz7qpJ40EVkqCSXkH5vwEqzBzYbt9IqDf4KBgo9IA8g7TsG8DqEEvpyweFfoTLF88OLF7hrPXg12yNUpUnYZRiMDCu+7JC0rLuQti1YZ1HjhzDIUlSiLL8aBYVo0iyhW03tSHBVe6m1xtxT9VQdssA1HHuLydCbiozx0ltIoQKHA4FndImlpCzGBxqb1QYjeFt47tmtRcjBJ+oPxC7wYrnUxm3cw5G97VqUcLq8UAxg693sg8GlTne9cZTp9em2wxykbAPNfRiNmyrNHzh9E1FBOL6iZfqp2GmJY0QX1Pq1o=
+  file: /tmp/jiauthframework.jar
+  on:
+    repo: Polyjapan/ji-auth-framework
