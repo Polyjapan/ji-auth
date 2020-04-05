@@ -9,6 +9,20 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AuthorizationActions @Inject()(val parser: BodyParsers.Default, jwt: APITokensValidationService)(implicit val executionContext: ExecutionContext) {
 
+  class OptionalActionBuilder extends ActionTransformer[Request, OptionalAuthorizedRequest] with ActionBuilder[OptionalAuthorizedRequest, AnyContent] {
+    override protected def transform[A](request: Request[A]): Future[OptionalAuthorizedRequest[A]] = Future.successful {
+      val principal = request.headers.get("Authorization").filter(_.startsWith("Bearer"))
+        .map(_.replace("Bearer ", "").trim)
+        .flatMap(jwt.validateToken)
+
+      new OptionalAuthorizedRequest[A](principal, request)
+    }
+
+    override def parser: BodyParser[AnyContent] = AuthorizationActions.this.parser
+
+    override protected def executionContext: ExecutionContext = AuthorizationActions.this.executionContext
+  }
+
   class AuthorizationActionBuilder(requiredScopes: Principal => Set[String], principalValidator: PrincipalFilter = _ => true) extends ActionBuilder[AuthorizedRequest, AnyContent]
     with ActionRefiner[Request, AuthorizedRequest] {
     override protected def refine[A](request: Request[A]): Future[Either[Result, AuthorizedRequest[A]]] = Future.successful {
@@ -37,6 +51,10 @@ class AuthorizationActions @Inject()(val parser: BodyParsers.Default, jwt: APITo
   }
 
   class AuthorizedRequest[A](val principal: AuthentifiedPrincipal, request: Request[A]) extends WrappedRequest[A](request)
+
+  class OptionalAuthorizedRequest[A](val principal: Option[AuthentifiedPrincipal], request: Request[A]) extends WrappedRequest[A](request)
+
+  def optional() = new OptionalActionBuilder()
 
   /**
     * Create an action that only ensures a valid token is present

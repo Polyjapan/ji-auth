@@ -6,14 +6,14 @@ import scala.util.Try
 
 package object apitokens {
 
-  abstract class Principal(id: Int, val name: String) {
+  abstract class Principal(val id: Int, val name: String) {
     def toSubject = s"$name|$id"
   }
 
 
-  case class User(id: Int) extends Principal(id, "user")
+  case class User(override val id: Int) extends Principal(id, "user")
 
-  case class App(id: Int) extends Principal(id, "app")
+  case class App(override val id: Int) extends Principal(id, "app")
 
   object Principal {
     val fromName: String => (Int => Principal) = Map(
@@ -29,6 +29,18 @@ package object apitokens {
           fromName(tpe)(id.toInt)
         }.toOption
       case _ => None
+    }
+  }
+
+  implicit val PrincipalFormat: Format[Principal] = new Format[Principal] {
+    override def writes(o: Principal): JsValue = JsString(o.toSubject)
+
+    override def reads(json: JsValue): JsResult[Principal] = json match {
+      case JsString(str) => Principal.fromSubject(str) match {
+        case Some(ppal) => JsSuccess(ppal)
+        case _ => JsError()
+      }
+      case _ => JsError()
     }
   }
 
