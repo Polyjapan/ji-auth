@@ -13,6 +13,14 @@ ThisBuild / libraryDependencies ++= Seq(
 lazy val api = (project in file("api"))
   .settings(version := "1.0-SNAPSHOT")
 
+
+lazy val tools = (project in file("tools"))
+  .settings(
+    libraryDependencies +=
+      "org.bouncycastle" % "bcpkix-jdk15on" % "1.64"
+  )
+
+
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala, DebianPlugin, JDebPackaging, SystemdPlugin)
   .settings(
@@ -52,7 +60,7 @@ lazy val root = (project in file("."))
     publishArtifact in(Compile, packageDoc) := false
 
   )
-  .aggregate(api)
+  .aggregate(api, tools)
   .dependsOn(api)
 
 
