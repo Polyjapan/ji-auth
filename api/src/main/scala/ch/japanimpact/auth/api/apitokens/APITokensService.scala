@@ -2,7 +2,7 @@ package ch.japanimpact.auth.api.apitokens
 
 import ch.japanimpact.auth.api.ApiMapper
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes.ErrorCode
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.libs.json.{Json, Writes}
 import play.api.libs.ws._
@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @author Louis Vialar
   */
 @Singleton
-class APITokensService(ws: WSClient, config: Configuration)(implicit ec: ExecutionContext) {
+class APITokensService @Inject()(ws: WSClient, config: Configuration)(implicit ec: ExecutionContext) {
   private val apiBase = config.get[String]("jiauth.baseUrl")
   private val apiSecret = config.getOptional[String]("jiauth.clientSecret").getOrElse("no_api_key")
 
