@@ -10,6 +10,7 @@ import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import services.JWTService
 import utils.Implicits._
+import ch.japanimpact.auth.api.apitokens._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -20,6 +21,10 @@ import scala.concurrent.duration._
 class ApiTokensController @Inject()(cc: ControllerComponents, cas: CASService, jwt: JWTService, users: UsersModel)
                                    (implicit ec: ExecutionContext, apiKeys: ApiKeysModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
+  private def getScopes(userScopes: Set[String], requestedScopes: Set[String]) = {
+    // For example, if requestedScopes contains "uploads/*" and user has "uploads/files/*", this will return "uploads/files/*"
+    userScopes.filter(requestedScopes.hasScope) ++ requestedScopes.filter(userScopes.hasScope)
+  }
 
   def userToken = Action.async(parse.json[UserTokenRequest]) { implicit req =>
     val request = req.body
@@ -27,7 +32,7 @@ class ApiTokensController @Inject()(cc: ControllerComponents, cas: CASService, j
       case Right(resp) =>
         val userId = resp.user.toInt
         users.getAllowedScopes(userId) map { allowedScopes =>
-          val scopes = request.scopes.filter(allowedScopes)
+          val scopes = getScopes(allowedScopes, request.scopes)
 
           val (dur, token) = jwt.issueApiToken(User(resp.user.toInt), scopes, request.audiences, request.duration.seconds)
 
@@ -44,7 +49,7 @@ class ApiTokensController @Inject()(cc: ControllerComponents, cas: CASService, j
       .withApp(errorToReturn = Json.toJson(ErrorResponse("unauthorized", "the api key is not valid or missing"))) { app =>
         val request = req.body
         apiKeys.getAllowedScopes(app.appId.get) map { allowedScopes =>
-          val scopes = request.scopes.filter(allowedScopes)
+          val scopes = getScopes(allowedScopes, request.scopes)
           val (dur, token) = jwt.issueApiToken(App(app.appId.get), scopes, request.audiences, request.duration.seconds)
 
           Ok(Json.toJson(TokenResponse(token, scopes, request.audiences, dur)))
