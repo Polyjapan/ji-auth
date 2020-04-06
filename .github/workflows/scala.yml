@@ -21,7 +21,7 @@ jobs:
       run: sbt dist ; sbt packageBin ; sbt packageDoc
     
     - name: Copy files
-      run: mkdir jars ; cp api/target/scala-*/*.jar jars/
+      run: mkdir jars ; cp api/target/scala-*/*.jar jars/ ; mkdir server ; cp target/universal/*.zip server
     - name: Upload API
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -35,4 +35,4 @@ jobs:
         # Artifact name
         name: Server
         # Directory containing files to upload
-        path: target/universal/*.zip
+        path: server
