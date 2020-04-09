@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author Louis Vialar
  */
 object ApiUtils {
-  private[api] val ScopeRegex = "^[a-zA-Z0-9_/*-]{2,128}$".r
+  private[api] val ScopeRegex = "^[a-zA-Z0-9_/*-]{1,128}$".r
 
   private[api] def withGivenApp(clientSecret: String)(body: ApiKey => Future[Result])(implicit apps: ApiKeysModel, request: RequestHeader, ec: ExecutionContext): Future[Result] = {
     apps getApiKeyBySecret (clientSecret) flatMap {
