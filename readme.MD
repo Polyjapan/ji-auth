@@ -15,60 +15,9 @@ You can provide a specific configuration file using the `-Dconfig.file=path` swi
 
 [https://github.com/Polyjapan/ji-auth-framework] is a cool client written in scala for the JVM :)
 
-## Protocol for internal apps
-
-> :information_source: Internal apps are apps that share the same session (JWT). 
-
-The login process is quite simple: 
-1. Redirect the user to a special URL
-2. The user logs in
-3. The user is redirected back to your app, with an `accessToken` and a `refreshToken`
-
-Let's now dig into the details!
-
-### 1. Registering the app
-
-To use JI-Auth, you first need to whitelist the domain for internal use.
-
-### 2. Sending the user
- 
-To log an user in, redirect him to `https://${API_DOMAIN}/internal/login?service=<FULL_CALLBACK_URL>`.
-
-Let's see what's in this URL:
- - `API_DOMAIN`, the server on which this API runs (usually `auth.japan-impact.ch`)
- - `FULL_CALLBACK_URL`, the url to which the user will be redirected.
- 
-> :warning: The user will be redirected with NO INTERACTION. Your service should not login users from any URL.
- 
-### 3. Checking the token
-
-After logging in, the user will get redirected to:
-`${FULL_CALLBACK_URL}?access_token=${ACCESS_TOKEN}&refresh_token=${REFRESH_TOKEN}&duration=${EXP_TIME}`
-
-The GET parameters are the following:
- - `ACCESS_TOKEN`: your main access token. It's a [JWT](https://jwt.io/) that you can paste on https://jwt.io for details. 
-   It contains thw following mandatory fields:
-    - `sub`: (`string`) the user ID (encoded as a string, but it's only digits so you can safely do `.toInt`)
-    - `exp`: (`number`) the expiration timestamp. You **MUST NOT** accept a token if `timestampSeconds() > exp`
-    - `iat`: (`number`) the issue timestamp. You **MUST NOT** accept a token if `timestampSeconds() < iat`
-    - `grp`: (`string[]`) a list of groups the user is a member of
-    
-   Its header specifies an algorithm. **YOU MUST NOT ACCEPT A TOKEN** if its algorithm is not **ECDSA** (`ES256` currently).
-   
-   The token is signed using a public key. **YOU MUST VALIDATE THE TOKEN BEFORE ACCEPTING IT**.
-   Beware, the JOSE standard is a bit buggy and allows users to specify `none` as the signature algorithm. YOU MUST VERIFY THE SIGNATURE ALGO AND ENSURE IT'S ECDSA.
-   
-   The signing key is at https://auth.japan-impact.ch/.id.pub and the certificate at https://auth.japan-impact.ch/public.cer.
-   
- - `REFRESH_TOKEN`: the token you can use to redeem a new `ACCESS_TOKEN` once it's expired
- - `EXP_TIME`: the time (in seconds) during which the token is valid. Should be `exp - iat`
- 
-Voilà! Your user is authenticated. You can use the `ACCESS_TOKEN` against any other `authentified` API that accepts it without any
-additional login step. 
-
 ## API authentication
 
-Any API that accepts these tokens proceeds them in the same way.
+Any API that accepts API tokens proceeds them in the same way.
 
 To access these APIs MUST pass the token in the `Authorization` header, as follows: `Authorization: Bearer ${ACCESS_TOKEN}`.
 
