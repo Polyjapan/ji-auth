@@ -2,7 +2,7 @@
 @import helper._
 
 @import views.html.management.managementTemplate
-@(user: UserSession, groups: Set[Group], apps: Set[data.ApiKey], internalApps: List[String], casServices: List[CasService])(implicit request: RequestHeader)
+@(user: UserSession, groups: Set[Group], apps: Set[data.ApiKey], casServices: List[CasService])(implicit request: RequestHeader)
 
 @header = {
     <p class="card-text">Bonjour, <b>@{user.email} !</b> Votre identifiant est le <b>#@{user.id}</b>. Vous êtes bien
@@ -10,6 +10,9 @@
 
 @if(user.isAdmin) {
     <p class="card-text">Cette page vous permet d'administrer le service de connexion centralisé Japan Impact.</p>
+
+    <a class="btn btn-lg btn-primary" href="https://admin.japan-impact.ch/">Utiliser la nouvelle interface Admin swag</a>
+    <br><br>
 }
 
     <a class="btn btn-danger" href="/logout">Déconnexion</a>
@@ -17,9 +20,6 @@
 
     <hr>
 
-    @if(user.canBrowseUsers) {
-        <a href="#">Gestion des utilisateurs</a>
-    }
 }
 
 @managementTemplate("Console de gestion", user, header) {
@@ -62,31 +62,6 @@
                             @if(user.canCreateApiKey) {
                                 <li class="list-group-item"><a href="@controllers.management.routes.ApiKeysCRUDController.createApp()">Créer une application</a></li>
                             }
-                        </ul>
-                    </div>
-                }
-
-
-                @if(user.canCreateInternalApp) {
-                    <br>
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title">Applications internes</h5>
-                            <h6 class="card-subtitle text-muted mb-1">Pour l'utilisation des tokens JWT</h6>
-                        </div>
-                        <ul class="list-group list-group-flush">
-                            @for(app <- internalApps) {
-                                <li class="list-group-item">
-                                   @form(action = controllers.management.routes.InternalAppsCRUDController.whitelistDomainDelete(), 'style -> "display: inline; float: right;") {
-                                       @CSRF.formField
-                                       <input type="hidden" name="domain" value="@app">
-                                       <button class="btn btn-danger" type="submit">&cross;</button>
-                                    }
-                                  @app
-                                </li>
-                            }
-
-                            <li class="list-group-item"><a href="@controllers.management.routes.InternalAppsCRUDController.whitelistDomainGet()">Créer une application interne</a></li>
                         </ul>
                     </div>
                 }

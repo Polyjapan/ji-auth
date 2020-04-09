@@ -1,7 +1,7 @@
 package controllers.management
 
 import javax.inject.Inject
-import models.{ApiKeysModel, GroupsModel, InternalAppsModel, ServicesModel, TicketsModel}
+import models.{ApiKeysModel, GroupsModel, ServicesModel, TicketsModel}
 import play.api.Configuration
 import play.api.libs.mailer.MailerClient
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
  */
 class ManagementHomeController @Inject()(cc: ControllerComponents,
                                          tickets: TicketsModel,
-                                         apiKeys: ApiKeysModel, internal: InternalAppsModel, cas: ServicesModel,
+                                         apiKeys: ApiKeysModel, cas: ServicesModel,
                                          groups: GroupsModel)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
 
@@ -21,10 +21,8 @@ class ManagementHomeController @Inject()(cc: ControllerComponents,
     ManagementTools.ifLoggedIn { session =>
       apiKeys.getApiKeysByOwner(session.id).flatMap(apps => {
         groups.getGroupsByMember(session.id).flatMap(groups => {
-          internal.getInternalApps.flatMap(internalApps => {
-            cas.getCasServices.map(services => {
-              Ok(views.html.management.home(session, groups.toSet, apps.map(_.apiKey).toSet, internalApps, services))
-            })
+          cas.getCasServices.map(services => {
+            Ok(views.html.management.home(session, groups.toSet, apps.map(_.apiKey).toSet, services))
           })
         })
       })

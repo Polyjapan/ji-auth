@@ -1,7 +1,7 @@
 package controllers
 
 import data.UserSession._
-import data.{Address, AuthenticationInstance, CASInstance, RegisteredUser, TokensInstance}
+import data.{Address, AuthenticationInstance, CASInstance, RegisteredUser}
 import javax.inject.Inject
 import models._
 import play.api.Configuration
@@ -52,23 +52,6 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
             Forbidden(views.html.errorPage("Permissions manquantes", Html("<p>L'accès à cette application nécessite d'être membre de certains groupes.</p>")))
           }
         })
-      case TokensInstance(redirectUrl, safe) =>
-        groups.getGroupsByMember(userId)
-          .flatMap(groups => sessions.createSession(userId).map(sessionId => (sessionId, groups)))
-          .map {
-            case (sid, groups) =>
-              val token = jwt.issueInternalToken(userId, groups.map(_.name).toSet)
-              val refresh = sid.toString
-
-              redirectUrl + "?accessToken=" + token + "&refreshToken=" + refresh + "&duration=" + (jwt.ExpirationTimeMinutes * 60)
-          }
-          .map(url => {
-            if (!url.startsWith("https://") || !safe) {
-              Ok(views.html.redirectConfirm(url))
-            } else {
-              Redirect(url)
-            }
-          })
 
     }).map(result => result.removingFromSession(AuthenticationInstance.SessionKey))
   }

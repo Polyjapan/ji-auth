@@ -1,10 +1,9 @@
 package controllers.api
 
-import ch.japanimpact.auth.api.internal.AuthorizationUtils._
 import ch.japanimpact.auth.api.constants.GeneralErrorCodes._
 import ch.japanimpact.auth.api.{UserProfile, _}
 import javax.inject.Inject
-import models.{ApiKeysModel, GroupsModel, ServicesModel, TicketsModel, UsersModel}
+import models.{ApiKeysModel, GroupsModel, TicketsModel, UsersModel}
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.libs.mailer.MailerClient
@@ -19,8 +18,7 @@ import scala.concurrent.ExecutionContext
 class AppProfileController @Inject()(cc: ControllerComponents,
                                      tickets: TicketsModel,
                                      users: UsersModel,
-                                     groups: GroupsModel,
-                                     userAction: UserAction)(implicit ec: ExecutionContext, apps: ApiKeysModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
+                                     groups: GroupsModel)(implicit ec: ExecutionContext, apps: ApiKeysModel, mailer: MailerClient, config: Configuration) extends AbstractController(cc) {
 
   private def fetchUserProfile(user: Int) = users.getUserProfile(id = user).map {
     case Some((user, address)) =>
@@ -35,10 +33,6 @@ class AppProfileController @Inject()(cc: ControllerComponents,
     ApiUtils.withApp { _ =>
       fetchUserProfile(user)
     }
-  }
-
-  def getBearerProfile: Action[AnyContent] = userAction.andThen(PermissionCheckAction()).async { implicit rq =>
-    fetchUserProfile(rq.user.get.userId)
   }
 
   def searchUsers(query: String) = Action.async { implicit rq =>
