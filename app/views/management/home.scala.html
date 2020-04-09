@@ -101,7 +101,7 @@
                         <ul class="list-group list-group-flush">
                             @for(app <- casServices) {
                                 <li class="list-group-item">
-                                    <a href="@controllers.management.routes.CasAppsCRUDController.getApp(app.serviceId)">@app.serviceName</a>
+                                    <a href="@controllers.management.routes.CasAppsCRUDController.getApp(app.serviceId.get)">@app.serviceName</a>
                                 </li>
                             }
 

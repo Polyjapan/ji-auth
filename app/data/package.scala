@@ -1,9 +1,9 @@
-import java.sql.PreparedStatement
 import java.util.{Base64, Date}
 
 import anorm.Macro.ColumnNaming
-import anorm.{Column, Macro, RowParser, ToParameterList, ToStatement}
-import ch.japanimpact.auth.api.{UserAddress, UserDetails}
+import anorm.{Macro, RowParser, ToParameterList}
+import ch.japanimpact.auth.api.{UserAddress, UserDetails, UserProfile}
+import play.api.libs.json.{Format, JsObject, Json, Writes}
 
 /**
  * @author Louis Vialar
@@ -46,8 +46,16 @@ package object data {
                            ) {
 
     def toUserDetails = UserDetails(firstName, lastName, phoneNumber)
+
+    def toUserProfile(address: Option[UserAddress] = None) =
+      UserProfile(id.get, email, toUserDetails, address)
+
+    def obfuscate = copy(emailConfirmKey = None, passwordReset = None, password = null)
   }
 
+
+  implicit val RegisteredUserFormat: Writes[RegisteredUser] = Json.writes[RegisteredUser]
+    .transform((obj: JsObject) => obj - "emailConfirmKey" - "passwordReset" - "password")
 
   implicit val RegisteredUserRowParser: RowParser[RegisteredUser] = Macro.namedParser[RegisteredUser](ColumnNaming.SnakeCase)
   implicit val RegisteredUserParameterList: ToParameterList[RegisteredUser] = Macro.toParameters[RegisteredUser]()
@@ -63,15 +71,23 @@ package object data {
   /**
    * Represents an app allowed to make API calls on the system
    *
-   * @param appId               an internal id for the app
-   * @param appCreatedBy        the id of the user who created the app
-   * @param clientSecret        the client secret to authenticate secret (backend to backend) requests
-   * @param appName             the name of the app
+   * @param appId        an internal id for the app
+   * @param appCreatedBy the id of the user who created the app
+   * @param clientSecret the client secret to authenticate secret (backend to backend) requests
+   * @param appName      the name of the app
    */
   case class ApiKey(appId: Option[Int], appCreatedBy: Int, clientSecret: String, appName: String)
 
-  case class CasService(serviceId: Int, serviceName: String, serviceRedirectUrl: Option[String] = None)
+  case class ApiKeyData(apiKey: ApiKey, allowedScopes: Set[String], author: UserProfile) {
+    def obfuscated = copy(apiKey = apiKey.copy(clientSecret = "********"))
+  }
 
+  implicit val ApiKeyFormat: Format[ApiKey] = Json.format[ApiKey]
+  implicit val ApiKeyDataFormat: Format[ApiKeyData] = Json.format[ApiKeyData]
+
+  case class CasService(serviceId: Option[Int], serviceName: String, serviceRedirectUrl: Option[String] = None)
+
+  implicit val CasServiceFormat: Format[CasService] = Json.format[CasService]
   implicit val CasServiceRowParser: RowParser[CasService] = Macro.namedParser[CasService](ColumnNaming.SnakeCase)
   implicit val CasServiceParameterList: ToParameterList[CasService] = Macro.toParameters[CasService]()
 
@@ -80,16 +96,23 @@ package object data {
   implicit val AppRowParser: RowParser[ApiKey] = Macro.namedParser[ApiKey](ColumnNaming.SnakeCase)
   implicit val AppParameterList: ToParameterList[ApiKey] = Macro.toParameters[ApiKey]()
 
+  case class ServiceData(service: CasService, requiredGroups: Set[String], allowedGroups: Set[String], domains: Set[String], accessFrom: List[(Int, String)])
+
+  implicit val ServiceDataFormat: Format[ServiceData] = Json.format[ServiceData]
+
   /**
    * Represents a group of users
    *
    * @param id          the id of the group
-   * @param owner       the current owner (user id) of the group
    * @param name        the internal name for the group ([a-zA-Z0-9_-]+)
    * @param displayName the display name for the group
    */
-  case class Group(id: Option[Int], owner: Int, name: String, displayName: String)
+  case class Group(id: Option[Int], name: String, displayName: String)
 
+  case class GroupData(group: Group, allowedScopes: Set[String])
+
+  implicit val GroupFormat: Format[Group] = Json.format[Group]
+  implicit val GroupDataFormat: Format[GroupData] = Json.format[GroupData]
   implicit val GroupRowParser: RowParser[Group] = Macro.namedParser[Group](ColumnNaming.SnakeCase)
   implicit val GroupParameterList: ToParameterList[Group] = Macro.toParameters[Group]()
 

@@ -43,7 +43,7 @@ class CASService @Inject()(val ws: WSClient, val config: CasConfiguration)(impli
     *         can access the PGT via [[CASServiceResponse.PGT]]
     */
   def serviceValidate(ticket: ServiceTicket, pgtUrl: Option[String] = None): Future[Either[CASError, CASServiceResponse]] =
-    ticketValidate(ticket, pgtUrl, "/serviceValidate")
+    ticketValidate(ticket, pgtUrl, "serviceValidate")
 
   /**
     * Use a service or proxy ticket to get user information
@@ -54,7 +54,7 @@ class CASService @Inject()(val ws: WSClient, val config: CasConfiguration)(impli
     *         can access the PGT via [[CASServiceResponse.PGT]]
     */
   def proxyValidate(ticket: ProxyTicket, pgtUrl: Option[String]): Future[Either[CASError, CASServiceResponse]] =
-    ticketValidate(ticket, pgtUrl, "/proxyValidate")
+    ticketValidate(ticket, pgtUrl, "proxyValidate")
 
   /**
     * Get a ProxyTicket for a given service and user.
@@ -64,7 +64,7 @@ class CASService @Inject()(val ws: WSClient, val config: CasConfiguration)(impli
     * @return a ProxyTicket, that can be used by `requestedService`
     */
   def proxy(ticket: ProxyGrantingTicket, requestedService: String): Future[Either[CASError, ProxyTicket]] = {
-    val query = ws.url(config.path("/proxy"))
+    val query = ws.url(config.path("proxy"))
       .withQueryStringParameters(
         "service" -> requestedService,
         "ticket" -> ticket,

@@ -14,7 +14,7 @@
             <ul>
                 <li>Nom : <code>@app.serviceName</code></li>
                 <li>URL de redirection facultative : <code>@app.serviceRedirectUrl</code></li>
-                <li><a href="@controllers.management.routes.CasAppsCRUDController.updateApp(app.serviceId)">Modifier le service</a></li>
+                <li><a href="@controllers.management.routes.CasAppsCRUDController.updateApp(app.serviceId.get)">Modifier le service</a></li>
             </ul>
 
         </div>
@@ -31,7 +31,7 @@
                     <ul class="list-group list-group-flush">
                         @for(group <- reqGroups) {
                             <li class="list-group-item">
-                                @form(action = controllers.management.routes.CasAppsCRUDController.groupsDeletePost(app.serviceId, required = true), 'style -> "display: inline; float: right;") {
+                                @form(action = controllers.management.routes.CasAppsCRUDController.groupsDeletePost(app.serviceId.get, required = true), 'style -> "display: inline; float: right;") {
                                     @CSRF.formField
                                     <input type="hidden" name="group" value="@group">
                                     <button class="btn btn-danger" type="submit">&cross;</button>
@@ -41,7 +41,7 @@
                         }
 
                         <li class="list-group-item">
-                        @form(action = controllers.management.routes.CasAppsCRUDController.groupsAddPost(app.serviceId, required = true), 'class -> "form-inline") {
+                        @form(action = controllers.management.routes.CasAppsCRUDController.groupsAddPost(app.serviceId.get, required = true), 'class -> "form-inline") {
                             @CSRF.formField
                             <input type="text" name="group" class="form-control" required placeholder="Nom du groupe">
                             <button class="btn btn-success" type="submit">&plus;</button>
@@ -59,7 +59,7 @@
                     <ul class="list-group list-group-flush">
                         @for(group <- allowGroups) {
                             <li class="list-group-item">
-                                @form(action = controllers.management.routes.CasAppsCRUDController.groupsDeletePost(app.serviceId, required = false), 'style -> "display: inline; float: right;") {
+                                @form(action = controllers.management.routes.CasAppsCRUDController.groupsDeletePost(app.serviceId.get, required = false), 'style -> "display: inline; float: right;") {
                                     @CSRF.formField
                                     <input type="hidden" name="group" value="@group">
                                     <button class="btn btn-danger" type="submit">&cross;</button>
@@ -69,7 +69,7 @@
                         }
 
                         <li class="list-group-item">
-                        @form(action = controllers.management.routes.CasAppsCRUDController.groupsAddPost(app.serviceId, required = false), 'class -> "form-inline") {
+                        @form(action = controllers.management.routes.CasAppsCRUDController.groupsAddPost(app.serviceId.get, required = false), 'class -> "form-inline") {
                             @CSRF.formField
                             <input type="text" name="group" class="form-control" required placeholder="Nom du groupe">
                             <button class="btn btn-success" type="submit">&plus;</button>
@@ -91,7 +91,7 @@
                     <ul class="list-group list-group-flush">
                         @for(domain <- domains) {
                             <li class="list-group-item">
-                                @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainDelete(app.serviceId), 'style -> "display: inline; float: right;") {
+                                @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainDelete(app.serviceId.get), 'style -> "display: inline; float: right;") {
                                     @CSRF.formField
                                     <input type="hidden" name="domain" value="@domain">
                                     <button class="btn btn-danger" type="submit">&cross;</button>
@@ -101,7 +101,7 @@
                         }
 
                         <li class="list-group-item">
-                        @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainPost(app.serviceId), 'class -> "form-inline") {
+                        @form(action = controllers.management.routes.CasAppsCRUDController.whitelistDomainPost(app.serviceId.get), 'class -> "form-inline") {
                             @CSRF.formField
                             <input type="text" name="domain" class="form-control" required placeholder="Nom de domaine">
                             <button class="btn btn-success" type="submit">&plus;</button>
@@ -119,7 +119,7 @@
                     <ul class="list-group list-group-flush">
                         @for(pair <- accessFrom) {
                             <li class="list-group-item">
-                                @form(action = controllers.management.routes.CasAppsCRUDController.allowedAppsDelete(app.serviceId), 'style -> "display: inline; float: right;") {
+                                @form(action = controllers.management.routes.CasAppsCRUDController.allowedAppsDelete(app.serviceId.get), 'style -> "display: inline; float: right;") {
                                     @CSRF.formField
                                     <input type="hidden" name="allowedApp" value="@pair._1">
                                     <button class="btn btn-danger" type="submit">&cross;</button>
@@ -129,7 +129,7 @@
                         }
 
                         <li class="list-group-item">
-                        @form(action = controllers.management.routes.CasAppsCRUDController.allowedAppsAdd(app.serviceId), 'class -> "form-inline") {
+                        @form(action = controllers.management.routes.CasAppsCRUDController.allowedAppsAdd(app.serviceId.get), 'class -> "form-inline") {
                             @CSRF.formField
                             <input type="text" name="allowedApp" class="form-control" required placeholder="ID du service CAS">
                             <button class="btn btn-success" type="submit">&plus;</button>

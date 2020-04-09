@@ -3,114 +3,179 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-OPTIONS        /                                           controllers.OptionsController.rootOptions
-OPTIONS        /*url                                       controllers.OptionsController.options(url: String)
+OPTIONS        /                                                    controllers.OptionsController.rootOptions
+OPTIONS        /*url                                                controllers.OptionsController.options(url: String)
 
 # API
+GET            /api/user/:user                                      controllers.api.AppProfileController.getUserProfile(user: Int)
+GET            /api/user                                            controllers.api.AppProfileController.getBearerProfile
+GET            /api/user/search/:query                              controllers.api.AppProfileController.searchUsers(query: String)
+GET            /api/users/$users<[0-9,]+>                           controllers.api.AppProfileController.getUserProfiles(users: String)
+
+
+GET            /api/v2/apikeys                                      controllers.api.management.ApiKeysController.getApiKeys
++nocsrf
+POST           /api/v2/apikeys                                      controllers.api.management.ApiKeysController.createApiKey
+GET            /api/v2/apikeys/:id                                  controllers.api.management.ApiKeysController.getApiKey(id: Int)
++nocsrf
+PUT            /api/v2/apikeys/:id                                  controllers.api.management.ApiKeysController.updateApiKey(id: Int)
++nocsrf
+DELETE         /api/v2/apikeys/:id                                  controllers.api.management.ApiKeysController.deleteApiKey(id: Int)
+GET            /api/v2/apikeys/:id/scopes                           controllers.api.management.ApiKeysController.getKeyScopes(id: Int)
++nocsrf
+POST           /api/v2/apikeys/:id/scopes                           controllers.api.management.ApiKeysController.addScope(id: Int)
++nocsrf
+POST           /api/v2/apikeys/:id/scopes/delete                    controllers.api.management.ApiKeysController.deleteScope(id: Int)
+
+GET            /api/v2/casservices                                  controllers.api.management.CasAppsController.getCasServices
++nocsrf
+POST           /api/v2/casservices                                  controllers.api.management.CasAppsController.createCasService
+GET            /api/v2/casservices/:id                              controllers.api.management.CasAppsController.getCasService(id: Int)
++nocsrf
+DELETE         /api/v2/casservices/:id                              controllers.api.management.CasAppsController.deleteApp(id: Int)
++nocsrf
+PUT            /api/v2/casservices/:id                              controllers.api.management.CasAppsController.updateCasService(id: Int)
++nocsrf
+POST           /api/v2/casservices/:id/domains                      controllers.api.management.CasAppsController.addDomainToWhitelist(id: Int)
++nocsrf
+POST           /api/v2/casservices/:id/domains/delete               controllers.api.management.CasAppsController.removeDomainFromWhitelist(id: Int)
++nocsrf
+POST           /api/v2/casservices/:id/allowedGroups                controllers.api.management.CasAppsController.addAllowedGroup(id: Int)
++nocsrf
+POST           /api/v2/casservices/:id/allowedGroups/delete         controllers.api.management.CasAppsController.removeAllowedGroup(id: Int)
++nocsrf
+POST           /api/v2/casservices/:id/requiredGroups               controllers.api.management.CasAppsController.addRequiredGroup(id: Int)
++nocsrf
+POST           /api/v2/casservices/:id/requiredGroups/delete        controllers.api.management.CasAppsController.removeRequiredGroup(id: Int)
++nocsrf
+POST           /api/v2/casservices/:id/allowedProxy                 controllers.api.management.CasAppsController.addAllowedService(id: Int)
++nocsrf
+POST           /api/v2/casservices/:id/allowedProxy/delete          controllers.api.management.CasAppsController.removeAllowedService(id: Int)
+
+
+GET            /api/v2/groups                                       controllers.api.management.GroupsController.getGroups
++nocsrf
+POST           /api/v2/groups                                       controllers.api.management.GroupsController.createGroup
+GET            /api/v2/groups/:name                                 controllers.api.management.GroupsController.getGroup(name: String)
++nocsrf
+PUT            /api/v2/groups/:name                                 controllers.api.management.GroupsController.updateGroup(name: String)
++nocsrf
+DELETE         /api/v2/groups/:name                                 controllers.api.management.GroupsController.deleteGroup(name: String)
++nocsrf
+POST           /api/v2/groups/:name/scopes                          controllers.api.management.GroupsController.addScope(name: String)
++nocsrf
+POST           /api/v2/groups/:name/scopes/delete                   controllers.api.management.GroupsController.deleteScope(name: String)
+GET            /api/v2/groups/:name/members                         controllers.api.management.GroupsController.getMembers(name: String)
++nocsrf
+POST           /api/v2/groups/:name/members                         controllers.api.management.GroupsController.addMember(name: String)
++nocsrf
+POST           /api/v2/groups/:name/members/delete                  controllers.api.management.GroupsController.deleteMember(name: String)
+
+
+GET            /api/v2/users                                        controllers.api.management.UsersController.getUsers
+GET            /api/v2/users/:id                                    controllers.api.management.UsersController.getUser(id: Int)
++nocsrf
+PUT            /api/v2/users/:id                                    controllers.api.management.UsersController.updateUser(id: Int)
+GET            /api/v2/users/:id/logout                             controllers.api.management.UsersController.forceLogOut(id: Int)
+GET            /api/v2/users/:id/confirmEmail                       controllers.api.management.UsersController.forceConfirmEmail(id: Int)
++nocsrf
+POST           /api/v2/users/:id/scopes                             controllers.api.management.UsersController.addScope(id: Int)
++nocsrf
+POST           /api/v2/users/:id/scopes/delete                      controllers.api.management.UsersController.deleteScope(id: Int)
 
 +nocsrf
-POST           /api/groups/:name/members                   controllers.api.AppGroupsController.addMemberToGroup(name: String)
-GET            /api/groups/:name/members                   controllers.api.AppGroupsController.getGroupMembers(name: String)
-DELETE         /api/groups/:name/members/:member           controllers.api.AppGroupsController.removeMemberFromGroup(name: String, member: Int)
-
-GET            /api/user/:user                             controllers.api.AppProfileController.getUserProfile(user: Int)
-GET            /api/user                                   controllers.api.AppProfileController.getBearerProfile
-GET            /api/user/search/:query                     controllers.api.AppProfileController.searchUsers(query: String)
-GET            /api/users/$users<[0-9,]+>                  controllers.api.AppProfileController.getUserProfiles(users: String)
-
+POST           /api/token/user                                      controllers.api.ApiTokensController.userToken
 +nocsrf
-POST           /api/token/user                             controllers.api.ApiTokensController.userToken
-+nocsrf
-POST           /api/token/app                              controllers.api.ApiTokensController.appToken
+POST           /api/token/app                                       controllers.api.ApiTokensController.appToken
 
 # CAS
 
-GET            /cas/login                                  controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
+GET            /cas/login                                           controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
-GET            /cas/v1/validate                            controllers.cas.CASv1Controller.validate(ticket: String, service: String)
-GET            /cas/v1/login                               controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
+GET            /cas/v1/validate                                     controllers.cas.CASv1Controller.validate(ticket: String, service: String)
+GET            /cas/v1/login                                        controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
-GET            /cas/v2/proxy                               controllers.cas.CASv2Controller.proxy(pgt: String, service: String, format: Option[String] ?= None)
-GET            /cas/v2/serviceValidate                     controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
-GET            /cas/v2/proxyValidate                       controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
-GET            /cas/v2/login                               controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
+GET            /cas/v2/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, service: String, format: Option[String] ?= None)
+GET            /cas/v2/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
+GET            /cas/v2/proxyValidate                                controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
+GET            /cas/v2/login                                        controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
 # Internal
 
-GET            /internal/login                             controllers.internal.InternalLoginController.loginGet(service: String)
-GET            /internal/refresh/:refreshToken             controllers.internal.TokenRefreshController.refreshToken(refreshToken: String)
-GET            /api/refresh/:refreshToken                  controllers.internal.TokenRefreshController.refreshToken(refreshToken: String)
+GET            /internal/login                                      controllers.internal.InternalLoginController.loginGet(service: String)
+GET            /internal/refresh/:refreshToken                      controllers.internal.TokenRefreshController.refreshToken(refreshToken: String)
+GET            /api/refresh/:refreshToken                           controllers.internal.TokenRefreshController.refreshToken(refreshToken: String)
 
 
 # General redirection
 
-GET            /redirect                                   controllers.RedirectController.redirectGet
+GET            /redirect                                            controllers.RedirectController.redirectGet
 
 # UI
 
-GET            /register                                   controllers.forms.RegisterController.registerGet
-POST           /register                                   controllers.forms.RegisterController.registerPost
+GET            /register                                            controllers.forms.RegisterController.registerGet
+POST           /register                                            controllers.forms.RegisterController.registerPost
 
-GET            /login                                      controllers.forms.LoginController.loginGet(app: Option[String] ?= None, tokenType: Option[String] ?= None, service: Option[String] ?= None)
-POST           /login                                      controllers.forms.LoginController.loginPost
+GET            /login                                               controllers.forms.LoginController.loginGet(app: Option[String] ?= None, tokenType: Option[String] ?= None, service: Option[String] ?= None)
+POST           /login                                               controllers.forms.LoginController.loginPost
 
-GET            /update_info                                controllers.forms.UpdateInfoController.updateGet
-POST           /update_info                                controllers.forms.UpdateInfoController.updatePost
+GET            /update_info                                         controllers.forms.UpdateInfoController.updateGet
+POST           /update_info                                         controllers.forms.UpdateInfoController.updatePost
 
-GET            /forgot_password                            controllers.forms.PasswordResetController.passwordResetGet
-POST           /forgot_password                            controllers.forms.PasswordResetController.passwordResetPost
+GET            /forgot_password                                     controllers.forms.PasswordResetController.passwordResetGet
+POST           /forgot_password                                     controllers.forms.PasswordResetController.passwordResetPost
 
-GET            /password_reset/:email/:code                controllers.forms.PasswordResetController.passwordResetChangeGet(email: String, code: String)
-POST           /password_reset                             controllers.forms.PasswordResetController.passwordResetChangePost
+GET            /password_reset/:email/:code                         controllers.forms.PasswordResetController.passwordResetChangeGet(email: String, code: String)
+POST           /password_reset                                      controllers.forms.PasswordResetController.passwordResetChangePost
 
-GET            /email_confirm/:email/:code                 controllers.forms.EmailConfirmController.emailConfirmGet(email: String, code: String)
+GET            /email_confirm/:email/:code                          controllers.forms.EmailConfirmController.emailConfirmGet(email: String, code: String)
 
-GET            /logout                                     controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
+GET            /logout                                              controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
 
-GET            /assets/*file                               controllers.Assets.at(file)
+GET            /assets/*file                                        controllers.Assets.at(file)
 
 
 # Management web UI
 
-GET            /                                           controllers.management.ManagementHomeController.home
+GET            /                                                    controllers.management.ManagementHomeController.home
 
-GET            /groups/create                              controllers.management.GroupCRUDController.createGroupForm
-POST           /groups/create                              controllers.management.GroupCRUDController.createGroup
-GET            /groups/:name                               controllers.management.GroupCRUDController.getGroup(name: String)
-DELETE         /groups/:name                               controllers.management.GroupCRUDController.deleteGroup(name: String)
-GET            /groups/:name/update                        controllers.management.GroupCRUDController.updateGroupForm(name: String)
-POST           /groups/:name/update                        controllers.management.GroupCRUDController.updateGroup(name: String)
+GET            /groups/create                                       controllers.management.GroupCRUDController.createGroupForm
+POST           /groups/create                                       controllers.management.GroupCRUDController.createGroup
+GET            /groups/:name                                        controllers.management.GroupCRUDController.getGroup(name: String)
+DELETE         /groups/:name                                        controllers.management.GroupCRUDController.deleteGroup(name: String)
+GET            /groups/:name/update                                 controllers.management.GroupCRUDController.updateGroupForm(name: String)
+POST           /groups/:name/update                                 controllers.management.GroupCRUDController.updateGroup(name: String)
 
-POST           /groups/:name/members                       controllers.management.GroupMembersCRUDController.addMember(name: String)
-GET            /groups/:name/members/:id/update            controllers.management.GroupMembersCRUDController.updateMemberForm(name: String, id: Int)
-POST           /groups/:name/members/:id/update            controllers.management.GroupMembersCRUDController.updateMember(name: String, id: Int)
-POST           /groups/:name/members/:id/delete            controllers.management.GroupMembersCRUDController.deleteMember(name: String, id: Int)
+POST           /groups/:name/members                                controllers.management.GroupMembersCRUDController.addMember(name: String)
+GET            /groups/:name/members/:id/update                     controllers.management.GroupMembersCRUDController.updateMemberForm(name: String, id: Int)
+POST           /groups/:name/members/:id/update                     controllers.management.GroupMembersCRUDController.updateMember(name: String, id: Int)
+POST           /groups/:name/members/:id/delete                     controllers.management.GroupMembersCRUDController.deleteMember(name: String, id: Int)
 
-GET            /apikeys/create                             controllers.management.ApiKeysCRUDController.createAppForm
-POST           /apikeys/create                             controllers.management.ApiKeysCRUDController.createApp
-GET            /apikeys/:id                                controllers.management.ApiKeysCRUDController.getApp(id: Int)
-GET            /apikeys/:id/update                         controllers.management.ApiKeysCRUDController.updateAppForm(id: Int)
-POST           /apikeys/:id/update                         controllers.management.ApiKeysCRUDController.updateApp(id: Int)
+GET            /apikeys/create                                      controllers.management.ApiKeysCRUDController.createAppForm
+POST           /apikeys/create                                      controllers.management.ApiKeysCRUDController.createApp
+GET            /apikeys/:id                                         controllers.management.ApiKeysCRUDController.getApp(id: Int)
+GET            /apikeys/:id/update                                  controllers.management.ApiKeysCRUDController.updateAppForm(id: Int)
+POST           /apikeys/:id/update                                  controllers.management.ApiKeysCRUDController.updateApp(id: Int)
 
-GET            /internalapps/create                        controllers.management.InternalAppsCRUDController.whitelistDomainGet
-POST           /internalapps/create                        controllers.management.InternalAppsCRUDController.whitelistDomainPost
-POST           /internalapps/delete                        controllers.management.InternalAppsCRUDController.whitelistDomainDelete
+GET            /internalapps/create                                 controllers.management.InternalAppsCRUDController.whitelistDomainGet
+POST           /internalapps/create                                 controllers.management.InternalAppsCRUDController.whitelistDomainPost
+POST           /internalapps/delete                                 controllers.management.InternalAppsCRUDController.whitelistDomainDelete
 
 
-GET            /casapps/create                             controllers.management.CasAppsCRUDController.createAppForm
-POST           /casapps/create                             controllers.management.CasAppsCRUDController.createApp
-GET            /casapps/:id                                controllers.management.CasAppsCRUDController.getApp(id: Int)
-GET            /casapps/:id/update                         controllers.management.CasAppsCRUDController.updateAppForm(id: Int)
-POST           /casapps/:id/update                         controllers.management.CasAppsCRUDController.updateApp(id: Int)
+GET            /casapps/create                                      controllers.management.CasAppsCRUDController.createAppForm
+POST           /casapps/create                                      controllers.management.CasAppsCRUDController.createApp
+GET            /casapps/:id                                         controllers.management.CasAppsCRUDController.getApp(id: Int)
+GET            /casapps/:id/update                                  controllers.management.CasAppsCRUDController.updateAppForm(id: Int)
+POST           /casapps/:id/update                                  controllers.management.CasAppsCRUDController.updateApp(id: Int)
 
-POST           /casapps/:id/domains                        controllers.management.CasAppsCRUDController.whitelistDomainPost(id: Int)
-POST           /casapps/:id/domains/delete                 controllers.management.CasAppsCRUDController.whitelistDomainDelete(id: Int)
+POST           /casapps/:id/domains                                 controllers.management.CasAppsCRUDController.whitelistDomainPost(id: Int)
+POST           /casapps/:id/domains/delete                          controllers.management.CasAppsCRUDController.whitelistDomainDelete(id: Int)
 
-POST           /casapps/:id/groups/:required               controllers.management.CasAppsCRUDController.groupsAddPost(id: Int, required: Boolean)
-POST           /casapps/:id/groups/:required/delete        controllers.management.CasAppsCRUDController.groupsDeletePost(id: Int, required: Boolean)
+POST           /casapps/:id/groups/:required                        controllers.management.CasAppsCRUDController.groupsAddPost(id: Int, required: Boolean)
+POST           /casapps/:id/groups/:required/delete                 controllers.management.CasAppsCRUDController.groupsDeletePost(id: Int, required: Boolean)
 
-POST           /casapps/:id/allowProxy                     controllers.management.CasAppsCRUDController.allowedAppsAdd(id: Int)
-POST           /casapps/:id/allowProxy/delete              controllers.management.CasAppsCRUDController.allowedAppsDelete(id: Int)
+POST           /casapps/:id/allowProxy                              controllers.management.CasAppsCRUDController.allowedAppsAdd(id: Int)
+POST           /casapps/:id/allowProxy/delete                       controllers.management.CasAppsCRUDController.allowedAppsDelete(id: Int)
 
 
 

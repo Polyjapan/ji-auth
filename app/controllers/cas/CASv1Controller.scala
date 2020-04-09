@@ -15,7 +15,7 @@ class CASv1Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
   def validate(ticket: String, service: String): Action[AnyContent] = Action.async { implicit rq =>
     apps.getCasService(service) flatMap {
       case Some(CasService(serviceId, _, _)) =>
-        tickets.getCasTicket(ticket, serviceId) map {
+        tickets.getCasTicket(ticket, serviceId.get) map {
           case Some(user) =>
             Ok("yes\n" + user._1.id.get + "\n")
           case None =>

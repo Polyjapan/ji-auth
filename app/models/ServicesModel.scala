@@ -14,6 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author zyuiop
  */
 class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContext) {
+
   private val db = dbApi database "default"
 
   def getCasService(url: String): Future[Option[CasService]] = {
@@ -25,6 +26,12 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
       })
       case None => Future.successful(None)
     }
+  }
+
+  def deleteService(id: Int) = {
+    Future(db.withConnection { implicit c =>
+      SQL"DELETE FROM cas_services WHERE service_id = $id".execute()
+    })
   }
 
   def hasRequiredGroups(service: Int, userId: Int): Future[Boolean] = Future(db.withConnection { implicit c =>
@@ -42,9 +49,6 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
     })
   }
 
-
-  case class ServiceData(service: CasService, requiredGroups: Set[String], allowedGroups: Set[String], domains: Set[String], accessFrom: List[(Int, String)])
-
   def getServiceById(id: Int): Future[Option[ServiceData]] = {
     Future(db.withConnection { implicit c =>
       val service = SQL"SELECT * FROM cas_services WHERE service_id = $id".as(CasServiceRowParser.singleOpt)
@@ -52,7 +56,7 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
       val allowGroups = SQL"SELECT g.name FROM cas_allowed_groups JOIN `groups` g on cas_allowed_groups.group_id = g.id WHERE service_id = $id".as(str("name").*).toSet
       val domains = SQL"SELECT domain FROM cas_domains WHERE service_id = $id".as(str("domain").*).toSet
       val allowAccessFrom = SQL"SELECT cs.* FROM cas_proxy_allow JOIN cas_services cs on cas_proxy_allow.allowed_service = cs.service_id WHERE cas_proxy_allow.target_service = $id"
-          .as((int("service_id") ~ str("service_name")).map { case k ~ v => (k, v)}.*)
+        .as((int("service_id") ~ str("service_name")).map { case k ~ v => (k, v) }.*)
 
       service.map(s => ServiceData(s, reqGroups, allowGroups, domains, allowAccessFrom))
     })
@@ -65,26 +69,33 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
     })
   }
 
-  def createApp(name: String, redirection: Option[String]): Future[Int] =
+  def createApp(name: String, redirection: Option[String]): Future[CasService] =
     Future(db.withConnection { implicit c =>
-      SQL"INSERT INTO cas_services(service_name, service_redirect_url) VALUES ($name, $redirection)"
+      val id = SQL"INSERT INTO cas_services(service_name, service_redirect_url) VALUES ($name, $redirection)"
         .executeInsert[Int](scalar[Int].single)
+
+      CasService(Some(id), name, redirection)
     })
 
   def updateApp(app: CasService): Future[Int] =
     Future(db.withConnection(implicit c => SqlUtils.replaceOne("cas_services", app, "serviceId")))
 
+  def getDomains(serviceId: Int): Future[Set[String]] =
+    Future(db.withConnection(implicit c =>
+      SQL"SELECT domain FROM cas_domains WHERE service_id = $serviceId"
+        .as(str("domain").*).toSet
+    ))
 
-  def addDomain(service: Int, url: String): Future[Boolean] = {
+  def addDomain(service: Int, url: String): Future[Option[String]] = {
     CAS.getServiceDomain(url) match {
       case Some(domain) => Future(db.withConnection {
         implicit c =>
           SQL"INSERT INTO cas_domains(service_id, domain) VALUES ($service, $domain)"
             .execute()
 
-          true
+          Some(domain)
       })
-      case None => Future.successful(false)
+      case None => Future.successful(None)
     }
   }
 

@@ -1,6 +1,6 @@
 package controllers.management
 
-import data.UserSession
+import data.{ServiceData, UserSession}
 import javax.inject.Inject
 import models.{ApiKeysModel, ServicesModel, TicketsModel}
 import play.api.Configuration
@@ -55,7 +55,7 @@ class CasAppsCRUDController @Inject()(cc: MessagesControllerComponents,
         BadRequest(views.html.management.cas.createUpdate(session, withErrors))
       }, {
         case (name, domain) =>
-        apps.createApp(name, domain).map(id => Redirect(routes.CasAppsCRUDController.getApp(id)))})
+        apps.createApp(name, domain).map(app => Redirect(routes.CasAppsCRUDController.getApp(app.serviceId.get)))})
     }
   }
 
@@ -89,7 +89,7 @@ class CasAppsCRUDController @Inject()(cc: MessagesControllerComponents,
   def getApp(id: Int): Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifPermission(UserSession.ManageCasApps) { implicit session =>
       apps.getServiceById(id).flatMap {
-        case Some(apps.ServiceData(service, requiredGroups, allowedGroups, domains, accessFrom)) =>
+        case Some(ServiceData(service, requiredGroups, allowedGroups, domains, accessFrom)) =>
           Ok(views.html.management.cas.view(session, service, domains, requiredGroups, allowedGroups, accessFrom))
         case None => NotFound(ManagementTools.error("Application introuvable", "L'application recherchée n'existe pas, ou ne vous est pas accessible."))
       }

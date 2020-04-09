@@ -23,7 +23,7 @@ class ManagementHomeController @Inject()(cc: ControllerComponents,
         groups.getGroupsByMember(session.id).flatMap(groups => {
           internal.getInternalApps.flatMap(internalApps => {
             cas.getCasServices.map(services => {
-              Ok(views.html.management.home(session, groups.toSet, apps.toSet, internalApps, services))
+              Ok(views.html.management.home(session, groups.toSet, apps.map(_.apiKey).toSet, internalApps, services))
             })
           })
         })

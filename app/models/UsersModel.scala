@@ -3,7 +3,9 @@ package models
 import java.net.URLEncoder
 import java.sql.Timestamp
 
+import anorm.SqlParser._
 import anorm._
+import ch.japanimpact.auth.api.{UserData, UserProfile}
 import com.google.common.base.Preconditions
 import data.{Address, AddressRowParser, RegisteredUser, RegisteredUserRowParser}
 import javax.inject.Inject
@@ -48,6 +50,21 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
       .groupMapReduce(_._1.id.get)(pair => pair)((pair, _) => pair) // we know elements are unique
   })
 
+  def getUsers: Future[Seq[UserProfile]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT * FROM users"
+      .as(RegisteredUserRowParser.map(_.toUserProfile()).*)
+  })
+
+  def addAllowedScope(userId: Int, allowed: String) = Future(db.withConnection { implicit c =>
+    SQL"INSERT IGNORE INTO users_allowed_scopes(user_id, scope) VALUES ($userId, $allowed)"
+      .execute()
+  })
+
+  def removeAllowedScope(userId: Int, allowed: String) = Future(db.withConnection { implicit c =>
+    SQL"DELETE FROM users_allowed_scopes WHERE user_id = $userId AND scope = $allowed"
+      .execute()
+  })
+
   /**
    * Gets a user in the database by its id
    *
@@ -58,13 +75,28 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
     SQL"SELECT * FROM users WHERE id = $id".as(RegisteredUserRowParser.singleOpt)
   })
 
+  def getUserData(id: Int) = Future(db.withConnection { implicit c =>
+    SQL"SELECT users.*, g.name, ua.*, uas.scope FROM users LEFT JOIN groups_members gm on users.id = gm.user_id LEFT JOIN `groups` g on gm.group_id = g.id LEFT JOIN users_addresses ua on users.id = ua.user_id LEFT JOIN users_allowed_scopes uas on users.id = uas.user_id WHERE users.id = $id"
+      .as(((RegisteredUserRowParser ~ AddressRowParser.?) ~ (str("name").? ~ str("scope").?)).*)
+      .map { case (user ~ address) ~ (name ~ scope) => ((user, address), (name, scope)) }
+      .groupMap(_._1)(_._2)
+      .map {
+        case ((user, address), list) =>
+          val (groups, scopes) = list.unzip
+
+          UserData(user.id, user.email, user.emailConfirmKey.isEmpty,
+            user.toUserDetails, user.passwordAlgo, user.passwordReset.nonEmpty, user.passwordResetEnd,
+            address.map(_.toUserAddress), groups = groups.flatten.toSet, scopes = scopes.flatten.toSet)
+      }.headOption
+  })
+
   /**
    * Create a user
    *
    * @param user the user to create
    * @return a future hodling the id of the inserted user
    */
-  def createUser(user: RegisteredUser, address: Option[Address]): Future[Int] = Future(db.withConnection( { implicit c =>
+  def createUser(user: RegisteredUser, address: Option[Address]): Future[Int] = Future(db.withConnection({ implicit c =>
     val uid = SqlUtils.insertOne("users", user)
     if (address.nonEmpty) SqlUtils.insertOne("users_addresses", address.get.copy(userId = uid))
 

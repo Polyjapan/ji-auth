@@ -1,5 +1,6 @@
 package ch.japanimpact.auth.api.apitokens
 
+import ch.japanimpact.api.APIError
 import ch.japanimpact.auth.api.apitokens.AuthorizationActions.PrincipalFilter
 import javax.inject.Inject
 import play.api.mvc.Results.{Forbidden, Unauthorized}
@@ -33,7 +34,12 @@ class AuthorizationActions @Inject()(val parser: BodyParsers.Default, jwt: APITo
       principal match {
         case None =>
           // No principal in the request
-          Left(Unauthorized)
+          Left({
+            if (request.headers.hasHeader("Authorization"))
+              APIError(Unauthorized, "invalid_token", "The provided token was invalid")
+            else
+              APIError(Unauthorized, "no_token", "No Authorization header present")
+          })
 
         case Some(user) if (principalValidator(user.principal) && requiredScopes(user.principal).forall(user.hasScope)) =>
           // Principal with access to the scope
@@ -41,7 +47,7 @@ class AuthorizationActions @Inject()(val parser: BodyParsers.Default, jwt: APITo
 
         case _ =>
           // Principal with no access to the scope
-          Left(Forbidden)
+          Left(APIError(Forbidden, "forbidden", "Your access token doesn't have access to this page."))
       }
     }
 

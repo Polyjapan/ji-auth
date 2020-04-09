@@ -4,7 +4,8 @@ import java.sql.SQLException
 
 import anorm.SqlParser._
 import anorm._
-import data.{Group, GroupMember, GroupRowParser, RegisteredUser, GroupMemberRowParser, RegisteredUserRowParser}
+import ch.japanimpact.auth.api.UserProfile
+import data.{Group, GroupData, GroupRowParser, RegisteredUser, RegisteredUserRowParser}
 import javax.inject.Inject
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -13,94 +14,89 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author zyuiop
  */
 class GroupsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionContext) {
+
+
   private val db = dbApi database "default"
 
-
-  def getGroups(app: data.ApiKey, userId: Int): Future[Set[String]] = Future(db.withConnection { implicit c =>
-    SQL"""SELECT name FROM `groups`
-      JOIN groups_members gm1 on `groups`.id = gm1.group_id and gm1.can_read_members = TRUE and gm1.user_id = ${app.appCreatedBy}
-      JOIN groups_members gm2 on `groups`.id = gm2.group_id and gm2.user_id = ${userId}
-    """.as(str(1).*).toSet
-  })
-
-
-  def getGroupsByMember(member: Int): Future[Seq[Group]] = Future(db.withConnection { implicit c =>
-    SQL"SELECT * FROM `groups` JOIN groups_members gm on `groups`.id = gm.group_id WHERE gm.user_id = $member"
-      .as(GroupRowParser.*)
+  def getAllGroups: Future[List[GroupData]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT * FROM `groups` LEFT JOIN groups_allowed_scopes gas on `groups`.id = gas.group_id"
+      .as((GroupRowParser ~ str("scope").?).*
+        .map(lst =>
+          lst.map { case a ~ b => (a, b) }
+            .groupMap(_._1)(_._2)
+            .map(pair => GroupData(pair._1, pair._2.flatten.toSet))
+        )).toList
   })
 
   /**
    * Create a group, and return true if the group could be created correctly
    */
-  def createGroup(name: String, displayName: String, user: Int): Future[Boolean] = Future(db.withConnection { implicit c =>
+  def createGroup(group: Group): Future[Option[Group]] = Future(db.withConnection { implicit c =>
     try {
-      val groupId = SqlUtils.insertOne("groups", Group(None, user, name, displayName))
-      SqlUtils.insertOne("groups_members", GroupMember(groupId, user, true, true, true))
-
-      true
+      val groupId = SqlUtils.insertOne("groups", group.copy(id = None))
+      Some(group.copy(id = Some(groupId)))
     } catch {
       case e: SQLException =>
-        e.printStackTrace()
-        false
+        None
     }
   })
 
-  /**
-   * Update a group, and return true if the group could be updated correctly
-   */
-  def updateGroup(oldName: String, name: String, displayName: String): Future[Boolean] = {
-    if (oldName == name) {
-      Future(db.withConnection(implicit c => {
-        SQL"UPDATE `groups` SET display_name = $displayName WHERE name = $name".executeUpdate() > 0
-      }))
-    } else {
-      Future(db.withConnection(implicit c => {
-        SQL"UPDATE `groups` SET name = $name, display_name = $displayName WHERE name = $oldName".executeUpdate() > 0
-      }))
-    }
-
-
-  }
-
-  def getGroup(name: String): Future[Option[Group]] = Future(db.withConnection{ implicit c =>
-    SQL"SELECT * FROM `groups` WHERE name = $name".as(GroupRowParser.singleOpt)
+  def updateGroup(name: String, group: Group): Future[Boolean] = Future(db.withConnection { implicit c =>
+    SQL"UPDATE `groups` SET name = ${group.name}, display_name = ${group.displayName} WHERE name = $name"
+      .executeUpdate() > 0
   })
 
-  def getGroupMembers(id: Int): Future[Seq[(GroupMember, RegisteredUser)]] =
-    Future(db.withConnection{ implicit c =>
-      SQL"SELECT * FROM groups_members JOIN users u on groups_members.user_id = u.id WHERE group_id = $id"
-        .as((GroupMemberRowParser ~ RegisteredUserRowParser).map { case gm ~ u => (gm, u)}.*)
-    })
+  def deleteGroup(name: String) = Future(db.withConnection { implicit c =>
+    SQL"DELETE FROM `groups` WHERE name = $name".execute()
+  })
 
-  def getGroupMembership(name: String, user: Int): Future[Option[GroupMember]] =
-    Future(db.withConnection{ implicit c =>
-      SQL"SELECT gm.* FROM `groups` JOIN groups_members gm on `groups`.id = gm.group_id WHERE name = $name AND user_id = $user"
-        .as(GroupMemberRowParser.singleOpt)
-    })
+  def getGroup(name: String): Future[Option[GroupData]] = Future(db.withConnection {
+    implicit c =>
+      SQL"SELECT * FROM `groups` LEFT JOIN groups_allowed_scopes gas on `groups`.id = gas.group_id WHERE name = $name"
+        .as((GroupRowParser ~ str("scope").?).*
+          .map(lst =>
+            lst.map { case a ~ b => (a, b) }
+              .groupMap(_._1)(_._2).headOption
+              .map(pair => GroupData(pair._1, pair._2.flatten.toSet))))
+  })
 
-  def getGroupIfMember(name: String, user: Int): Future[Option[(Group, GroupMember, RegisteredUser)]] =
-    Future(db.withConnection{ implicit c =>
-      SQL"SELECT * FROM `groups` JOIN groups_members gm on `groups`.id = gm.group_id JOIN users u on `groups`.owner = u.id WHERE name = $name AND user_id = $user"
-        .as((GroupRowParser ~ GroupMemberRowParser ~ RegisteredUserRowParser).map { case a ~ b ~ c => (a, b, c) }.singleOpt)
-    })
+  def addScope(group: String, scope: String) = Future(db.withConnection { implicit c =>
+    SQL"INSERT IGNORE INTO groups_allowed_scopes SELECT id, $scope FROM `groups` WHERE name = $group"
+      .execute()
+  })
 
-  def addMember(groupId: Int, userId: Int): Future[Boolean] = {
-    Future(db.withConnection(implicit c => {
-      try {
-        SqlUtils.insertOne("groups_members", GroupMember(groupId, userId, false, false, false)) > 0
-      } catch {
-        case e: SQLException =>
-          e.printStackTrace()
-          false
-      }
-    }))
-  }
+  def removeScope(group: String, scope: String) = Future(db.withConnection { implicit c =>
+    val gid = SQL"SELECT id FROM groups WHERE name = $group".as(scalar[Int].singleOpt);
+    gid.map { gid =>
+      SQL"DELETE FROM groups_allowed_scopes WHERE group_id = $gid AND scope = $scope"
+        .execute()
+    }
+  })
 
-  def removeMember(groupId: Int, userId: Int): Future[Boolean] = {
+  def addMember(group: String, userId: Int): Future[Boolean] = Future(db.withConnection { implicit c =>
+    SQL"INSERT IGNORE INTO groups_members(group_id, user_id) SELECT id, $userId FROM `groups` WHERE name = $group"
+      .execute()
+  })
 
+  def removeMember(group: String, userId: Int): Future[Option[Boolean]] = Future(db.withConnection { implicit c =>
+    val gid = SQL"SELECT id FROM groups WHERE name = $group".as(scalar[Int].singleOpt);
+    gid.map { gid =>
+      SQL"DELETE FROM groups_members WHERE group_id = $gid AND user_id = $userId"
+        .execute()
+    }
+  })
+
+
+  def getGroupMembers(name: String): Future[Seq[UserProfile]] =
     Future(db.withConnection {
-      implicit c => SQL"DELETE FROM groups_members WHERE group_id = $groupId AND user_id = $userId".execute()
+      implicit c =>
+        SQL"SELECT u.* FROM groups_members JOIN `groups` g on groups_members.group_id = g.id JOIN users u on groups_members.user_id = u.id WHERE g.name = $name"
+          .as(RegisteredUserRowParser.map(_.toUserProfile(None)).*)
     })
-  }
+
+  def getGroupsByMember(member: Int): Future[Seq[Group]] = Future(db.withConnection { implicit c =>
+    SQL"SELECT * FROM `groups` JOIN groups_members gm on `groups`.id = gm.group_id WHERE gm.user_id = $member"
+      .as(GroupRowParser.*)
+  })
 
 }

@@ -67,7 +67,7 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
         Ok(CAS.getProxyErrorResponseXML(CASErrorType.InvalidTicketSpec, pgt)))
     } else {
       apps.getCasService(service) flatMap {
-        case Some(CasService(serviceId, _, _)) =>
+        case Some(CasService(Some(serviceId), _, _)) =>
           tickets.getProxyTicket(pgt, serviceId) flatMap {
             case Some((userId, true)) =>
               apps.hasRequiredGroups(serviceId, userId).map {
@@ -128,7 +128,7 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
         Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidTicketSpec, ticket)))
     } else {
       apps.getCasService(service) flatMap {
-        case Some(CasService(serviceId, _, _)) =>
+        case Some(CasService(Some(serviceId), _, _)) =>
           tickets.getCasTicket(ticket, serviceId) flatMap {
             case Some((user, groups)) =>
               val ticket = pgtUrl.map(url => createProxyTicket(url, serviceId, user.id.get))

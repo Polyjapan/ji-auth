@@ -38,7 +38,7 @@ class ApiKeysCRUDController @Inject()(cc: MessagesControllerComponents,
       }, name => {
 
         apps.createApiKey(name, session.id).map(
-          id => Redirect(routes.ApiKeysCRUDController.getApp(id)))
+          id => Redirect(routes.ApiKeysCRUDController.getApp(id.appId.get)))
       })
     }
   }
