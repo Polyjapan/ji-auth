@@ -69,12 +69,11 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
     })
   }
 
-  def createApp(name: String, redirection: Option[String]): Future[CasService] =
+  def createApp(service: CasService): Future[CasService] =
     Future(db.withConnection { implicit c =>
-      val id = SQL"INSERT INTO cas_services(service_name, service_redirect_url) VALUES ($name, $redirection)"
-        .executeInsert[Int](scalar[Int].single)
+      val id = SqlUtils.insertOne("cas_services", service.copy(serviceId = None))
 
-      CasService(Some(id), name, redirection)
+      service.copy(serviceId = Some(id))
     })
 
   def updateApp(app: CasService): Future[Int] =

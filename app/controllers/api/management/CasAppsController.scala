@@ -34,7 +34,7 @@ class CasAppsController @Inject()(cc: ControllerComponents, authorize: Authoriza
   }
 
   def createCasService = authorize(OnlyUsers, "casservices/create").async(parse.json[CasService]) { req =>
-    apps.createApp(req.body.serviceName, req.body.serviceRedirectUrl)
+    apps.createApp(req.body)
       .map(service => Ok(Json.toJson(service)))
   }
 

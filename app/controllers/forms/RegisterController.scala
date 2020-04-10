@@ -26,15 +26,7 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
       "email" -> email, "password" -> nonEmptyText(8),
       "firstName" -> nonEmptyText(1, 50),
       "lastName" -> nonEmptyText(1, 50),
-      "phone" -> optional(ValidationUtils.validPhoneVerifier(nonEmptyText(8, 20))),
-
-      "address" -> nonEmptyText(2, 200),
-      "addressComplement" -> optional(nonEmptyText(2, 200)),
-      "postCode" -> nonEmptyText(3, 10),
-      "city" -> nonEmptyText(3, 100),
-      "country" -> nonEmptyText(2, 100),
-
-      "g-recaptcha-response" -> text)(Tuple11.apply)(Tuple11.unapply))
+      "g-recaptcha-response" -> text)(Tuple5.apply)(Tuple5.unapply))
 
   private def displayForm(form: Form[_])(implicit rq: RequestHeader): HtmlFormat.Appendable =
     views.html.register.register(form, config.get[String]("recaptcha.siteKey"))
@@ -52,15 +44,14 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
         println(withErrors.errors)
         Future.successful(BadRequest(displayForm(withErrors)))
       }, data => {
-        val (email, password, firstName, lastName, phone, address, addressComplement, postCode, city, country, captchaResponse) = data
+        val (email, password, firstName, lastName, captchaResponse) = data
 
-        val addr = Address(-1, address, addressComplement, postCode, city, country)
         // Password is hashed by register method, don't worry
-        val profile = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = phone)
+        val profile = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = None)
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),
-          profile, Some(addr), (email, code) => controllers.forms.routes.EmailConfirmController.emailConfirmGet(email, code).absoluteURL(true)
+          profile, None, (email, code) => controllers.forms.routes.EmailConfirmController.emailConfirmGet(email, code).absoluteURL(true)
         ).map {
           case users.BadCaptcha =>
             BadRequest(displayForm(registerForm.withGlobalError("Captcha incorrect")))

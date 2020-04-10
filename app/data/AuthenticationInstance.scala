@@ -36,6 +36,6 @@ sealed trait AuthenticationInstance {
   def pair: (String, String) = AuthenticationInstance.SessionKey -> Json.stringify(Json.toJson(this))
 }
 
-case class CASInstance(url: String, serviceId: Int) extends AuthenticationInstance
+case class CASInstance(url: String, serviceId: Int, requireFullInfo: Boolean) extends AuthenticationInstance
 
 

@@ -1,4 +1,4 @@
-@(userForm: Form[_])(implicit request: RequestHeader, messageProvider: MessagesProvider)
+@(userForm: Form[_], required: Boolean = false)(implicit request: RequestHeader, messageProvider: MessagesProvider)
 
     @import helper._
     @import views.forms.FormFieldTemplate._
@@ -14,8 +14,15 @@
         <div class="py-5 text-center">
             <img class="d-block mx-auto mb-4" src="@routes.Assets.at("img/logo.png")" alt="Logo Japan Impact" width="240" height="200">
             <h2>Modifier mes informations</h2>
-            <p class="lead">Vous pouvez mettre à jour les informations de votre profil ici.</p>
 
+            @if(required) {
+                <div class="alert alert-info">
+                    <p>L'application à laquelle vous souhaitez accéder demande des informations supplémentaires. Merci
+                        de bien vouloir compléter votre adresse et votre numéro de téléphone.</p>
+                </div>
+            } else {
+                <p class="lead">Vous pouvez mettre à jour les informations de votre profil ici.</p>
+            }
             <hr>
         </div>
 

@@ -25,14 +25,16 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
                                    apps: ServicesModel) extends MessagesAbstractController(cc) with I18nSupport {
 
 
-  private def produceRedirection(user: RegisteredUser, address: Address, authInstance: Option[AuthenticationInstance])(implicit rq: RequestHeader): Future[Result] = {
+  private def produceRedirection(user: RegisteredUser, address: Option[Address], authInstance: Option[AuthenticationInstance])(implicit rq: RequestHeader): Future[Result] = {
     val userId = user.id.get
 
     (if (authInstance.isEmpty) Redirect("/").asFuture
     else authInstance.get match {
-      case CASInstance(url, serviceId) =>
-        apps.hasRequiredGroups(serviceId, userId).flatMap(hasRequired => {
-
+      case CASInstance(url, serviceId, requireInfo) =>
+        if (requireInfo && (user.phoneNumber.isEmpty || address.isEmpty)) {
+          // The service requires more data
+          Future.successful(Redirect(controllers.forms.routes.UpdateInfoController.updateGet(Some(true))))
+        } else apps.hasRequiredGroups(serviceId, userId).flatMap(hasRequired => {
           if (hasRequired) {
             val symbol = if (url.contains("?")) "&" else "?"
 
@@ -51,9 +53,8 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
           } else {
             Forbidden(views.html.errorPage("Permissions manquantes", Html("<p>L'accès à cette application nécessite d'être membre de certains groupes.</p>")))
           }
-        })
-
-    }).map(result => result.removingFromSession(AuthenticationInstance.SessionKey))
+        }).map(result => result.removingFromSession(AuthenticationInstance.SessionKey))
+    })
   }
 
   def redirectGet: Action[AnyContent] = Action.async { implicit rq =>
@@ -61,13 +62,13 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
       // Check: are required informations provided?
 
       users.getUserProfile(rq.userSession.id).flatMap {
-        case Some((user, Some(address))) =>
-          // has address
+        case Some((user, address)) =>
+
           val authInstance = rq.session.get(AuthenticationInstance.SessionKey)
             .map(Json.parse)
             .flatMap(js => Json.fromJson[AuthenticationInstance](js).asOpt)
 
-          println("Redirect: user " + user.email + " with authInstance " + authInstance)
+          println("Try to redirect: user " + user.email + " with authInstance " + authInstance)
 
           this.produceRedirection(user, address, authInstance)
         case _ =>

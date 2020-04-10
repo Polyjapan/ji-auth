@@ -22,12 +22,13 @@ class CASLoginController @Inject()(cc: ControllerComponents, apps: ServicesModel
           Redirect(casService.serviceRedirectUrl.getOrElse(service))
         } else {
           val ret = Redirect(controllers.routes.RedirectController.redirectGet())
+          val instance = CASInstance(url = casService.serviceRedirectUrl.getOrElse(service), casService.serviceId.get, requireFullInfo = casService.serviceRequiresFullInfo)
 
           if (renew.getOrElse(false))
             // Renew: if param is set, we should drop the existing user session and ask the user to log in again
-            ret.withSession(CASInstance(url = casService.serviceRedirectUrl.getOrElse(service), casService.serviceId.get).pair)
+            ret.withSession(instance.pair)
           else
-            ret.addingToSession(CASInstance(url = casService.serviceRedirectUrl.getOrElse(service), casService.serviceId.get).pair)
+            ret.addingToSession(instance.pair)
         }
       case None => Ok(views.html.errorPage("Service introuvable", Html("<p>Le service spécifié est introuvable. Merci de signaler cette erreur au créateur du site dont vous provenez.")));
     }

@@ -34,10 +34,10 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents, hashes: H
       "country" -> nonEmptyText(2, 100)
     )(Tuple8.apply)(Tuple8.unapply))
 
-  private def displayForm(form: Form[_])(implicit rq: RequestHeader): Future[HtmlFormat.Appendable] =
-    views.html.updateInfo.updateInfo(form)
+  private def displayForm(form: Form[_], required: Boolean = false)(implicit rq: RequestHeader): Future[HtmlFormat.Appendable] =
+    views.html.updateInfo.updateInfo(form, required)
 
-  def updateGet: Action[AnyContent] = Action.async { implicit rq =>
+  def updateGet(required: Option[Boolean] = None): Action[AnyContent] = Action.async { implicit rq =>
     AuthTools.ifLoggedIn { user: UserSession =>
       users.getUserProfile(user.id).map {
         case Some((user, address)) =>
@@ -48,7 +48,7 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents, hashes: H
             address.map(_.city).orNull,
             address.map(_.country).orNull
           )
-      }.flatMap(tuple => displayForm(registerForm.fill(tuple)).map(f => Ok(f)))
+      }.flatMap(tuple => displayForm(registerForm.fill(tuple), required.getOrElse(false)).map(f => Ok(f)))
     }
   }
 

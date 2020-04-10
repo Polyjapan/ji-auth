@@ -85,7 +85,7 @@ package object data {
   implicit val ApiKeyFormat: Format[ApiKey] = Json.format[ApiKey]
   implicit val ApiKeyDataFormat: Format[ApiKeyData] = Json.format[ApiKeyData]
 
-  case class CasService(serviceId: Option[Int], serviceName: String, serviceRedirectUrl: Option[String] = None)
+  case class CasService(serviceId: Option[Int], serviceName: String, serviceRedirectUrl: Option[String] = None, serviceRequiresFullInfo: Boolean)
 
   implicit val CasServiceFormat: Format[CasService] = Json.format[CasService]
   implicit val CasServiceRowParser: RowParser[CasService] = Macro.namedParser[CasService](ColumnNaming.SnakeCase)
