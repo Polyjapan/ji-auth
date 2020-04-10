@@ -135,38 +135,3 @@ GET            /assets/*file                                        controllers.
 
 GET            /                                                    controllers.management.ManagementHomeController.home
 
-GET            /groups/create                                       controllers.management.GroupCRUDController.createGroupForm
-POST           /groups/create                                       controllers.management.GroupCRUDController.createGroup
-GET            /groups/:name                                        controllers.management.GroupCRUDController.getGroup(name: String)
-DELETE         /groups/:name                                        controllers.management.GroupCRUDController.deleteGroup(name: String)
-GET            /groups/:name/update                                 controllers.management.GroupCRUDController.updateGroupForm(name: String)
-POST           /groups/:name/update                                 controllers.management.GroupCRUDController.updateGroup(name: String)
-
-POST           /groups/:name/members                                controllers.management.GroupMembersCRUDController.addMember(name: String)
-GET            /groups/:name/members/:id/update                     controllers.management.GroupMembersCRUDController.updateMemberForm(name: String, id: Int)
-POST           /groups/:name/members/:id/update                     controllers.management.GroupMembersCRUDController.updateMember(name: String, id: Int)
-POST           /groups/:name/members/:id/delete                     controllers.management.GroupMembersCRUDController.deleteMember(name: String, id: Int)
-
-GET            /apikeys/create                                      controllers.management.ApiKeysCRUDController.createAppForm
-POST           /apikeys/create                                      controllers.management.ApiKeysCRUDController.createApp
-GET            /apikeys/:id                                         controllers.management.ApiKeysCRUDController.getApp(id: Int)
-GET            /apikeys/:id/update                                  controllers.management.ApiKeysCRUDController.updateAppForm(id: Int)
-POST           /apikeys/:id/update                                  controllers.management.ApiKeysCRUDController.updateApp(id: Int)
-
-GET            /casapps/create                                      controllers.management.CasAppsCRUDController.createAppForm
-POST           /casapps/create                                      controllers.management.CasAppsCRUDController.createApp
-GET            /casapps/:id                                         controllers.management.CasAppsCRUDController.getApp(id: Int)
-GET            /casapps/:id/update                                  controllers.management.CasAppsCRUDController.updateAppForm(id: Int)
-POST           /casapps/:id/update                                  controllers.management.CasAppsCRUDController.updateApp(id: Int)
-
-POST           /casapps/:id/domains                                 controllers.management.CasAppsCRUDController.whitelistDomainPost(id: Int)
-POST           /casapps/:id/domains/delete                          controllers.management.CasAppsCRUDController.whitelistDomainDelete(id: Int)
-
-POST           /casapps/:id/groups/:required                        controllers.management.CasAppsCRUDController.groupsAddPost(id: Int, required: Boolean)
-POST           /casapps/:id/groups/:required/delete                 controllers.management.CasAppsCRUDController.groupsDeletePost(id: Int, required: Boolean)
-
-POST           /casapps/:id/allowProxy                              controllers.management.CasAppsCRUDController.allowedAppsAdd(id: Int)
-POST           /casapps/:id/allowProxy/delete                       controllers.management.CasAppsCRUDController.allowedAppsDelete(id: Int)
-
-
-

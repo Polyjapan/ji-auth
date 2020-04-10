@@ -6,7 +6,7 @@ import play.api.Configuration
 import play.api.libs.mailer.MailerClient
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * @author Louis Vialar
@@ -19,14 +19,9 @@ class ManagementHomeController @Inject()(cc: ControllerComponents,
 
   def home: Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifLoggedIn { session =>
-      apiKeys.getApiKeysByOwner(session.id).flatMap(apps => {
-        groups.getGroupsByMember(session.id).flatMap(groups => {
-          cas.getCasServices.map(services => {
-            Ok(views.html.management.home(session, groups.toSet, apps.map(_.apiKey).toSet, services))
-          })
-        })
-      })
-
+      Future.successful {
+        Ok(views.html.management.home(session))
+      }
     }
   }
 }
