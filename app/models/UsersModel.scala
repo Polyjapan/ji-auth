@@ -125,9 +125,9 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
     Future(db.withConnection { implicit c => SqlUtils.replaceOne("users", user, "id") })
   }
 
-  def update(id: Int, firstName: String, lastName: String, phone: String, addr: Address): Future[Boolean] = Future(
+  def update(id: Int, firstName: String, lastName: String, phone: String, newsletter: Boolean, addr: Address): Future[Boolean] = Future(
     db.withConnection { implicit c =>
-      val ok = SQL"UPDATE users SET first_name = $firstName, last_name = $lastName, phone_number = $phone WHERE id = $id".executeUpdate() > 0
+      val ok = SQL"UPDATE users SET first_name = $firstName, last_name = $lastName, phone_number = $phone, newsletter = $newsletter WHERE id = $id".executeUpdate() > 0
       SqlUtils.insertOne("users_addresses", addr, upsert = true)
 
       ok
@@ -267,7 +267,7 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
 
     getUser(email).flatMap({
       // Check if the user needs email confirmation and if the code is correct
-      case Some(user@RegisteredUser(id, _, Some(c), _, _, _, _, _, _, _, _)) if c == code =>
+      case Some(user) if user.emailConfirmKey.contains(code) =>
 
         // Update the user to mark the email is confirmed, and return a new ticket
         val updated = user.copy(emailConfirmKey = None)
@@ -298,7 +298,7 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
 
   def login(email: String, password: String): Future[LoginResult] = {
     getUser(email).flatMap {
-      case Some(user@RegisteredUser(Some(id), _, emailConfirmKey, hash, algo, _, _, _, _, _, _)) =>
+      case Some(user@RegisteredUser(Some(id), _, emailConfirmKey, hash, algo, _, _, _, _, _, _, _)) =>
         // Check if password is correct
         if (hashes.check(algo, hash, password)) {
 

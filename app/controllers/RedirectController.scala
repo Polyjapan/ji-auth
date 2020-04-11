@@ -32,35 +32,37 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
     else authInstance.get match {
       case CASInstance(url, serviceId, requireInfo) =>
         if (requireInfo && (user.phoneNumber.isEmpty || address.isEmpty)) {
-          // The service requires more data
+          // The service requires more data but the user didn't provide it yet: we must request it.
           Future.successful(Redirect(controllers.forms.routes.UpdateInfoController.updateGet(Some(true))))
-        } else apps.hasRequiredGroups(serviceId, userId).flatMap(hasRequired => {
-          if (hasRequired) {
-            val symbol = if (url.contains("?")) "&" else "?"
+        } else {
+          // check that the user has all required groups to access the app
+          apps.hasRequiredGroups(serviceId, userId).flatMap(hasRequired => {
+            if (hasRequired) {
+              val symbol = if (url.contains("?")) "&" else "?"
 
-            val ticket = "ST-" + RandomUtils.randomString(64)
+              val ticket = "ST-" + RandomUtils.randomString(64)
 
-            val redirectUrl = tickets
-              .insertCasTicket(ticket, userId, serviceId)
-              .map(_ => url + symbol + "ticket=" + ticket)
+              val redirectUrl = tickets
+                .insertCasTicket(ticket, userId, serviceId)
+                .map(_ => url + symbol + "ticket=" + ticket)
 
-            if (!url.startsWith("https://")) {
-              // Security for weird redirects, specially for android apps
-              redirectUrl.map(url => Ok(views.html.redirectConfirm(url)))
+              if (!url.startsWith("https://")) {
+                // Security for weird redirects, specially for android apps
+                redirectUrl.map(url => Ok(views.html.redirectConfirm(url)))
+              } else {
+                redirectUrl.map(url => Redirect(url))
+              }
             } else {
-              redirectUrl.map(url => Redirect(url))
+              Forbidden(views.html.errorPage("Permissions manquantes", Html("<p>L'accès à cette application nécessite d'être membre de certains groupes.</p>")))
             }
-          } else {
-            Forbidden(views.html.errorPage("Permissions manquantes", Html("<p>L'accès à cette application nécessite d'être membre de certains groupes.</p>")))
-          }
-        }).map(result => result.removingFromSession(AuthenticationInstance.SessionKey))
+          }) // in any case, the redirection is done now, so we invalidate it
+            .map(result => result.removingFromSession(AuthenticationInstance.SessionKey))
+        }
     })
   }
 
   def redirectGet: Action[AnyContent] = Action.async { implicit rq =>
     if (rq.hasUserSession) {
-      // Check: are required informations provided?
-
       users.getUserProfile(rq.userSession.id).flatMap {
         case Some((user, address)) =>
 

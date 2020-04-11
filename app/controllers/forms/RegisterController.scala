@@ -26,7 +26,8 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
       "email" -> email, "password" -> nonEmptyText(8),
       "firstName" -> nonEmptyText(1, 50),
       "lastName" -> nonEmptyText(1, 50),
-      "g-recaptcha-response" -> text)(Tuple5.apply)(Tuple5.unapply))
+      "newsletter" -> boolean,
+      "g-recaptcha-response" -> text)(Tuple6.apply)(Tuple6.unapply))
 
   private def displayForm(form: Form[_])(implicit rq: RequestHeader): HtmlFormat.Appendable =
     views.html.register.register(form, config.get[String]("recaptcha.siteKey"))
@@ -44,10 +45,10 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
         println(withErrors.errors)
         Future.successful(BadRequest(displayForm(withErrors)))
       }, data => {
-        val (email, password, firstName, lastName, captchaResponse) = data
+        val (email, password, firstName, lastName, newsletter, captchaResponse) = data
 
         // Password is hashed by register method, don't worry
-        val profile = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = None)
+        val profile = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = None, newsletter = newsletter)
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),

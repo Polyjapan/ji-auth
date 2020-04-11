@@ -42,7 +42,8 @@ package object data {
                             adminLevel: Int = 0,
                             firstName: String,
                             lastName: String,
-                            phoneNumber: Option[String] = None
+                            phoneNumber: Option[String] = None,
+                            newsletter: Boolean
                            ) {
 
     def toUserDetails = UserDetails(firstName, lastName, phoneNumber)

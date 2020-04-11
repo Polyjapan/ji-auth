@@ -31,8 +31,9 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents, hashes: H
       "addressComplement" -> optional(nonEmptyText(2, 200)),
       "postCode" -> nonEmptyText(3, 10),
       "city" -> nonEmptyText(3, 100),
-      "country" -> nonEmptyText(2, 100)
-    )(Tuple8.apply)(Tuple8.unapply))
+      "country" -> nonEmptyText(2, 100),
+      "newsletter" -> boolean
+    )(Tuple9.apply)(Tuple9.unapply))
 
   private def displayForm(form: Form[_], required: Boolean = false)(implicit rq: RequestHeader): Future[HtmlFormat.Appendable] =
     views.html.updateInfo.updateInfo(form, required)
@@ -46,7 +47,8 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents, hashes: H
             address.flatMap(_.addressComplement),
             address.map(_.postCode).orNull,
             address.map(_.city).orNull,
-            address.map(_.country).orNull
+            address.map(_.country).orNull,
+            user.newsletter
           )
       }.flatMap(tuple => displayForm(registerForm.fill(tuple), required.getOrElse(false)).map(f => Ok(f)))
     }
@@ -58,11 +60,11 @@ class UpdateInfoController @Inject()(cc: MessagesControllerComponents, hashes: H
         println(withErrors.errors)
         displayForm(withErrors).map(f => BadRequest(f))
       }, data => {
-        val (firstName, lastName, phone, address, addressComplement, postCode, city, country) = data
+        val (firstName, lastName, phone, address, addressComplement, postCode, city, country, newsletter) = data
 
         val addr = Address(user.id, address, addressComplement, postCode, city, country)
 
-        users.update(user.id, firstName, lastName, phone, addr).flatMap(succ =>
+        users.update(user.id, firstName, lastName, phone, newsletter, addr).flatMap(succ =>
           if (succ) Redirect(controllers.routes.RedirectController.redirectGet())
           else displayForm(registerForm.withGlobalError("Erreur inconnue de base de données")).map(f => InternalServerError(f))
         )

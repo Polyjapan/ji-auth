@@ -45,7 +45,7 @@
                     @inputText(userForm("email"), 'type -> "email", '_label -> "Email", 'class -> "form-control", 'placeholder -> "raï@japan-impact.ch", 'required -> true)
                     @inputPassword(userForm("password"), '_label -> "Mot de passe", 'class -> "form-control", 'placeholder -> "Mot de passe", 'required -> true)
 
-                    <!--@checkbox(userForm("newsletter"), 'label -> "Je souhaite recevoir une lettre d'information de PolyJapan, au maximum une fois tous les mois")-->
+                    @checkbox(userForm("newsletter"), '_label -> "", '_text -> "Je souhaite recevoir la lettre d'informations bimestrielle Japan Impact")
 
                     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
                     <div class="g-recaptcha" style="align-self: center;" data-sitekey="@captcha"></div>
@@ -58,7 +58,7 @@
                         Ces informations ne seront pas transmises à des tiers ni utilisées à des fins publicitaires.
                         Nous ne collectond pas d'autres données personnelles à votre sujet.
                         <br><br>
-                        <!--La lettre d'information PolyJapan est facultative. Nous nous engageons à ne jamais envoyer plus de 12 emails par année aux personnes inscrites.-->
+                        La lettre d'information est facultative. Nous nous engageons à ne jamais envoyer plus de 6 emails par année aux personnes inscrites.
                     </p>
 
 
