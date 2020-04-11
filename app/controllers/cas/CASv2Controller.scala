@@ -1,7 +1,7 @@
 package controllers.cas
 
 import ch.japanimpact.auth.api.cas.{CASError, CASErrorType}
-import data.CasService
+import data.{CasService, SessionID}
 import javax.inject.Inject
 import models.{ServicesModel, TicketsModel}
 import play.api.libs.ws.WSClient
@@ -68,12 +68,12 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
     } else {
       apps.getCasService(service) flatMap {
         case Some(CasService(Some(serviceId), _, _, _)) =>
-          tickets.getProxyTicket(pgt, serviceId) flatMap {
-            case Some((userId, true)) =>
+          tickets.getProxyGrantingTicket(pgt, serviceId) flatMap {
+            case Some((userId, true, sessionId)) =>
               apps.hasRequiredGroups(serviceId, userId).map {
                 case true =>
                   val pt = "PT-" + RandomUtils.randomString(64)
-                  tickets.insertCasTicket(pt, userId, serviceId)
+                  tickets.insertCasTicket(pt, userId, serviceId, sessionId)
 
                   if (json)
                     Ok(CAS.getProxySuccessJson(pt))
@@ -101,7 +101,7 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
     }
   }
 
-  private def createProxyTicket(pgtUrl: String, service: Int, user: Int): Future[Either[CASErrorType, Option[String]]] = {
+  private def createProxyTicket(pgtUrl: String, service: Int, user: Int, sessionId: SessionID): Future[Either[CASErrorType, Option[String]]] = {
     if (!pgtUrl.startsWith("https://")) Future.successful(Left(CASErrorType.UnauthorizedServiceProxy))
     else apps.getCasService(pgtUrl) flatMap {
       case Some(_) =>
@@ -112,7 +112,7 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
         ws.url(url).get().filter(_.status == 200).flatMap { r =>
           // Insert PGT
-          tickets.insertCasProxyTicket(pgtId, user, service).map(_ => Right(Some(pgtIou)))
+          tickets.insertCasProxyTicket(pgtId, user, service, sessionId).map(_ => Right(Some(pgtIou)))
         }.fallbackTo(Future.successful(Right(None)))
       case None => Future(Left(CASErrorType.UnauthorizedServiceProxy))
     }
@@ -130,8 +130,8 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
       apps.getCasService(service) flatMap {
         case Some(CasService(Some(serviceId), _, _, _)) =>
           tickets.getCasTicket(ticket, serviceId) flatMap {
-            case Some((user, groups)) =>
-              val ticket = pgtUrl.map(url => createProxyTicket(url, serviceId, user.id.get))
+            case Some(((user, sessionKey), groups)) =>
+              val ticket = pgtUrl.map(url => createProxyTicket(url, serviceId, user.id.get, sessionKey))
                 .getOrElse(Future.successful(Right(None)))
 
               var attributes = Map(

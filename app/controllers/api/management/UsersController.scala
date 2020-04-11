@@ -30,7 +30,7 @@ class UsersController @Inject()(cc: ControllerComponents, authorize: Authorizati
   }
 
   def forceLogOut(id: Int) = authorize("users/forceLogout").async { req =>
-    tickets.logout(id).flatMap(_ => sessions.logout(id)).map(_ => Ok)
+    tickets.logout(id).flatMap(_ => sessions.logoutUser(id)).map(_ => Ok)
   }
 
   def forceConfirmEmail(id: Int) = authorize("users/forceEmailConfirm").async { req =>

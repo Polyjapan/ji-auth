@@ -2,7 +2,7 @@ package controllers.forms
 
 import data.UserSession
 import javax.inject.Inject
-import models.{ServicesModel, UsersModel}
+import models.{ServicesModel, SessionsModel, UsersModel}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author Louis Vialar
  */
 class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration,
-                                                                  users: UsersModel,
+                                                                  users: UsersModel, sessions: SessionsModel,
                                                                   apps: ServicesModel) extends MessagesAbstractController(cc) with I18nSupport {
 
 
@@ -38,14 +38,14 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
       }, data => {
         val (email, password) = data
 
-        users.login(email, password).map {
-
+        users.login(email, password).flatMap {
           case users.BadLogin =>
-            BadRequest(displayForm(loginForm.withGlobalError("Email ou mot de passe incorrect")))
+            Future.successful(BadRequest(displayForm(loginForm.withGlobalError("Email ou mot de passe incorrect"))))
           case users.EmailNotConfirmed =>
-            BadRequest(displayForm(loginForm.withGlobalError("Vous devez confirmer votre adresse email pour pouvoir vous connecter")))
+            Future.successful(BadRequest(displayForm(loginForm.withGlobalError("Vous devez confirmer votre adresse email pour pouvoir vous connecter"))))
           case users.LoginSuccess(user) =>
-            Redirect(controllers.routes.RedirectController.redirectGet()).addingToSession(UserSession(user): _*)
+            sessions.createSession(user.id.get, rq.remoteAddress, rq.headers.get("User-Agent").getOrElse("unknown"))
+              .map(sid => Redirect(controllers.routes.RedirectController.redirectGet()).addingToSession(UserSession(user, sid): _*))
         }
       })
     }

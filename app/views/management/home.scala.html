@@ -19,12 +19,6 @@
                 }</b>. Vous êtes bien
                     connecté à votre compte Japan Impact et pourrez donc accéder facilement à nos divers services en ligne.</p>
 
-                @if(user.isAdmin) {
-                    <a class="btn btn-lg btn-danger" href="https://admin.japan-impact.ch/">Accéder à l'interface Admin</a>
-                    <br>
-                    <br>
-                }
-
                 <a class="btn btn-danger" href="/logout">Déconnexion</a>
                 <a class="btn btn-primary" href="@controllers.forms.routes.UpdateInfoController.updateGet()">
                     Mettre à jour mon profil</a>

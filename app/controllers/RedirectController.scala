@@ -1,7 +1,8 @@
 package controllers
 
+import ch.japanimpact.auth.api.UserData
 import data.UserSession._
-import data.{Address, AuthenticationInstance, CASInstance, RegisteredUser}
+import data.{AuthenticationInstance, CASInstance, SessionID}
 import javax.inject.Inject
 import models._
 import play.api.Configuration
@@ -25,13 +26,15 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
                                    apps: ServicesModel) extends MessagesAbstractController(cc) with I18nSupport {
 
 
-  private def produceRedirection(user: RegisteredUser, address: Option[Address], authInstance: Option[AuthenticationInstance])(implicit rq: RequestHeader): Future[Result] = {
+  private def produceRedirection(user: UserData,
+                                 sessionId: SessionID,
+                                 authInstance: Option[AuthenticationInstance])(implicit rq: RequestHeader): Future[Result] = {
     val userId = user.id.get
 
     (if (authInstance.isEmpty) Redirect("/").asFuture
     else authInstance.get match {
       case CASInstance(url, serviceId, requireInfo) =>
-        if (requireInfo && (user.phoneNumber.isEmpty || address.isEmpty)) {
+        if (requireInfo && (user.details.phoneNumber.isEmpty || user.address.isEmpty)) {
           // The service requires more data but the user didn't provide it yet: we must request it.
           Future.successful(Redirect(controllers.forms.routes.UpdateInfoController.updateGet(Some(true))))
         } else {
@@ -43,7 +46,7 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
               val ticket = "ST-" + RandomUtils.randomString(64)
 
               val redirectUrl = tickets
-                .insertCasTicket(ticket, userId, serviceId)
+                .insertCasTicket(ticket, userId, serviceId, sessionId)
                 .map(_ => url + symbol + "ticket=" + ticket)
 
               if (!url.startsWith("https://")) {
@@ -63,8 +66,8 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
 
   def redirectGet: Action[AnyContent] = Action.async { implicit rq =>
     if (rq.hasUserSession) {
-      users.getUserProfile(rq.userSession.id).flatMap {
-        case Some((user, address)) =>
+      sessions.getSession(rq.userSession.sessionKey).flatMap {
+        case Some(user) =>
 
           val authInstance = rq.session.get(AuthenticationInstance.SessionKey)
             .map(Json.parse)
@@ -72,7 +75,7 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
 
           println("Try to redirect: user " + user.email + " with authInstance " + authInstance)
 
-          this.produceRedirection(user, address, authInstance)
+          this.produceRedirection(user, rq.userSession.sessionKey, authInstance)
         case _ =>
           Redirect(controllers.forms.routes.UpdateInfoController.updateGet())
       }

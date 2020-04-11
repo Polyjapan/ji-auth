@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class LogoutController @Inject()(cc: ControllerComponents)
                                 (implicit ec: ExecutionContext, cas: ServicesModel,
-                                 config: Configuration, tickets: TicketsModel, sessions: SessionsModel) extends AbstractController(cc) {
+                                 config: Configuration, sessions: SessionsModel) extends AbstractController(cc) {
 
   def logout(app: Option[String], redirect: Option[String], service: Option[String]): Action[AnyContent] = Action.async { implicit rq =>
     def redirectUrl: Future[String] = {
@@ -30,9 +30,7 @@ class LogoutController @Inject()(cc: ControllerComponents)
     }
 
     if (rq.hasUserSession) {
-      val userId = rq.userSession.id
-      tickets.logout(userId)
-        .flatMap(_ => sessions.logout(userId))
+      sessions.logoutSession(rq.userSession.sessionKey)
         .flatMap(_ => redirectUrl)
         .map(url => Redirect(url).withNewSession)
     } else {
