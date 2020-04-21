@@ -77,7 +77,7 @@ class RedirectController @Inject()(cc: MessagesControllerComponents)
 
           this.produceRedirection(user, rq.userSession.sessionKey, authInstance)
         case _ =>
-          Redirect(controllers.forms.routes.UpdateInfoController.updateGet())
+          Redirect(controllers.forms.routes.LoginController.loginGet()).removingFromSession("id", "email", "sessionKey")
       }
     } else {
       Redirect(controllers.forms.routes.LoginController.loginGet())
