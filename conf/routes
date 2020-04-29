@@ -92,6 +92,7 @@ POST           /api/token/app                                       controllers.
 GET            /cas/login                                           controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
 GET            /cas/v1/validate                                     controllers.cas.CASv1Controller.validate(ticket: String, service: String)
+GET            /cas/validate                                     controllers.cas.CASv1Controller.validate(ticket: String, service: String)
 GET            /cas/v1/login                                        controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
 GET            /cas/v2/logout                                       controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
@@ -99,8 +100,11 @@ GET            /cas/v1/logout                                       controllers.
 GET            /cas/logout                                          controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
 
 GET            /cas/v2/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, service: String, format: Option[String] ?= None)
+GET            /cas/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, service: String, format: Option[String] ?= None)
 GET            /cas/v2/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
+GET            /cas/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/v2/proxyValidate                                controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
+GET            /cas/proxyValidate                                controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/v2/login                                        controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
 # General redirection
