@@ -75,7 +75,7 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
     SQL"SELECT * FROM users WHERE id = $id".as(RegisteredUserRowParser.singleOpt)
   })
 
-  def getUserData(id: Int) = Future(db.withConnection { implicit c =>
+  def getUserData(id: Int): Future[Option[UserData]] = Future(db.withConnection { implicit c =>
     SQL"SELECT users.*, g.name, ua.*, uas.scope FROM users LEFT JOIN groups_members gm on users.id = gm.user_id LEFT JOIN `groups` g on gm.group_id = g.id LEFT JOIN users_addresses ua on users.id = ua.user_id LEFT JOIN users_allowed_scopes uas on users.id = uas.user_id WHERE users.id = $id"
       .as(((RegisteredUserRowParser ~ AddressRowParser.?) ~ (str("name").? ~ str("scope").?)).*)
       .map { case (user ~ address) ~ (name ~ scope) => ((user, address), (name, scope)) }

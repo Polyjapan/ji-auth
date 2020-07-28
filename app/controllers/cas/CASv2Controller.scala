@@ -4,12 +4,15 @@ import ch.japanimpact.auth.api.cas.{CASError, CASErrorType}
 import data.{CasService, SessionID}
 import javax.inject.Inject
 import models.{ServicesModel, TicketsModel}
+import play.api.http.Writeable
+import play.api.libs.json.JsObject
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 import utils.{CAS, RandomUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.matching.Regex
+import scala.xml.Elem
 
 /**
  * Implemented as per `https://apereo.github.io/cas/6.0.x/protocol/CAS-Protocol-Specification.html#27-proxy-cas-20`
@@ -60,11 +63,10 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
     // json support is not standard but may be practical
     val json = format.getOrElse("XML").equalsIgnoreCase("json")
 
+    val responses: CAS.CASResponses = if (json) CAS.JSONCasResponses else CAS.XMLCasResponses
+
     if (!pgtPattern.matches(pgt)) {
-      Future.successful(if (json)
-        Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidTicketSpec, pgt))
-      else
-        Ok(CAS.getProxyErrorResponseXML(CASErrorType.InvalidTicketSpec, pgt)))
+      Future.successful(responses.getProxyErrorResponse(CASErrorType.InvalidTicketSpec, pgt))
     } else {
       apps.getCasService(service) flatMap {
         case Some(CasService(Some(serviceId), _, _, _)) =>
@@ -75,27 +77,17 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
                   val pt = "PT-" + RandomUtils.randomString(64)
                   tickets.insertCasTicket(pt, userId, serviceId, sessionId)
 
-                  if (json)
-                    Ok(CAS.getProxySuccessJson(pt))
-                  else
-                    Ok(CAS.getProxySuccessXML(pt))
+                  responses.getProxySuccessResponse(pt)
                 case false =>
-                  if (json) Ok(CAS.getCasErrorResponseJson(CASErrorType.InternalError, pgt))
-                  else Ok(CAS.getCasErrorResponseXML(CASErrorType.InternalError, pgt))
+                  responses.getProxyErrorResponse(CASErrorType.InternalError, pgt)
               }
             case None =>
-              Future.successful(
-                if (json) Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidTicket, pgt))
-                else Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidTicket, pgt))
-              )
+              Future.successful(responses.getProxyErrorResponse(CASErrorType.InvalidTicket, pgt))
           }
 
         case _ =>
           Future.successful(
-            if (json)
-              Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
-            else
-              Ok(CAS.getProxyErrorResponseXML(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
+            responses.getProxyErrorResponse(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service))
           )
       }
     }
@@ -120,12 +112,10 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
   private def doServiceValidate(ticket: String, service: String, format: Option[String], pgtUrl: Option[String], pattern: Regex): Action[AnyContent] = Action.async { implicit rq =>
     val json = format.getOrElse("XML").equalsIgnoreCase("json")
+    val responses: CAS.CASResponses = if (json) CAS.JSONCasResponses else CAS.XMLCasResponses
 
     if (!pattern.matches(ticket)) {
-      Future.successful(if (json)
-        Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidTicketSpec, ticket))
-      else
-        Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidTicketSpec, ticket)))
+      Future.successful(responses.getErrorResponse(CASErrorType.InvalidTicketSpec, ticket))
     } else {
       apps.getCasService(service) flatMap {
         case Some(CasService(Some(serviceId), _, _, _)) =>
@@ -134,7 +124,7 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
               val ticket = pgtUrl.map(url => createProxyTicket(url, serviceId, user.id.get, sessionKey))
                 .getOrElse(Future.successful(Right(None)))
 
-              var attributes = Map(
+              val attributes = Map(
                 "email" -> user.email,
                 "name" -> (user.firstName + " " + user.lastName),
                 "firstname" -> user.firstName,
@@ -143,28 +133,23 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
 
               ticket.map {
                 case Left(err) =>
-                  if (json) Ok(CAS.getCasErrorResponseJson(err, pgtUrl.get))
-                  else Ok(CAS.getCasErrorResponseXML(err, pgtUrl.get))
+                  responses.getErrorResponse(err, pgtUrl.get)
                 case Right(pgt) =>
                   val properties = (pgt match {
                     case Some(t) => Map("proxyGrantingTicket" -> t)
                     case None => Map.empty[String, String]
                   }) + ("user" -> s"${user.id.get}")
 
-                  if (json) Ok(CAS.getCasSuccessMessageJson(properties, attributes, groups))
-                  else Ok(CAS.getCasSuccessMessageXML(properties, attributes, groups))
+                  responses.getSuccessResponse(properties, attributes, groups)
               }
 
             case None =>
-              Future.successful(
-                if (json) Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidTicket, ticket))
-                else Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidTicket, ticket)))
+              Future.successful(responses.getErrorResponse(CASErrorType.InvalidTicket, ticket))
           }
 
         case None =>
           tickets.invalidateCasTicket(ticket).map(_ =>
-            if (json) Ok(CAS.getCasErrorResponseJson(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
-            else Ok(CAS.getCasErrorResponseXML(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service)))
+            responses.getErrorResponse(CASErrorType.InvalidService, CAS.getServiceDomain(service).getOrElse(service))
           )
       }
     }
