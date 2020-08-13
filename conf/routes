@@ -99,8 +99,8 @@ GET            /cas/v2/logout                                       controllers.
 GET            /cas/v1/logout                                       controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
 GET            /cas/logout                                          controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
 
-GET            /cas/v2/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, service: String, format: Option[String] ?= None)
-GET            /cas/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, service: String, format: Option[String] ?= None)
+GET            /cas/v2/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, targetService: String, format: Option[String] ?= None)
+GET            /cas/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, targetService: String, format: Option[String] ?= None)
 GET            /cas/v2/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/p3/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)

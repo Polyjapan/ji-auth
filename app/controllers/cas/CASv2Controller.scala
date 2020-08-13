@@ -105,7 +105,12 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
         ws.url(url).get().filter(_.status == 200).flatMap { r =>
           // Insert PGT
           tickets.insertCasProxyTicket(pgtId, user, service, sessionId).map(_ => Right(Some(pgtIou)))
-        }.fallbackTo(Future.successful(Right(None)))
+        }.recover {
+          case t: Throwable =>
+            println("Exception while calling PGT endpoint " + pgtUrl)
+            t.printStackTrace()
+            Right(None)
+        }
       case None => Future(Left(CASErrorType.UnauthorizedServiceProxy))
     }
   }

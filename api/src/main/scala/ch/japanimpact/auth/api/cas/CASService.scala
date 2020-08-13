@@ -17,7 +17,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class CASService @Inject()(val ws: WSClient, val config: CasConfiguration)(implicit ec: ExecutionContext) {
   private val Map = CacheBuilder.newBuilder()
     .expireAfterWrite(30, TimeUnit.SECONDS)
-    .expireAfterAccess(0, TimeUnit.SECONDS)
     .build[PGT_IOU, ProxyTicket]()
 
   /**
@@ -66,8 +65,8 @@ class CASService @Inject()(val ws: WSClient, val config: CasConfiguration)(impli
   def proxy(ticket: ProxyGrantingTicket, requestedService: String): Future[Either[CASError, ProxyTicket]] = {
     val query = ws.url(config.path("proxy"))
       .withQueryStringParameters(
-        "service" -> requestedService,
-        "ticket" -> ticket,
+        "pgt" -> ticket,
+        "targetService" -> requestedService,
         "format" -> "JSON"
       )
 
@@ -93,7 +92,11 @@ class CASService @Inject()(val ws: WSClient, val config: CasConfiguration)(impli
       .map(js => Json.fromJson[Either[CASError, CASServiceResponse]](js).get)
       .map(res => res.map(ticket => {
         // Replace PGT_UOI with PGT :)
-        ticket.copy(proxyGrantingTicket = ticket.proxyGrantingTicket.flatMap(pgtUoi => Option(Map.getIfPresent(pgtUoi))))
+        ticket.copy(proxyGrantingTicket = ticket.proxyGrantingTicket.flatMap(pgtUoi => {
+          val pgt = Option(Map.getIfPresent(pgtUoi))
+          Map.invalidate(pgtUoi) // Remove entry from the cache
+          pgt
+        }))
       }))
   }
 }
