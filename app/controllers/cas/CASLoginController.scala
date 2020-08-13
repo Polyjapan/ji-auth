@@ -19,10 +19,10 @@ class CASLoginController @Inject()(cc: ControllerComponents, apps: ServicesModel
       case Some(casService) =>
         if (gateway.getOrElse(false) && !rq.hasUserSession) {
           // Gateway: if param is set, we should not attempt to log the user in
-          Redirect(casService.serviceRedirectUrl.getOrElse(service))
+          Redirect(casService.serviceRedirectUrl.map(_.trim).filter(_.nonEmpty).getOrElse(service))
         } else {
           val ret = Redirect(controllers.routes.RedirectController.redirectGet())
-          val instance = CASInstance(url = casService.serviceRedirectUrl.getOrElse(service), casService.serviceId.get, requireFullInfo = casService.serviceRequiresFullInfo)
+          val instance = CASInstance(url = casService.serviceRedirectUrl.map(_.trim).filter(_.nonEmpty).getOrElse(service), casService.serviceId.get, requireFullInfo = casService.serviceRequiresFullInfo)
 
           if (renew.getOrElse(false))
             // Renew: if param is set, we should drop the existing user session and ask the user to log in again
