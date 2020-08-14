@@ -4,8 +4,8 @@ import java.sql.SQLException
 
 import anorm.SqlParser._
 import anorm._
-import ch.japanimpact.auth.api.UserProfile
-import data.{Group, GroupData, GroupRowParser, RegisteredUser, RegisteredUserRowParser}
+import ch.japanimpact.auth.api.{Group, GroupData, UserProfile}
+import data.{GroupRowParser, RegisteredUserRowParser}
 import javax.inject.Inject
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,6 +33,7 @@ class GroupsModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCont
    */
   def createGroup(group: Group): Future[Option[Group]] = Future(db.withConnection { implicit c =>
     try {
+      import data.GroupParameterList
       val groupId = SqlUtils.insertOne("groups", group.copy(id = None))
       Some(group.copy(id = Some(groupId)))
     } catch {

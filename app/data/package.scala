@@ -2,7 +2,7 @@ import java.util.{Base64, Date}
 
 import anorm.Macro.ColumnNaming
 import anorm.{Macro, RowParser, ToParameterList}
-import ch.japanimpact.auth.api.{UserAddress, UserDetails, UserProfile}
+import ch.japanimpact.auth.api.{Group, UserAddress, UserDetails, UserProfile}
 import play.api.libs.json.{Format, JsObject, Json, Writes}
 
 /**
@@ -101,19 +101,6 @@ package object data {
 
   implicit val ServiceDataFormat: Format[ServiceData] = Json.format[ServiceData]
 
-  /**
-   * Represents a group of users
-   *
-   * @param id          the id of the group
-   * @param name        the internal name for the group ([a-zA-Z0-9_-]+)
-   * @param displayName the display name for the group
-   */
-  case class Group(id: Option[Int], name: String, displayName: String)
-
-  case class GroupData(group: Group, allowedScopes: Set[String])
-
-  implicit val GroupFormat: Format[Group] = Json.format[Group]
-  implicit val GroupDataFormat: Format[GroupData] = Json.format[GroupData]
   implicit val GroupRowParser: RowParser[Group] = Macro.namedParser[Group](ColumnNaming.SnakeCase)
   implicit val GroupParameterList: ToParameterList[Group] = Macro.toParameters[Group]()
 

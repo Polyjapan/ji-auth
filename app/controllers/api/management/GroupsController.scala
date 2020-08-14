@@ -3,9 +3,9 @@ package controllers.api.management
 import java.time.Clock
 
 import ch.japanimpact.api.APIError
+import ch.japanimpact.auth.api.Group
 import ch.japanimpact.auth.api.apitokens.AuthorizationActions
 import controllers.api.ApiUtils
-import data.Group
 import javax.inject.Inject
 import models.GroupsModel
 import play.api.Configuration

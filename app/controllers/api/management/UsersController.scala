@@ -16,8 +16,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class UsersController @Inject()(cc: ControllerComponents, authorize: AuthorizationActions, users: UsersModel,
                                 groups: GroupsModel, tickets: TicketsModel, sessions: SessionsModel)(implicit ec: ExecutionContext, conf: Configuration, clock: Clock) extends AbstractController(cc) with APIErrorsHelper {
-  private val namingRegex = "^[a-zA-Z0-9_-]{2,128}$".r
-
   def getUsers = authorize("users/list").async { req =>
     users.getUsers.map(lst => Ok(Json.toJson(lst)))
   }
@@ -27,6 +25,24 @@ class UsersController @Inject()(cc: ControllerComponents, authorize: Authorizati
       case Some(data) => Ok(Json.toJson(data))
       case None => APIError(NotFound, "not_found", s"No user with id $id")
     }
+  }
+
+  def searchUsers(query: String) = authorize("users/search").async { implicit rq =>
+    // Sounds legacy, maybe we want to search full user data?
+    users.searchUsers(query).map(
+      seq => seq.map(user => {
+        val details = user.toUserDetails
+        UserProfile(user.id.get, user.email, details, None)
+      })).map(r => Ok(Json.toJson(r)))
+  }
+
+  def getUsersWithIds(idsStr: String) = authorize("users/get").async { implicit rq =>
+    val ids = idsStr.split(",").filter(_.forall(_.isDigit)).map(_.toInt).toSet
+
+    users.getUsersData(ids)
+      .map { data =>
+        Ok(Json.toJson(data.map { case (id, data) => (id.toString, data) }))
+      }
   }
 
   def forceLogOut(id: Int) = authorize("users/forceLogout").async { req =>

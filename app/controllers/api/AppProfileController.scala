@@ -29,12 +29,14 @@ class AppProfileController @Inject()(cc: ControllerComponents,
     case None => !UserNotFound
   }
 
+  @deprecated
   def getUserProfile(user: Int): Action[AnyContent] = Action.async { implicit rq =>
     ApiUtils.withApp { _ =>
       fetchUserProfile(user)
     }
   }
 
+  @deprecated
   def searchUsers(query: String) = Action.async { implicit rq =>
     ApiUtils.withApp { _ =>
       users.searchUsers(query).map(
@@ -45,6 +47,7 @@ class AppProfileController @Inject()(cc: ControllerComponents,
     }
   }
 
+  @deprecated
   def getUserProfiles(idsStr: String): Action[AnyContent] = Action.async { implicit rq =>
     val ids = idsStr.split(",").filter(_.forall(_.isDigit)).map(_.toInt).toSet
 

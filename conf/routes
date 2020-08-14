@@ -6,12 +6,13 @@
 OPTIONS        /                                                    controllers.OptionsController.rootOptions
 OPTIONS        /*url                                                controllers.OptionsController.options(url: String)
 
-# API
+# API (legacy)
 GET            /api/user/:user                                      controllers.api.AppProfileController.getUserProfile(user: Int)
 GET            /api/user/search/:query                              controllers.api.AppProfileController.searchUsers(query: String)
 GET            /api/users/$users<[0-9,]+>                           controllers.api.AppProfileController.getUserProfiles(users: String)
 
 
+# API
 GET            /api/v2/apikeys                                      controllers.api.management.ApiKeysController.getApiKeys
 +nocsrf
 POST           /api/v2/apikeys                                      controllers.api.management.ApiKeysController.createApiKey
@@ -72,7 +73,9 @@ POST           /api/v2/groups/:name/members/delete                  controllers.
 
 
 GET            /api/v2/users                                        controllers.api.management.UsersController.getUsers
-GET            /api/v2/users/:id                                    controllers.api.management.UsersController.getUser(id: Int)
+GET            /api/v2/users/$id<[0-9]+>                            controllers.api.management.UsersController.getUser(id: Int)
+GET            /api/v2/users/$ids<[0-9,]+>                          controllers.api.management.UsersController.getUsersWithIds(ids)
+GET            /api/v2/users/search                                 controllers.api.management.UsersController.searchUsers(q: String)
 +nocsrf
 PUT            /api/v2/users/:id                                    controllers.api.management.UsersController.updateUser(id: Int)
 GET            /api/v2/users/:id/logout                             controllers.api.management.UsersController.forceLogOut(id: Int)
@@ -92,7 +95,7 @@ POST           /api/token/app                                       controllers.
 GET            /cas/login                                           controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
 GET            /cas/v1/validate                                     controllers.cas.CASv1Controller.validate(ticket: String, service: String)
-GET            /cas/validate                                     controllers.cas.CASv1Controller.validate(ticket: String, service: String)
+GET            /cas/validate                                        controllers.cas.CASv1Controller.validate(ticket: String, service: String)
 GET            /cas/v1/login                                        controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
 GET            /cas/v2/logout                                       controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
@@ -100,13 +103,13 @@ GET            /cas/v1/logout                                       controllers.
 GET            /cas/logout                                          controllers.forms.LogoutController.logout(app: Option[String], redirect: Option[String] ?= None, service: Option[String] ?= None)
 
 GET            /cas/v2/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, targetService: String, format: Option[String] ?= None)
-GET            /cas/proxy                                        controllers.cas.CASv2Controller.proxy(pgt: String, targetService: String, format: Option[String] ?= None)
+GET            /cas/proxy                                           controllers.cas.CASv2Controller.proxy(pgt: String, targetService: String, format: Option[String] ?= None)
 GET            /cas/v2/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/p3/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
-GET            /cas/serviceValidate                              controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
+GET            /cas/serviceValidate                                 controllers.cas.CASv2Controller.serviceValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/v2/proxyValidate                                controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/p3/proxyValidate                                controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
-GET            /cas/proxyValidate                                controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
+GET            /cas/proxyValidate                                   controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/v2/login                                        controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
 # General redirection

@@ -13,6 +13,8 @@ package object api {
   implicit val profileMapper: Format[UserProfile] = Json.format[UserProfile]
   implicit val dataMapper: Format[UserData] = Json.format[UserData]
   implicit val tokenResponseMapper: Format[TokenResponse] = Json.format[TokenResponse]
+  implicit val groupMapper: Format[Group] = Json.format[Group]
+  implicit val groupDataMapper: Format[GroupData] = Json.format[GroupData]
 
   case class AuthorizedUser(userId: Int, groups: Set[String])
 
@@ -28,4 +30,15 @@ package object api {
                       passwordAlgo: String, passwordReset: Boolean, passwordResetEnd: Option[Date],
                       address: Option[UserAddress], scopes: Set[String], groups: Set[String])
 
+
+  /**
+   * Represents a group of users
+   *
+   * @param id          the id of the group
+   * @param name        the internal name for the group ([a-zA-Z0-9_-]+)
+   * @param displayName the display name for the group
+   */
+  case class Group(id: Option[Int], name: String, displayName: String)
+
+  case class GroupData(group: Group, allowedScopes: Set[String])
 }

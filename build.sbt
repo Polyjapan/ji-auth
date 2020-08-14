@@ -11,13 +11,16 @@ ThisBuild / libraryDependencies ++= Seq(
 )
 
 lazy val api = (project in file("api"))
-  .settings(version := "1.0-SNAPSHOT")
+  .settings(
+    version := "2.0-SNAPSHOT",
+    libraryDependencies += "com.google.inject" % "guice" % "4.2.2",
+    libraryDependencies += cacheApi
+  )
 
 
 lazy val tools = (project in file("tools"))
   .settings(
-    libraryDependencies +=
-      "org.bouncycastle" % "bcpkix-jdk15on" % "1.64"
+    libraryDependencies += "org.bouncycastle" % "bcpkix-jdk15on" % "1.64"
   )
 
 
