@@ -16,12 +16,7 @@ jobs:
       with:
         java-version: 11
     - name: Set-up key
-      run: mkdir ~/.sbt ; \
-        echo "realm=reposilite" >> ~/.sbt/.credentials ; \
-        echo "host=repository.japan-impact.ch" >> ~/.sbt/.credentials ; \
-        echo "user=${{ secrets.MavenUser }}" >> ~/.sbt/.credentials ; \
-        echo "password=${{ secrets.MavenPassword }}" >> ~/.sbt/.credentials ; \
-        cat ~/.sbt/.credentials
+      run: mkdir ~/.sbt ; echo "realm=reposilite" >> ~/.sbt/.credentials ; echo "host=repository.japan-impact.ch" >> ~/.sbt/.credentials ; echo "user=${{ secrets.MavenUser }}" >> ~/.sbt/.credentials ; echo "password=${{ secrets.MavenPassword }}" >> ~/.sbt/.credentials ; cat ~/.sbt/.credentials
     - name: Build
       run: sbt dist ; sbt packageBin ; sbt packageDoc
     - name: Deploy
