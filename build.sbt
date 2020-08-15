@@ -14,7 +14,9 @@ lazy val api = (project in file("api"))
   .settings(
     version := "2.0-SNAPSHOT",
     libraryDependencies += "com.google.inject" % "guice" % "4.2.2",
-    libraryDependencies += cacheApi
+    libraryDependencies += cacheApi,
+    publishTo := { Some("Japan Impact Repository" at { "https://repository.japan-impact.ch/" + ( if (isSnapshot.value) "snapshots" else "releases" ) } ) },
+    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
   )
 
 
