@@ -27,7 +27,7 @@ lazy val tools = (project in file("tools"))
 
 
 lazy val root = (project in file("."))
-  .enablePlugins(PlayScala, DebianPlugin, JDebPackaging, SystemdPlugin)
+  .enablePlugins(PlayScala, JDebPackaging, SystemdPlugin, JavaServerAppPackaging)
   .settings(
     name := "JIAuth",
     version := "1.0",
@@ -60,6 +60,22 @@ lazy val root = (project in file("."))
       "-deprecation",
       "-language:postfixOps"
     ),
+
+    maintainer in Linux := "Louis Vialar <louis@japan-impact.ch>",
+
+    javaOptions in Universal ++= Seq(
+      // Provide the PID file
+      s"-Dpidfile.path=/dev/null",
+      // s"-Dpidfile.path=/run/${packageName.value}/play.pid",
+
+      // Set the configuration to the production file
+      s"-Dconfig.file=/usr/share/${packageName.value}/conf/production.conf",
+
+      // Apply DB evolutions automatically
+      "-DapplyEvolutions.default=true"
+    ),
+
+
 
     // Don't add the doc in the zip
     publishArtifact in(Compile, packageDoc) := false
