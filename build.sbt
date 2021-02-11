@@ -51,6 +51,7 @@ lazy val root = (project in file("."))
       "com.typesafe.play" %% "play-json-joda" % "2.8.1",
       "com.typesafe.play" %% "play-mailer" % "8.0.0",
       "com.typesafe.play" %% "play-mailer-guice" % "8.0.0",
+      "com.yubico" % "webauthn-server-core" % "1.7.0"
     ),
 
     resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
