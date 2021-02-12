@@ -12,6 +12,7 @@ import com.yubico.webauthn.{AssertionRequest, CredentialRepository, FinishAssert
 import com.yubico.webauthn.data.{AuthenticatorAssertionResponse, AuthenticatorAttestationResponse, ByteArray, ClientAssertionExtensionOutputs, ClientRegistrationExtensionOutputs, PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialDescriptor, RelyingPartyIdentity, UserIdentity}
 import com.yubico.webauthn.exception.{AssertionFailedException, RegistrationFailedException}
 import data.{RegisteredUser, RegisteredUserRowParser}
+import play.api.libs.json.JsObject
 
 import java.security.SecureRandom
 import java.sql.Blob
@@ -46,7 +47,7 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
       val userId = username.toIntOption
 
       userId.toSet // this set contains either 0 or 1 element, it's essentially an option
-        .flatMap { id =>
+        .flatMap { id: Int =>
         db.withConnection { implicit c =>
           SQL"SELECT key_uid FROM webauthn_keys WHERE user_id = $id"
             .as(str("key_uid").*)
@@ -77,8 +78,10 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
     }
 
     override def lookup(credentialId: ByteArray, userHandle: ByteArray): Optional[RegisteredCredential] = {
+      println(s"Looking up key with user_handle = ${userHandle.getBase64} AND key_uid = ${credentialId.getBase64}")
+
       val opt = db.withConnection { implicit c =>
-        SQL"SELECT * FROM webauthn_keys WHERE user_handle = ${credentialId.getBase64} AND key_uid = ${credentialId.getBase64}"
+        SQL"SELECT * FROM webauthn_keys WHERE user_handle = ${userHandle.getBase64} AND key_uid = ${credentialId.getBase64}"
           .as(RegisteredCredentialParser.singleOpt)
       }
 
@@ -94,13 +97,17 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
   }
 
   private val random = new SecureRandom
-  private val rp = RelyingParty.builder().identity(rpi).credentialRepository(new Repo).build()
+  private val rp = RelyingParty.builder()
+    .identity(rpi)
+    .credentialRepository(new Repo)
+    .allowOriginPort(true)
+    .build()
   private val registrationRequests: Cache[UUID, (Int, PublicKeyCredentialCreationOptions)] =
-    new CacheBuilder[UUID, (Int, PublicKeyCredentialCreationOptions)]
+    CacheBuilder.newBuilder()
       .expireAfterWrite(5.minutes.toJava)
       .build()
   private val authRequests: Cache[UUID, (Int, AssertionRequest)] =
-    new CacheBuilder[UUID, (Int, AssertionRequest)]
+    CacheBuilder.newBuilder()
       .expireAfterWrite(5.minutes.toJava)
       .build()
 
@@ -163,14 +170,18 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
    */
   def finishRegistration(user: RegisteredUser,
                          requestId: UUID,
-                         response: PublicKeyCredential[AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs],
+                         responseJson: JsObject,
                          name: String): Future[Boolean] = {
+
+    val response = PublicKeyCredential.parseRegistrationResponseJson(responseJson.toString())
 
     Future {
       val request = Option(registrationRequests.getIfPresent(requestId))
         .flatMap {
           case (id, options) if id == user.id.get => Some(options)
-          case _ => None
+          case _ =>
+            println("No request ID")
+            None
         }
 
       if (request.isDefined) {
@@ -184,13 +195,25 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
 
           true
         } catch {
-          case _: RegistrationFailedException => false
+          case ex: RegistrationFailedException =>
+            ex.printStackTrace()
+            false
         }
       } else {
+        println("Request not found")
         false
       }
     }
   }
+
+  def getKeysForUser(user: Int) = Future { db.withConnection { implicit c =>
+
+  }}
+
+  def userHasKeys(user: Int): Future[Boolean] = Future { db.withConnection { implicit c =>
+    SQL"SELECT * FROM webauthn_keys WHERE user_id = $user LIMIT 1".as(int("user_id").singleOpt)
+      .exists(_ == user)
+  }}
 
   /**
    * Start authenticating a user
@@ -219,13 +242,20 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
    */
   def validateAuthentication(user: RegisteredUser,
                              requestId: UUID,
-                             response: PublicKeyCredential[AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs]): Future[Boolean] = {
+                             responseJson: JsObject): Future[Boolean] = {
+
+    val response = PublicKeyCredential.parseAssertionResponseJson(responseJson.toString())
+    println(response)
+    println(response.getResponse.getUserHandle)
 
     Future {
       val request = Option(authRequests.getIfPresent(requestId))
         .flatMap {
-          case (id, options) if id == user.id.get => Some(options)
-          case _ => None
+          case (id, options) if id == user.id.get =>
+            Some(options)
+          case _ =>
+            println("WebAuthN: user " + user.id.get + " attempted to use non-existing or incorrect request id " + requestId)
+            None
         }
 
       if (request.isDefined) {
@@ -235,14 +265,19 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
             .response(response)
             .build)
 
+          println(result)
+
           if (result.isSuccess) result.getUserHandle.equals(user.handle.get)
           else false
         } catch {
-          case _: AssertionFailedException => false
+          case ex: AssertionFailedException =>
+            ex.printStackTrace()
+            false
         }
       } else {
         false
       }
     }
   }
+
 }

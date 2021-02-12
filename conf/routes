@@ -124,7 +124,13 @@ POST           /register                                            controllers.
 GET            /login                                               controllers.forms.LoginController.loginGet(app: Option[String] ?= None, tokenType: Option[String] ?= None, service: Option[String] ?= None)
 POST           /login                                               controllers.forms.LoginController.loginPost
 
-GET            /webauthn/register                                   controllers.forms.WebAuthnRegisterController.registerGet
+GET            /login/tfa                                           controllers.forms.TFAValidationController.tfaCheckGet
+POST           /login/tfa                                           controllers.forms.TFAValidationController.tfaCheckPost
+GET            /login/tfa/webauthn/start                            controllers.forms.TFAValidationController.webauthnInit
+
+GET            /webauthn/register                                   controllers.forms.WebAuthnManagementController.registerGet
+GET            /webauthn/register/start                             controllers.forms.WebAuthnManagementController.registerGetParams
+POST           /webauthn/register/complete                          controllers.forms.WebAuthnManagementController.registerComplete
 
 GET            /update_info                                         controllers.forms.UpdateInfoController.updateGet(required: Option[Boolean] ?= None)
 POST           /update_info                                         controllers.forms.UpdateInfoController.updatePost

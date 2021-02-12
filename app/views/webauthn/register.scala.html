@@ -1,41 +1,42 @@
-@(reqId: String, json: String)(implicit request: RequestHeader, messageProvider: MessagesProvider)
+@import views.html.helper.CSRF
+@()(implicit request: RequestHeader)
 
 
 @style = {
     <link rel="stylesheet" href="@routes.Assets.at("css/register.css")" crossorigin="anonymous">
 }
 
-@main("Connexion", style) {
+@main("Authentification Forte", style) {
 
-    <script>
-        const registerCredentials =
-            async () => {
-                const cred = await navigator.credentials.create({publicKey: @json});
 
-                console.log(cred)
-            }
-    </script>
+    <div hidden id="csrf-token">@CSRF.formField</div>
 
     <div class="container">
         <div class="py-5 text-center">
             <img class="d-block mx-auto mb-4" src="@routes.Assets.at("img/logo.png")" alt="Logo Japan Impact" width="240" height="200">
-            <h2>Connexion</h2>
-            <p class="lead">Pour poursuivre, connectez vous à votre compte Japan Impact.</p>
-
-
-            <a class="mb-3" href="@controllers.forms.routes.RegisterController.registerGet()">
-                Je n'ai pas encore de compte</a>
+            <h2>Authentification forte</h2>
+            <p class="lead">
+                Protégez votre compte en utilisant une clé de sécurité, votre empreinte digitale ou votre smartphone lorsque vous vous connectez.</p>
 
             <hr>
         </div>
 
 
-
         <div class="row justify-content-md-center">
             <div class="col-md-8">
-                <button class="btn btn-lg btn-primary btn-block" type="submit" onclick="registerCredentials()">Enregistrer une clé</button>
+
+                <div class="alert alert-error" hidden id="register-error"><b>
+                    Une erreur s'est produite : </b><span id="register-error-text"></span></div>
+
+                <button class="btn btn-lg btn-primary btn-block" type="submit" id="register-key-start">
+                    Enregistrer une clé de sécurité</button>
+
+            </div>
 
         </div>
-
     </div>
+
+    <script src="@routes.Assets.at("js/base64.js")"></script>
+    <script src="@routes.Assets.at("js/webauthn_register.js")"></script>
+
 }

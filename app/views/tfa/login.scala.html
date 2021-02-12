@@ -1,0 +1,45 @@
+@import views.html.helper.CSRF
+@import models.TFAModel.TFAMode.TFAMode
+@(modes: Set[TFAMode])(implicit request: RequestHeader)
+
+
+@style = {
+    <link rel="stylesheet" href="@routes.Assets.at("css/register.css")" crossorigin="anonymous">
+}
+
+@main("Authentification Forte", style) {
+
+    <form hidden method="post" action="@controllers.forms.routes.TFAValidationController.tfaCheckPost()" id="tfaForm">
+        @CSRF.formField
+        <input type="hidden" name="data" id="data" value="">
+        <input type="hidden" name="type" id="type" value="">
+    </form>
+
+    <div class="container">
+        <div class="py-5 text-center">
+            <img class="d-block mx-auto mb-4" src="@routes.Assets.at("img/logo.png")" alt="Logo Japan Impact" width="240" height="200">
+            <h2>Confirmez votre identité</h2>
+            <p class="lead">
+                Confirmez votre identité en utilisant une des méthodes ci dessous pour vous connecter.
+            <hr>
+        </div>
+
+
+        <div class="row justify-content-md-center">
+            <div class="col-md-8">
+
+                <div class="alert alert-error" hidden id="error"><b>
+                    Une erreur s'est produite : </b><span id="error-text"></span></div>
+
+                <button class="btn btn-lg btn-primary btn-block" type="submit" id="use-webauthn">
+                    Utiliser une clé de sécurité</button>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script src="@routes.Assets.at("js/base64.js")"></script>
+    <script src="@routes.Assets.at("js/tfa_confirm.js")"></script>
+
+}

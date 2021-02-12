@@ -1,14 +1,12 @@
 package data
 
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json, OFormat}
 
 object AuthenticationInstance {
-  val SessionKey = "ai";
+  val SessionKey = "ai"
 
-
-  private implicit val casInstanceFormat = Json.format[CASInstance]
-  implicit val authenticationInstanceFormat = Json.format[AuthenticationInstance]
-
+  private implicit val casInstanceFormat: OFormat[CASInstance] = Json.format[CASInstance]
+  implicit val authenticationInstanceFormat: OFormat[AuthenticationInstance] = Json.format[AuthenticationInstance]
 
   def unapply(instance: AuthenticationInstance): Option[(String, JsValue)] = {
     val (prod: Product, sub) = instance match {

@@ -7,7 +7,7 @@ class Module extends AbstractModule {
   @Provides
   def clock: Clock = Clock.systemUTC()
 
-  @Provides @Singleton
+  @Provides
   def rpIdentity(conf: Configuration): RelyingPartyIdentity =
-    RelyingPartyIdentity.builder().id(conf.get("webauthn.identification")).name(conf.get("webauthn.name")).build()
+    RelyingPartyIdentity.builder().id(conf.get[String]("webauthn.identification")).name(conf.get[String]("webauthn.name")).build()
 }
