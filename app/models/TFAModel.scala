@@ -1,6 +1,6 @@
 package models
 
-import models.TFAModel.TFAMode.{TFAMode, WebAuthn}
+import models.TFAModel.TFAMode.{TFAMode, WebAuthn, TOTP, Backup}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,11 +14,10 @@ object TFAModel {
   }
 }
 
-class TFAModel @Inject()(webAuthnModel: WebAuthnModel)(implicit ec: ExecutionContext) {
-  private val tfaModesCheck: Map[TFAModel.TFAMode.Value, Int => Future[Boolean]] = Map(
-    WebAuthn -> webAuthnModel.userHasKeys
-  )
+class TFAModel @Inject()(webAuthnModel: WebAuthnModel, totpModel: TOTPModel)(implicit ec: ExecutionContext) {
+  private val mapping: Map[TFAMode, TFARepository[_]] = Map(WebAuthn -> webAuthnModel, TOTP -> totpModel)
 
+  def repository(mode: TFAMode): TFARepository[_] = mapping(mode)
 
   /**
    * Gets the set of supported TFA modes for a user. If the returned set is not empty, TFA **must** be checked
@@ -27,11 +26,24 @@ class TFAModel @Inject()(webAuthnModel: WebAuthnModel)(implicit ec: ExecutionCon
    * @return a future with a list of TFA modes
    */
   def tfaModes(userId: Int): Future[Set[TFAMode]] = {
-    (Future.sequence {
-      tfaModesCheck.map {
-        case (mode, func) => func(userId).map(res => if (res) Some(mode) else None)
+    Future.sequence {
+      mapping.map {
+        case (mode, repo) => repo.userHasKeys(userId).map(res => if (res) Some(mode) else None)
       }
-    }).map(_.flatten.toSet)
+    }.map(_.flatten.toSet)
   }
 
+  /**
+   *
+   * @param userId
+   * @return a future with a set of tuples (TFA mode, name of the device, string representation of the ID)
+   */
+  def tfaKeys(userId: Int): Future[Set[(TFAMode, String, String)]] = {
+    Future.sequence {
+      mapping.map {
+        case (mode, repo) => repo.getKeysString(userId)
+          .map(set => set.map { case (name, id) => (mode, name, id) })
+      }
+    }.map(_.flatten.toSet)
+  }
 }

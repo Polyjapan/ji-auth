@@ -1,0 +1,65 @@
+@import models.TFAModel.TFAMode.TFAMode
+@import views.html.helper.CSRF
+@import models.TFAModel.TFAMode.WebAuthn
+@import models.TFAModel.TFAMode.TOTP
+@import models.TFAModel.TFAMode.Backup
+
+@import helper._
+@import views.forms.FormFieldTemplate._
+@import views.html.management.managementTemplate
+@(key: String, url: String, error: Option[String], otpForm: Form[_])(implicit request: RequestHeader)
+
+@managementTemplate("Authentification Forte") {
+
+
+
+        <div class="row">
+            <div class="col-md-4 text-center">
+
+                <img class="img-fluid py-2" src="https://chart.googleapis.com/chart?cht=qr&chs=350x350&chl=@url" alt="Erreur de chargement de l'image" />
+
+                <p>Clé : <code>@key</code></p>
+
+            </div>
+            <div class="col-md-8">
+
+                <div class="py-3">
+                    <h2>Nouvelle clé TOTP</h2>
+                    <p class="lead">Scannez le QR Code ci contre dans l'application Authy (ou similaire) puis indiquez le code fourni et un nom pour votre appareil.</p>
+                    <hr>
+                </div>
+
+                @if(error.isDefined){
+                    <div class="alert alert-danger py-2" id="error">
+                    <b>Une erreur s'est produite : </b> @error</div>
+                }
+
+                <form method="post" action="@controllers.management.routes.TFAManagementController.totpEnrolFinish()">
+                    @CSRF.formField
+
+
+                    <div class="form-group row">
+                        <label for="otpField" class="col-sm-4 col-form-label">Code d'authentification</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="otpField" name="code" placeholder="123456" required pattern="[0-9]{6}">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="nameField" class="col-sm-4 col-form-label">Nom de l'appareil</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="nameField" name="name" placeholder="Smartphone Android" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-sm-8 offset-sm-4">
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+}

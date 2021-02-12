@@ -68,6 +68,7 @@ const registerCredentials = async () => {
             body: JSON.stringify(payload)
         });
 
+        window.location.reload();
     } else {
         $('#register-error-text').innerText = "Une erreur réseau s'est produite, merci de réessayer.";
         $('#register-error').alert();

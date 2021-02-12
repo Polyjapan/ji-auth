@@ -128,9 +128,14 @@ GET            /login/tfa                                           controllers.
 POST           /login/tfa                                           controllers.forms.TFAValidationController.tfaCheckPost
 GET            /login/tfa/webauthn/start                            controllers.forms.TFAValidationController.webauthnInit
 
-GET            /webauthn/register                                   controllers.forms.WebAuthnManagementController.registerGet
-GET            /webauthn/register/start                             controllers.forms.WebAuthnManagementController.registerGetParams
-POST           /webauthn/register/complete                          controllers.forms.WebAuthnManagementController.registerComplete
+GET            /tfa/manage                                          controllers.management.TFAManagementController.get
+POST           /tfa/manage/delete                                   controllers.management.TFAManagementController.deleteKey
+
+GET            /totp/register/start                                 controllers.management.TFAManagementController.totpEnrolStart
+POST           /totp/register/complete                              controllers.management.TFAManagementController.totpEnrolFinish
+
+GET            /webauthn/register/start                             controllers.management.TFAManagementController.webauthnGetParam
+POST           /webauthn/register/complete                          controllers.management.TFAManagementController.webauthnCompleteRegistration
 
 GET            /update_info                                         controllers.forms.UpdateInfoController.updateGet(required: Option[Boolean] ?= None)
 POST           /update_info                                         controllers.forms.UpdateInfoController.updatePost

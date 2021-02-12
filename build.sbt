@@ -61,6 +61,8 @@ lazy val root = (project in file("."))
         exclude ("com.fasterxml.jackson.core", "jackson-databind")
         exclude ("com.fasterxml.jackson.datatype", "jackson-datatype-jdk8")
         exclude ("com.fasterxml.jackson.dataformat", "jackson-dataformat-cbor"),
+
+      "com.warrenstrange" % "googleauth" % "1.4.0"
     ),
 
     resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",

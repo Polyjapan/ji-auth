@@ -7,15 +7,17 @@ function submitTFA(type, data) {
 }
 
 const webauthnChallenge = async () => {
+    document.getElementById("error").hidden = true;
+
     if (!navigator.credentials) {
-        $('#error-text').innerText = "Votre navigateur ne supporte pas l'utilisation de clés de sécurité.";
-        $('#error').alert();
+        document.getElementById("error-text").innerText = "Votre navigateur ne supporte pas l'utilisation de clés de sécurité.";
+        document.getElementById("error").hidden = false;
         return;
     }
 
     if (!window.fetch) {
-        $('#error-text').innerText = "Votre navigateur ne supporte pas l'utilisation des API Javascript récentes.";
-        $('#error').alert();
+        document.getElementById("error-text").innerText =  "Votre navigateur ne supporte pas l'utilisation des API Javascript récentes.";
+        document.getElementById("error").hidden = false;
         return;
     }
 
@@ -32,7 +34,18 @@ const webauthnChallenge = async () => {
             cred.id = base64url.decode(cred.id);
         }
 
-        const creds = await navigator.credentials.get({publicKey: pk});
+        let creds = null;
+        try {
+            creds = await navigator.credentials.get({publicKey: pk});
+        } catch (e) {
+            console.log("Error while using security key:");
+            console.log(e);
+
+            document.getElementById("error-text").innerText = "Votre clé de sécurité n'est pas reconnue.";
+            document.getElementById("error").hidden = false;
+
+            return;
+        }
         console.log(creds);
 
         const credential = {};
@@ -62,8 +75,8 @@ const webauthnChallenge = async () => {
         submitTFA('WebAuthn', JSON.stringify(payload));
 
     } else {
-        $('#error-text').innerText = "Une erreur réseau s'est produite, merci de réessayer.";
-        $('#error').alert();
+        document.getElementById("error-text").innerText =  "Une erreur réseau s'est produite, merci de réessayer.";
+        document.getElementById("error").hidden = false;
     }
 }
 

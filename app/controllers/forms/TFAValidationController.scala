@@ -2,8 +2,8 @@ package controllers.forms
 
 import controllers.forms.TFAValidationController.readTemporarySession
 import data.{RegisteredUser, UserSession}
-import models.TFAModel.TFAMode.{TFAMode, WebAuthn}
-import models.{SessionsModel, TFAModel, UsersModel, WebAuthnModel}
+import models.TFAModel.TFAMode._
+import models.{SessionsModel, TFAModel, TOTPModel, UsersModel, WebAuthnModel}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
 import play.api.i18n.I18nSupport
@@ -23,12 +23,14 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
                                                                           users: UsersModel,
                                                                           sessions: SessionsModel,
                                                                           tfa: TFAModel,
-                                                                          webAuthn: WebAuthnModel) extends MessagesAbstractController(cc) with I18nSupport {
+                                                                          webAuthn: WebAuthnModel,
+                                                                          totp: TOTPModel) extends MessagesAbstractController(cc) with I18nSupport {
 
-
+  private val ErrorKey = "error"
   private val tfaLoginForm = Form(mapping("type" -> nonEmptyText, "data" -> nonEmptyText)(Tuple2.apply)(Tuple2.unapply))
   private val validators: Map[TFAMode, (RegisteredUser, String) => Future[Boolean]] = Map(
-    WebAuthn -> validateWebauthn
+    WebAuthn -> validateWebauthn,
+    TOTP -> validateTOTP
   )
 
   def tfaCheckGet: Action[AnyContent] = Action.async { implicit rq =>
@@ -36,7 +38,7 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
       case Some(userId) =>
         tfa.tfaModes(userId).flatMap {
           case modes if modes.nonEmpty =>
-            Future.successful(Ok(views.html.tfa.login(modes)))
+            Future.successful(Ok(views.html.tfa.login(modes, rq.flash.get(ErrorKey))))
           case _ => completeLogin(userId) // No TFA enabled
         }
 
@@ -57,6 +59,7 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
       .map(sid => Redirect(controllers.routes.RedirectController.redirectGet()).addingToSession(UserSession(user, sid): _*))
   }
 
+
   def tfaCheckPost: Action[(String, String)] = Action.async(parse.form(tfaLoginForm)) { implicit rq =>
     readTemporarySession match {
       case Some(userId) =>
@@ -67,10 +70,13 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
 
             if (tfaType.isEmpty) {
               println("User " + userId + " tried to use invalid tfa mode " + rq.body._1)
-              Future.successful(Redirect(controllers.forms.routes.TFAValidationController.tfaCheckGet()))
+              Future.successful(Redirect(controllers.forms.routes.TFAValidationController.tfaCheckGet())
+                .flashing(ErrorKey -> "Échec de la vérification, merci de réessayer"))
             } else if (!modes(tfaType.get)) {
               println("User " + userId + " tried to use TFA mode " + tfaType.get + " but only " + modes + " are configured.")
-              Future.successful(Redirect(controllers.forms.routes.TFAValidationController.tfaCheckGet()))
+              Future.successful(Redirect(controllers.forms.routes.TFAValidationController.tfaCheckGet())
+                .flashing(ErrorKey -> "Échec de la vérification, merci de réessayer")
+              )
             } else {
               users.getUserById(userId).flatMap {
                 case Some(user) =>
@@ -85,7 +91,7 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
                       // unrealistic attack rate, should work (requires 10 attacks per milliseconds... you have denial
                       // of service way before that threshold, and we'll never have google-like infra anyway!)
                       Future.successful(Redirect(controllers.forms.routes.TFAValidationController.tfaCheckGet())
-                        .flashing("error" -> "Échec de la vérification, merci de réessayer"))
+                        .flashing(ErrorKey -> "Échec de la vérification, merci de réessayer"))
                   }
                 case None =>
                   Future.successful(BadRequest("Bad userID in session."))
@@ -104,13 +110,10 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
       case Some(userId) =>
         users.getUserById(userId).flatMap {
           case Some(user) =>
-            webAuthn.startAuthentication(user)
-              .map {
-                case (json, uid) => Ok(s"""{ "uid":"${uid.toString}", "pk": $json }""").as("text/json")
-              }
-
-          case None =>
-            Future.successful(BadRequest("Bad userID in session"))
+            webAuthn.startAuthentication(user).map {
+              case (json, uid) => Ok(s"""{ "uid":"${uid.toString}", "pk": $json }""").as("text/json")
+            }
+          case None => Future.successful(BadRequest("Bad userID in session"))
         }
 
       case None => Future.successful(BadRequest("No user ID found"))
@@ -129,6 +132,13 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
     } else {
       webAuthn.validateAuthentication(user, uid.get, response.get)
     }
+  }
+
+  private def validateTOTP(user: RegisteredUser, data: String): Future[Boolean] = {
+    val code = Some(data).filter(_.length == 6).flatMap(_.toIntOption)
+
+    if (code.isEmpty) Future.successful(false)
+    else totp.check(user.id.get, code.get)
   }
 }
 

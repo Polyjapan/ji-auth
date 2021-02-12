@@ -1,0 +1,104 @@
+@import views.html.helper.CSRF
+@import views.html.management.managementTemplate
+@import models.TFAModel.TFAMode.TFAMode
+@import models.TFAModel.TFAMode.Backup
+@import models.TFAModel.TFAMode.WebAuthn
+@import models.TFAModel.TFAMode.TOTP
+@(modes: Set[TFAMode], keys: Set[(TFAMode, String, String)])(implicit request: RequestHeader)
+
+@display(mode: TFAMode) = @{
+    mode match {
+        case TOTP => "Application"
+        case WebAuthn => "Clé ou empreinte"
+        case Backup => "Codes de secours"
+        case other => other.toString
+    }
+}
+
+@managementTemplate("Authentification Forte") {
+
+
+    <div hidden id="csrf-token">@CSRF.formField</div>
+
+    <div class="py-3">
+        <h2>Authentification forte</h2>
+        <p class="lead">
+            Protégez votre compte en utilisant une clé de sécurité, votre empreinte digitale ou votre smartphone lorsque vous vous connectez.</p>
+
+        <hr>
+    </div>
+
+
+    <div class="row">
+        <div class="col-lg-12">
+
+
+            <h3>Modes d'authentification forte actifs</h3>
+
+
+
+            @if(modes.nonEmpty && !modes(Backup)){
+                <div class="alert alert-warning py-2" id="error">
+                    <b>Aucune clé de secours enregistrée !</b><br>Attention, vous avez activé l'authentification forte
+                    mais vous n'avez généré aucune clé de secours. Il est fortement conseillé de générer des clés de secours
+                    et de les garder en lieu sûr, au cas où vous perdriez l'accès à vos autres moyens d'authentification forte.
+                </div>
+            }
+            @if(modes.isEmpty){
+                <div class="alert alert-warning py-2" id="error">
+                    <b>Aucun mode d'authentification forte actif !</b><br>Attention, vous n'avez activé aucun mode d'authentification
+                    forte. Une personne mal intentionnée disposant de votre mot de passe pourrait se connecter à votre compte.
+                </div>
+            }else{
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Nom de l'appareil</th>
+                            <th scope="col">Suppression</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for(key <- keys){
+                            <tr>
+                                <th>@display(key._1)</th>
+                                <td>@{key._2}</td>
+                                <td>
+                                    <form method="post" action="@controllers.management.routes.TFAManagementController.deleteKey()">
+                                        <input type="hidden" name="type" value="@{key._1}" />
+                                        <input type="hidden" name="id" value="@{key._3}" />
+                                        @CSRF.formField
+                                        <button class="btn btn-danger btn-sm">Supprimer</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>
+            }
+
+
+
+            <hr>
+
+            <h3>Ajouter un mode d'authentification forte</h3>
+
+            <div class="alert alert-error" hidden id="register-error"><b>
+                Une erreur s'est produite : </b><span id="register-error-text"></span></div>
+
+
+
+            <button class="btn btn-primary" type="submit" id="register-key-start">
+                Enregistrer une clé de sécurité</button>
+
+            <a class="btn btn-primary" id="register-key-start" href="@controllers.management.routes.TFAManagementController.totpEnrolStart()">
+                Enregistrer une application OTP</a>
+
+        </div>
+    </div>
+
+    <script src="@routes.Assets.at("js/base64.js")"></script>
+    <script src="@routes.Assets.at("js/webauthn_register.js")"></script>
+
+}
