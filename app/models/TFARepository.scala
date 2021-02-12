@@ -1,5 +1,6 @@
 package models
 
+import data.RegisteredUser
 import models.TFAModel.TFAMode.TFAMode
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -48,4 +49,12 @@ trait TFARepository[IDType] {
   def removeKey(user: Int, id: IDType): Future[Unit]
 
   def removeKeyString(user: Int, id: String): Future[Unit] = removeKey(user, converter(id))
+
+  /**
+   * Validates a given key
+   * @param user
+   * @param keyData the data given by the client, to be authenticated
+   * @return
+   */
+  def validate(user: RegisteredUser, keyData: String): Future[Boolean]
 }

@@ -14,8 +14,8 @@ object TFAModel {
   }
 }
 
-class TFAModel @Inject()(webAuthnModel: WebAuthnModel, totpModel: TOTPModel)(implicit ec: ExecutionContext) {
-  private val mapping: Map[TFAMode, TFARepository[_]] = Map(WebAuthn -> webAuthnModel, TOTP -> totpModel)
+class TFAModel @Inject()(webAuthnModel: WebAuthnModel, totpModel: TOTPModel, backupModel: BackupCodesModel)(implicit ec: ExecutionContext) {
+  private val mapping: Map[TFAMode, TFARepository[_]] = Map(WebAuthn -> webAuthnModel, TOTP -> totpModel, Backup -> backupModel)
 
   def repository(mode: TFAMode): TFARepository[_] = mapping(mode)
 

@@ -12,18 +12,20 @@ import com.yubico.webauthn.exception.{AssertionFailedException, RegistrationFail
 import com.yubico.webauthn._
 import _root_.data.RegisteredUser
 import models.TFAModel.TFAMode.{TFAMode, WebAuthn}
-import play.api.libs.json.JsObject
+import play.api.libs.json.{JsObject, Json}
 
 import java.security.SecureRandom
 import java.util
 import java.util.{Optional, UUID}
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.jdk.DurationConverters._
 import scala.jdk.OptionConverters._
+import scala.util.Try
 
+@Singleton
 class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentity, users: UsersModel)(implicit ec: ExecutionContext)
   extends TFARepository[ByteArray] {
 
@@ -139,12 +141,6 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
     }
   }
 
-  def getKeysForUser(user: Int) = Future {
-    db.withConnection { implicit c =>
-
-    }
-  }
-
   def userHasKeys(user: Int): Future[Boolean] = Future {
     db.withConnection { implicit c =>
       SQL"SELECT * FROM webauthn_keys WHERE user_id = $user LIMIT 1".as(int("user_id").singleOpt).contains(user)
@@ -183,9 +179,6 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
                              responseJson: JsObject): Future[Boolean] = {
 
     val response = PublicKeyCredential.parseAssertionResponseJson(responseJson.toString())
-    println(response)
-    println(response.getResponse.getUserHandle)
-
     Future {
       val request = Option(authRequests.getIfPresent(requestId))
         .flatMap {
@@ -255,8 +248,6 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
     }
 
     override def lookup(credentialId: ByteArray, userHandle: ByteArray): Optional[RegisteredCredential] = {
-      println(s"Looking up key with user_handle = ${userHandle.getBase64} AND key_uid = ${credentialId.getBase64}")
-
       val opt = db.withConnection { implicit c =>
         SQL"SELECT * FROM webauthn_keys WHERE user_handle = ${userHandle.getBase64} AND key_uid = ${credentialId.getBase64}"
           .as(RegisteredCredentialParser.singleOpt)
@@ -320,6 +311,26 @@ class WebAuthnModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentit
     db.withConnection { implicit c =>
       SQL"DELETE FROM webauthn_keys WHERE user_id = $user AND key_uid = ${id.getBase64}"
         .execute()
+    }
+  }
+
+  /**
+   * Validates a given key
+   *
+   * @param user
+   * @param keyData the data given by the client, to be authenticated
+   * @return
+   */
+  override def validate(user: RegisteredUser, data: String): Future[Boolean] = {
+    val json = Json.parse(data)
+    val uid: Option[UUID] = (json \ "uid").validate[String].asOpt.flatMap(str => Try(UUID.fromString(str)).toOption)
+    val response: Option[JsObject] = (json \ "pk").validate[JsObject].asOpt
+
+    if (uid.isEmpty || response.isEmpty) {
+      println("User " + user.id.get + " tried to use WebAuthn but did not provide correct parameters")
+      Future.successful(false)
+    } else {
+      validateAuthentication(user, uid.get, response.get)
     }
   }
 }

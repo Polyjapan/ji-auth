@@ -15,6 +15,10 @@
     }
 }
 
+@genBackupUrl() = {
+    @CSRF(controllers.management.routes.TFAManagementController.generateBackupCodes())
+}
+
 @managementTemplate("Authentification Forte") {
 
 
@@ -39,9 +43,12 @@
 
             @if(modes.nonEmpty && !modes(Backup)){
                 <div class="alert alert-warning py-2" id="error">
-                    <b>Aucune clé de secours enregistrée !</b><br>Attention, vous avez activé l'authentification forte
-                    mais vous n'avez généré aucune clé de secours. Il est fortement conseillé de générer des clés de secours
-                    et de les garder en lieu sûr, au cas où vous perdriez l'accès à vos autres moyens d'authentification forte.
+                    <b>Aucun code de secours enregistrée !</b><br>Attention, vous avez activé l'authentification forte
+                    mais vous n'avez généré aucun code de secours. Il est fortement conseillé de générer des codes de secours
+                    et de les garder en lieu sûr, au cas où vous perdriez l'accès à vos autres moyens d'authentification forte.<br><br>
+
+                    <a class="btn btn-success" id="register-key-start" href="@genBackupUrl()">
+                        Générer des codes de secours</a>
                 </div>
             }
             @if(modes.isEmpty){
@@ -84,7 +91,7 @@
 
             <h3>Ajouter un mode d'authentification forte</h3>
 
-            <div class="alert alert-error" hidden id="register-error"><b>
+            <div class="alert alert-danger" hidden id="register-error"><b>
                 Une erreur s'est produite : </b><span id="register-error-text"></span></div>
 
 
@@ -94,6 +101,9 @@
 
             <a class="btn btn-primary" id="register-key-start" href="@controllers.management.routes.TFAManagementController.totpEnrolStart()">
                 Enregistrer une application OTP</a>
+
+            <a class="btn btn-@{if(modes(Backup)) "secondary" else "warning"}" id="register-key-start" href="@genBackupUrl">
+                @{if(modes(Backup)) "Regénérer les" else "Générer des"} codes de secours</a>
 
         </div>
     </div>

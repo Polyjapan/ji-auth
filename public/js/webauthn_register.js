@@ -1,15 +1,17 @@
 // Inspiration comes from https://codelabs.developers.google.com/codelabs/webauthn-reauth#2 but without the required libs o/
 
 const registerCredentials = async () => {
+    document.getElementById("register-error").hidden = true;
+
     if (!navigator.credentials) {
-        $('#register-error-text').innerText = "Votre navigateur ne supporte pas l'utilisation de clés de sécurité.";
-        $('#register-error').alert();
+        document.getElementById("register-error-text").innerText = "Votre navigateur ne supporte pas l'utilisation de clés de sécurité.";
+        document.getElementById("register-error").hidden = false;
         return;
     }
 
     if (!window.fetch) {
-        $('#register-error-text').innerText = "Votre navigateur ne supporte pas l'utilisation des API Javascript récentes.";
-        $('#register-error').alert();
+        document.getElementById("register-error-text").innerText = "Votre navigateur ne supporte pas l'utilisation des API Javascript récentes.";
+        document.getElementById("register-error").hidden = false;
         return;
     }
 
@@ -34,7 +36,18 @@ const registerCredentials = async () => {
             }
         }
 
-        const creds = await navigator.credentials.create({publicKey: pk});
+        let creds = null;
+        try {
+            creds = await navigator.credentials.create({publicKey: pk});
+        } catch (e) {
+            console.log("Error while using security key:");
+            console.log(e);
+
+            document.getElementById("register-error-text").innerText = "Votre clé de sécurité n'est pas reconnue. Peut être l'avez vous déjà enregistrée ?";
+            document.getElementById("register-error").hidden = false;
+
+            return;
+        }
         console.log(creds);
         const name = prompt("Donnez un surnom à cette méthode d'authentification forte");
 
@@ -70,8 +83,8 @@ const registerCredentials = async () => {
 
         window.location.reload();
     } else {
-        $('#register-error-text').innerText = "Une erreur réseau s'est produite, merci de réessayer.";
-        $('#register-error').alert();
+        document.getElementById("register-error-text").innerText = "Une erreur réseau s'est produite, merci de réessayer.";
+        document.getElementById("register-error").hidden = false;
     }
 }
 

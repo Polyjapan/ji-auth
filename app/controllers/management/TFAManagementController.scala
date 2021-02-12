@@ -2,13 +2,13 @@ package controllers.management
 
 import controllers.forms.AuthTools
 import data.UserSession
-import models.TFAModel.TFAMode.TFAMode
-import models.{TFAModel, TOTPModel, UsersModel, WebAuthnModel}
+import models._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
 import play.api.libs.json.{JsObject, JsValue}
 import play.api.mvc._
+import play.filters.csrf.CSRFCheck
 
 import java.util.UUID
 import javax.inject.Inject
@@ -18,11 +18,11 @@ import scala.util.Try
 /**
  * @author Louis Vialar
  */
-class TFAManagementController @Inject()(cc: MessagesControllerComponents)(implicit ec: ExecutionContext,
-                                                                          users: UsersModel,
-                                                                          webAuthn: WebAuthnModel,
-                                                                          tfa: TFAModel,
-                                                                          totp: TOTPModel) extends MessagesAbstractController(cc) with I18nSupport {
+class TFAManagementController @Inject()(cc: MessagesControllerComponents, checkToken: CSRFCheck)(implicit ec: ExecutionContext,
+                                                                                                 users: UsersModel,
+                                                                                                 webAuthn: WebAuthnModel,
+                                                                                                 tfa: TFAModel, backups: BackupCodesModel,
+                                                                                                 totp: TOTPModel) extends MessagesAbstractController(cc) with I18nSupport {
 
   private val OTPKeySessionKey = "otpKey"
   private val OTPUrlSessionKey = "otpUrl"
@@ -49,6 +49,16 @@ class TFAManagementController @Inject()(cc: MessagesControllerComponents)(implic
       if (tfaType.isEmpty) Future.successful(Redirect(controllers.management.routes.TFAManagementController.get()))
       else {
         tfa.repository(tfaType.get).removeKeyString(user.id, id).map(_ => Redirect(controllers.management.routes.TFAManagementController.get()))
+      }
+    }
+  }
+
+  def generateBackupCodes: Action[AnyContent] = checkToken {
+    Action.async { implicit rq =>
+      AuthTools.ifLoggedIn { user: UserSession =>
+        backups.generate(user.id).map { codes =>
+          Ok(views.html.tfa.backup_generate(codes))
+        }
       }
     }
   }
@@ -118,7 +128,6 @@ class TFAManagementController @Inject()(cc: MessagesControllerComponents)(implic
       }
     }
   }
-
 
 
 }

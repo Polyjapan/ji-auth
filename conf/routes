@@ -131,6 +131,8 @@ GET            /login/tfa/webauthn/start                            controllers.
 GET            /tfa/manage                                          controllers.management.TFAManagementController.get
 POST           /tfa/manage/delete                                   controllers.management.TFAManagementController.deleteKey
 
+GET            /tfabackups/generate                                 controllers.management.TFAManagementController.generateBackupCodes
+
 GET            /totp/register/start                                 controllers.management.TFAManagementController.totpEnrolStart
 POST           /totp/register/complete                              controllers.management.TFAManagementController.totpEnrolFinish
 

@@ -2,18 +2,14 @@ package controllers.forms
 
 import controllers.forms.TFAValidationController.readTemporarySession
 import data.{RegisteredUser, UserSession}
-import models.TFAModel.TFAMode._
-import models.{SessionsModel, TFAModel, TOTPModel, UsersModel, WebAuthnModel}
+import models._
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
 import play.api.i18n.I18nSupport
-import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 
-import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 
 /**
@@ -28,10 +24,6 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
 
   private val ErrorKey = "error"
   private val tfaLoginForm = Form(mapping("type" -> nonEmptyText, "data" -> nonEmptyText)(Tuple2.apply)(Tuple2.unapply))
-  private val validators: Map[TFAMode, (RegisteredUser, String) => Future[Boolean]] = Map(
-    WebAuthn -> validateWebauthn,
-    TOTP -> validateTOTP
-  )
 
   def tfaCheckGet: Action[AnyContent] = Action.async { implicit rq =>
     readTemporarySession match {
@@ -54,12 +46,6 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
     }
   }
 
-  private def completeLogin(user: RegisteredUser)(implicit rq: RequestHeader): Future[Result] = {
-    sessions.createSession(user.id.get, rq.remoteAddress, rq.headers.get("User-Agent").getOrElse("unknown"))
-      .map(sid => Redirect(controllers.routes.RedirectController.redirectGet()).addingToSession(UserSession(user, sid): _*))
-  }
-
-
   def tfaCheckPost: Action[(String, String)] = Action.async(parse.form(tfaLoginForm)) { implicit rq =>
     readTemporarySession match {
       case Some(userId) =>
@@ -80,16 +66,9 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
             } else {
               users.getUserById(userId).flatMap {
                 case Some(user) =>
-                  validators(tfaType.get)(user, data).flatMap {
-                    case true =>
-                      completeLogin(user)
+                  tfa.repository(tfaType.get).validate(user, data).flatMap {
+                    case true => completeLogin(user)
                     case false =>
-                      // TODO: When implementing TOTP, think about rate limits
-                      // since in TOTP you usually have a window of +- 30 seconds to use a token, it means you have 90sec
-                      // to bruteforce. On average, you find the correct combination after N/2 attempts [conservative estimate]
-                      // Therefore, an attacker needs to try 10k comb/sec to have a 50% chance to win
-                      // unrealistic attack rate, should work (requires 10 attacks per milliseconds... you have denial
-                      // of service way before that threshold, and we'll never have google-like infra anyway!)
                       Future.successful(Redirect(controllers.forms.routes.TFAValidationController.tfaCheckGet())
                         .flashing(ErrorKey -> "Échec de la vérification, merci de réessayer"))
                   }
@@ -100,6 +79,11 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
         }
       case None => Future.successful(Redirect(controllers.forms.routes.LoginController.loginGet()))
     }
+  }
+
+  private def completeLogin(user: RegisteredUser)(implicit rq: RequestHeader): Future[Result] = {
+    sessions.createSession(user.id.get, rq.remoteAddress, rq.headers.get("User-Agent").getOrElse("unknown"))
+      .map(sid => Redirect(controllers.routes.RedirectController.redirectGet()).addingToSession(UserSession(user, sid): _*))
   }
 
   /**
@@ -119,26 +103,6 @@ class TFAValidationController @Inject()(cc: MessagesControllerComponents)(implic
       case None => Future.successful(BadRequest("No user ID found"))
     }
 
-  }
-
-  private def validateWebauthn(user: RegisteredUser, data: String): Future[Boolean] = {
-    val json = Json.parse(data)
-    val uid: Option[UUID] = (json \ "uid").validate[String].asOpt.flatMap(str => Try(UUID.fromString(str)).toOption)
-    val response: Option[JsObject] = (json \ "pk").validate[JsObject].asOpt
-
-    if (uid.isEmpty || response.isEmpty) {
-      println("User " + user.id.get + " tried to use WebAuthn but did not provide correct parameters")
-      Future.successful(false)
-    } else {
-      webAuthn.validateAuthentication(user, uid.get, response.get)
-    }
-  }
-
-  private def validateTOTP(user: RegisteredUser, data: String): Future[Boolean] = {
-    val code = Some(data).filter(_.length == 6).flatMap(_.toIntOption)
-
-    if (code.isEmpty) Future.successful(false)
-    else totp.check(user.id.get, code.get)
   }
 }
 

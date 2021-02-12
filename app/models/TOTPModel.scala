@@ -4,6 +4,7 @@ import anorm.SqlParser._
 import anorm._
 import com.warrenstrange.googleauth.{GoogleAuthenticator, GoogleAuthenticatorQRGenerator}
 import com.yubico.webauthn.data._
+import data.RegisteredUser
 import models.TFAModel.TFAMode.{TFAMode, TOTP}
 import play.api.Configuration
 
@@ -104,5 +105,19 @@ class TOTPModel @Inject()(dbApi: play.api.db.DBApi, rpi: RelyingPartyIdentity, u
       SQL"DELETE FROM totp_keys WHERE user_id = $user AND id = $id"
         .execute()
     }
+  }
+
+  /**
+   * Validates a given key
+   *
+   * @param user
+   * @param keyData the data given by the client, to be authenticated
+   * @return
+   */
+  override def validate(user: RegisteredUser, data: String): Future[Boolean] = {
+    val code = Some(data).filter(_.length == 6).flatMap(_.toIntOption)
+
+    if (code.isEmpty) Future.successful(false)
+    else check(user.id.get, code.get)
   }
 }
