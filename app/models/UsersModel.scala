@@ -301,7 +301,7 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
 
   def login(email: String, password: String): Future[LoginResult] = {
     getUser(email).flatMap {
-      case Some(user@RegisteredUser(Some(id), _, emailConfirmKey, hash, algo, _, _, _, _, _, _, _)) =>
+      case Some(user@RegisteredUser(Some(id), _, emailConfirmKey, hash, algo, _, _, _, _, _, _, _, _)) =>
         // Check if password is correct
         if (hashes.check(algo, hash, password)) {
 

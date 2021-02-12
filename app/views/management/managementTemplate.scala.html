@@ -1,8 +1,12 @@
 @import data.UserSession
 
-@(title: String, user: UserSession, headerText: Html = Html(""))(body: Html)
+@(title: String, headerText: Html = Html(""))(body: Html)
 
-@main(title) {
+@style = {
+    <link rel="stylesheet" href="@routes.Assets.at("css/management.css")" crossorigin="anonymous">
+}
+
+@main(title, style) {
 
     <div class="container">
         <br>

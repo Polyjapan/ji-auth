@@ -23,6 +23,13 @@ class EmailConfirmController @Inject()(cc: ControllerComponents)(implicit ec: Ex
 
       users.confirmEmail(decode(email), decode(code)).flatMap {
         case Some(user) =>
+
+          // Note regarding TFA: when the user confirms their email, they can't possibly have set-up TFA since it's not
+          // possible to login while email is not confirmed.
+          // ==> BECAUSE OF THIS (and ONLY because of this) we can allow a direct login after email confirmation
+          // Also, we still need to make sure the confirm key is unique and random enough so that's it's "impossible" to
+          // guess for an attacker while the account hasn't been confirmed :)
+
           sessions.createSession(user.id.get, rq.remoteAddress, rq.headers.get("User-Agent").getOrElse("unknown"))
             .map(sid => Ok(views.html.register.emailconfirmok()).addingToSession(UserSession(user, sid): _*))
         case None =>

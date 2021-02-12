@@ -33,6 +33,7 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
     views.html.register.register(form, config.get[String]("recaptcha.siteKey"))
 
 
+
   def registerGet: Action[AnyContent] = Action.async { implicit rq =>
     AuthTools.ifLoggedOut {
       Future.successful(Ok(displayForm(registerForm)))
@@ -48,7 +49,7 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
         val (email, password, firstName, lastName, newsletter, captchaResponse) = data
 
         // Password is hashed by register method, don't worry
-        val profile = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = None, newsletter = newsletter)
+        val profile = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = None, newsletter = newsletter, userHandle = None)
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),

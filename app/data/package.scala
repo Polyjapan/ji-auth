@@ -1,8 +1,8 @@
 import java.util.{Base64, Date}
-
 import anorm.Macro.ColumnNaming
 import anorm.{Macro, RowParser, ToParameterList}
 import ch.japanimpact.auth.api.{Group, UserAddress, UserDetails, UserProfile}
+import com.yubico.webauthn.data.ByteArray
 import play.api.libs.json.{Format, JsObject, Json, Writes}
 
 /**
@@ -34,7 +34,7 @@ package object data {
    * @param passwordReset    an optional reset key for the password. If it's null then no password change was requested
    * @param passwordResetEnd an optional timestamp marking the date at which the password reset key will no longer be valid
    *                         If absent, the password reset key is considered invalid
-   * @param adminLevel       the admin level (1-10)
+   * @param adminLevel       the admin level (1-10) [Unused]
    */
   case class RegisteredUser(id: Option[Int], email: String, emailConfirmKey: Option[String], password: String,
                             passwordAlgo: String, passwordReset: Option[String] = Option.empty,
@@ -43,7 +43,8 @@ package object data {
                             firstName: String,
                             lastName: String,
                             phoneNumber: Option[String] = None,
-                            newsletter: Boolean
+                            newsletter: Boolean,
+                            userHandle: Option[String]
                            ) {
 
     def toUserDetails = UserDetails(firstName, lastName, phoneNumber)
@@ -51,7 +52,9 @@ package object data {
     def toUserProfile(address: Option[UserAddress] = None) =
       UserProfile(id.get, email, toUserDetails, address)
 
-    def obfuscate = copy(emailConfirmKey = None, passwordReset = None, password = null)
+    def obfuscate = copy(emailConfirmKey = None, passwordReset = None, password = null, userHandle = None)
+
+    def handle: Option[ByteArray] = userHandle.map(handleStr => ByteArray.fromBase64(handleStr))
   }
 
 

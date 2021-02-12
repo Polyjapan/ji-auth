@@ -1,0 +1,27 @@
+@import views.html.management.managementTemplate
+@(codes: Set[String])(implicit request: RequestHeader)
+
+@managementTemplate("Authentification Forte") {
+
+
+    <div class="row">
+        <div class="col-md-12 py-2">
+
+            <h2>Codes de secours générés</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+            <p class="lead">Copiez ou notez les codes de secours présents ci contre. En cas de besoin, vous
+                pourrez les utiliser en guise de second moyen d'authentification.</p>
+            <p><b>Attention ! </b>Ces codes remplacent tout code de secours généré précédemment, et ne sont utilisables
+                qu'une seule fois chacun.</p>
+        </div>
+
+
+        <div class="col-md-4 text-center">
+            <pre>@for(code <- codes) {@code &#13;&#10;}</pre>
+        </div>
+    </div>
+    </div>
+}

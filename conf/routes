@@ -124,6 +124,21 @@ POST           /register                                            controllers.
 GET            /login                                               controllers.forms.LoginController.loginGet(app: Option[String] ?= None, tokenType: Option[String] ?= None, service: Option[String] ?= None)
 POST           /login                                               controllers.forms.LoginController.loginPost
 
+GET            /login/tfa                                           controllers.forms.TFAValidationController.tfaCheckGet
+POST           /login/tfa                                           controllers.forms.TFAValidationController.tfaCheckPost
+GET            /login/tfa/webauthn/start                            controllers.forms.TFAValidationController.webauthnInit
+
+GET            /tfa/manage                                          controllers.management.TFAManagementController.get
+POST           /tfa/manage/delete                                   controllers.management.TFAManagementController.deleteKey
+
+GET            /tfabackups/generate                                 controllers.management.TFAManagementController.generateBackupCodes
+
+GET            /totp/register/start                                 controllers.management.TFAManagementController.totpEnrolStart
+POST           /totp/register/complete                              controllers.management.TFAManagementController.totpEnrolFinish
+
+GET            /webauthn/register/start                             controllers.management.TFAManagementController.webauthnGetParam
+POST           /webauthn/register/complete                          controllers.management.TFAManagementController.webauthnCompleteRegistration
+
 GET            /update_info                                         controllers.forms.UpdateInfoController.updateGet(required: Option[Boolean] ?= None)
 POST           /update_info                                         controllers.forms.UpdateInfoController.updatePost
 

@@ -1,7 +1,11 @@
 @import data.UserSession
 @(user: UserSession)(implicit request: RequestHeader)
 
-@main("Compte Japan Impact") {
+@style = {
+    <link rel="stylesheet" href="@routes.Assets.at("css/management.css")" crossorigin="anonymous">
+}
+
+@main("Compte Japan Impact", style) {
 
     <div class="container">
         <br>
@@ -22,6 +26,8 @@
                 <a class="btn btn-danger" href="/logout">Déconnexion</a>
                 <a class="btn btn-primary" href="@controllers.forms.routes.UpdateInfoController.updateGet()">
                     Mettre à jour mon profil</a>
+                <a class="btn btn-secondary" href="@controllers.management.routes.TFAManagementController.get()">
+                    Paramètres d'authentification forte</a>
 
                 <hr>
             </div>

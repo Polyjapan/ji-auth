@@ -1,6 +1,8 @@
 package controllers.forms
 
 import data.UserSession
+import models.tfa.TFAModel
+
 import javax.inject.Inject
 import models.{ServicesModel, SessionsModel, UsersModel}
 import play.api.Configuration
@@ -13,11 +15,14 @@ import play.twirl.api.HtmlFormat
 
 import scala.concurrent.{ExecutionContext, Future}
 
+object LoginController {
+  val TemporarySessionKey = "temporarySession"
+}
 /**
  * @author Louis Vialar
  */
 class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: ExecutionContext, mailer: MailerClient, config: Configuration,
-                                                                  users: UsersModel, sessions: SessionsModel,
+                                                                  users: UsersModel, sessions: SessionsModel, tfa: TFAModel,
                                                                   apps: ServicesModel) extends MessagesAbstractController(cc) with I18nSupport {
 
 
@@ -38,14 +43,15 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
       }, data => {
         val (email, password) = data
 
-        users.login(email, password).flatMap {
+        users.login(email, password).map {
           case users.BadLogin =>
-            Future.successful(BadRequest(displayForm(loginForm.withGlobalError("Email ou mot de passe incorrect"))))
+            BadRequest(displayForm(loginForm.withGlobalError("Email ou mot de passe incorrect")))
           case users.EmailNotConfirmed =>
-            Future.successful(BadRequest(displayForm(loginForm.withGlobalError("Vous devez confirmer votre adresse email pour pouvoir vous connecter"))))
+            BadRequest(displayForm(loginForm.withGlobalError("Vous devez confirmer votre adresse email pour pouvoir vous connecter")))
           case users.LoginSuccess(user) =>
-            sessions.createSession(user.id.get, rq.remoteAddress, rq.headers.get("User-Agent").getOrElse("unknown"))
-              .map(sid => Redirect(controllers.routes.RedirectController.redirectGet()).addingToSession(UserSession(user, sid): _*))
+            TFAValidationController.writeTemporarySession(user.id.get)(Redirect(controllers.forms.routes.TFAValidationController.tfaCheckGet()))
+            /*sessions.createSession(user.id.get, rq.remoteAddress, rq.headers.get("User-Agent").getOrElse("unknown"))
+              .map(sid => Redirect(controllers.routes.RedirectController.redirectGet()).addingToSession(UserSession(user, sid): _*))*/
         }
       })
     }

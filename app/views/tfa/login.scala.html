@@ -1,0 +1,115 @@
+@import models.tfa.TFAModel.TFAMode.TFAMode
+@import views.html.helper.CSRF
+@import models.tfa.TFAModel.TFAMode.WebAuthn
+@import models.tfa.TFAModel.TFAMode.TOTP
+@import models.tfa.TFAModel.TFAMode.Backup
+@(modes: Set[TFAMode], error: Option[String])(implicit request: RequestHeader)
+
+
+@style = {
+    <link rel="stylesheet" href="@routes.Assets.at("css/register.css")" crossorigin="anonymous">
+}
+
+@main("Authentification Forte", style) {
+
+    <div class="container">
+        <div class="py-2 text-center">
+            <img class="d-block mx-auto mb-4" src="@routes.Assets.at("img/logo.png")" alt="Logo Japan Impact" width="240" height="200">
+            <h2>Confirmez votre identité</h2>
+            <p class="lead">
+                Confirmez votre identité en utilisant une des méthodes ci dessous pour vous connecter.
+        <hr>
+        </div>
+
+
+        <div class="row justify-content-md-center">
+            <div class="col-md-8">
+
+                <!-- Error field for javascript -->
+                <div class="alert alert-danger py-2" hidden id="error">
+                    <b>Une erreur s'est produite : </b><span id="error-text"></span></div>
+
+                @if(error.isDefined){
+                    <div class="alert alert-danger py-2">
+                        <b>Une erreur s'est produite : </b> @error</div>
+                }
+
+                @if(modes(WebAuthn)) {
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Clé de sécurité</h5>
+                            <p class="card-text">Utilisez une clé de sécurité ou votre empreinte digitale.</p>
+
+                            <button class="btn btn-primary" id="use-webauthn">Utiliser une clé de sécurité</button>
+
+
+                            <form hidden method="post" action="@controllers.forms.routes.TFAValidationController.tfaCheckPost()" id="tfaForm">
+                                @CSRF.formField
+                                <input type="hidden" name="data" id="data" value="">
+                                <input type="hidden" name="type" id="type" value="@{WebAuthn.toString}">
+                            </form>
+
+                        </div>
+                    </div>
+                }
+
+                @if(modes(TOTP)) {
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Code à 6 chiffres</h5>
+                            <p class="card-text">
+                                Utilisez un code à 6 chiffres généré par une application (par exemple Authy ou Google Authenticator).</p>
+
+
+                            <form class="form-inline" method="post" action="@controllers.forms.routes.TFAValidationController.tfaCheckPost()">
+                                @CSRF.formField
+                                <input type="hidden" name="type" value="@{TOTP.toString}">
+
+                                <label class="sr-only" for="otpField">Code d'authentification</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="otpField" name="data" placeholder="Code d'authentification" required pattern="[0-9]{6}">
+
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary" type="submit">Connexion</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+
+                @if(modes(Backup)) {
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Code de secours</h5>
+                            <p class="card-text">Utilisez un des codes de secours que vous avez mis de côté. Attention, chaque code n'est utilisable qu'une fois.</p>
+
+                            <form class="form-inline" method="post" action="@controllers.forms.routes.TFAValidationController.tfaCheckPost()">
+                                @CSRF.formField
+                                <input type="hidden" name="type" value="@{Backup.toString}">
+
+                                <label class="sr-only" for="backupCodeField">Code de secours</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="backupCodeField" name="data" placeholder="Code de secours" required>
+
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary" type="submit">Connexion</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+
+
+                <p class="mb-3 mt-3 text-muted">Un problème pour vous connecter ? Contactez nous à <a href="mailto:informatique@@japan-impact.ch">informatique@@japan-impact.ch</a></p>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script src="@routes.Assets.at("js/base64.js")"></script>
+    <script src="@routes.Assets.at("js/tfa_confirm.js")"></script>
+
+}
