@@ -1,11 +1,12 @@
-package models
+package models.tfa
 
 import anorm.SqlParser._
 import anorm._
 import com.warrenstrange.googleauth.{GoogleAuthenticator, GoogleAuthenticatorQRGenerator}
 import com.yubico.webauthn.data._
 import data.RegisteredUser
-import models.TFAModel.TFAMode.{TFAMode, TOTP}
+import models.UsersModel
+import models.tfa.TFAModel.TFAMode.{TFAMode, TOTP}
 import play.api.Configuration
 
 import javax.inject.Inject

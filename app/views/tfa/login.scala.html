@@ -1,8 +1,8 @@
-@import models.TFAModel.TFAMode.TFAMode
+@import models.tfa.TFAModel.TFAMode.TFAMode
 @import views.html.helper.CSRF
-@import models.TFAModel.TFAMode.WebAuthn
-@import models.TFAModel.TFAMode.TOTP
-@import models.TFAModel.TFAMode.Backup
+@import models.tfa.TFAModel.TFAMode.WebAuthn
+@import models.tfa.TFAModel.TFAMode.TOTP
+@import models.tfa.TFAModel.TFAMode.Backup
 @(modes: Set[TFAMode], error: Option[String])(implicit request: RequestHeader)
 
 

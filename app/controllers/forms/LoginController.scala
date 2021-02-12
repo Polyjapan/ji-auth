@@ -1,9 +1,10 @@
 package controllers.forms
 
 import data.UserSession
+import models.tfa.TFAModel
 
 import javax.inject.Inject
-import models.{ServicesModel, SessionsModel, TFAModel, UsersModel}
+import models.{ServicesModel, SessionsModel, UsersModel}
 import play.api.Configuration
 import play.api.data.Form
 import play.api.data.Forms._

@@ -1,9 +1,10 @@
-package models
+package models.tfa
 
 import anorm.SqlParser._
 import anorm._
 import com.yubico.webauthn.data._
-import models.TFAModel.TFAMode.{Backup, TFAMode, TOTP}
+import models.UsersModel
+import models.tfa.TFAModel.TFAMode.{TFAMode, Backup}
 import play.api.Configuration
 
 import java.security.SecureRandom

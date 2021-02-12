@@ -3,6 +3,7 @@ package controllers.management
 import controllers.forms.AuthTools
 import data.UserSession
 import models._
+import models.tfa.{BackupCodesModel, TFAModel, TOTPModel, WebAuthnModel}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport

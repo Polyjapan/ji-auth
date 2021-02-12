@@ -1,17 +1,17 @@
-package models
+package models.tfa
 
-
-import anorm.SqlParser._
+import _root_.data.RegisteredUser
+import anorm.SqlParser.{str, _}
 import anorm._
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.{ObjectMapper, SerializationFeature}
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.google.common.cache.{Cache, CacheBuilder}
+import com.yubico.webauthn._
 import com.yubico.webauthn.data._
 import com.yubico.webauthn.exception.{AssertionFailedException, RegistrationFailedException}
-import com.yubico.webauthn._
-import _root_.data.RegisteredUser
-import models.TFAModel.TFAMode.{TFAMode, WebAuthn}
+import models.UsersModel
+import models.tfa.TFAModel.TFAMode.{TFAMode, WebAuthn}
 import play.api.libs.json.{JsObject, Json}
 
 import java.security.SecureRandom

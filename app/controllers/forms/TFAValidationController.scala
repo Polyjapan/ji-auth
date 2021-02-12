@@ -3,6 +3,7 @@ package controllers.forms
 import controllers.forms.TFAValidationController.readTemporarySession
 import data.{RegisteredUser, UserSession}
 import models._
+import models.tfa.{TFAModel, TOTPModel, WebAuthnModel}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
 import play.api.i18n.I18nSupport

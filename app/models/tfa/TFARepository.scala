@@ -1,7 +1,7 @@
-package models
+package models.tfa
 
 import data.RegisteredUser
-import models.TFAModel.TFAMode.TFAMode
+import models.tfa.TFAModel.TFAMode.TFAMode
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -1,11 +1,5 @@
-@import models.TFAModel.TFAMode.TFAMode
 @import views.html.helper.CSRF
-@import models.TFAModel.TFAMode.WebAuthn
-@import models.TFAModel.TFAMode.TOTP
-@import models.TFAModel.TFAMode.Backup
 
-@import helper._
-@import views.forms.FormFieldTemplate._
 @import views.html.management.managementTemplate
 @(key: String, url: String, error: Option[String], otpForm: Form[_])(implicit request: RequestHeader)
 

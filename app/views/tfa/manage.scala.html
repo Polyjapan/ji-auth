@@ -1,9 +1,9 @@
 @import views.html.helper.CSRF
 @import views.html.management.managementTemplate
-@import models.TFAModel.TFAMode.TFAMode
-@import models.TFAModel.TFAMode.Backup
-@import models.TFAModel.TFAMode.WebAuthn
-@import models.TFAModel.TFAMode.TOTP
+@import models.tfa.TFAModel.TFAMode.TFAMode
+@import models.tfa.TFAModel.TFAMode.Backup
+@import models.tfa.TFAModel.TFAMode.WebAuthn
+@import models.tfa.TFAModel.TFAMode.TOTP
 @(modes: Set[TFAMode], keys: Set[(TFAMode, String, String)])(implicit request: RequestHeader)
 
 @display(mode: TFAMode) = @{

@@ -1,6 +1,4 @@
-package models
-
-import models.TFAModel.TFAMode.{TFAMode, WebAuthn, TOTP, Backup}
+package models.tfa
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,6 +13,8 @@ object TFAModel {
 }
 
 class TFAModel @Inject()(webAuthnModel: WebAuthnModel, totpModel: TOTPModel, backupModel: BackupCodesModel)(implicit ec: ExecutionContext) {
+  import TFAModel.TFAMode._
+
   private val mapping: Map[TFAMode, TFARepository[_]] = Map(WebAuthn -> webAuthnModel, TOTP -> totpModel, Backup -> backupModel)
 
   def repository(mode: TFAMode): TFARepository[_] = mapping(mode)
