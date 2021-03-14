@@ -90,4 +90,11 @@ const registerCredentials = async () => {
 
 window.registerCredentials = registerCredentials
 
+// One of these two techniques (or both?) successfully sets the event "onclick" of the button to "registerCredentials"
+// We have to do this because the CSP (ContentSecurityPolicy) doesn't allow onclick="..." in HTML (considered as inline JS)
+// Allowing 'unsafe-inline' in the CSP would also fix this problem, but if we can avoid it it's better to avoid it.
 document.getElementById("register-key-start").onclick = registerCredentials
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("Registering event click on button.");
+    document.getElementById('register-key-start').addEventListener('click', registerCredentials);
+});

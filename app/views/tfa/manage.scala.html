@@ -43,11 +43,11 @@
 
             @if(modes.nonEmpty && !modes(Backup)){
                 <div class="alert alert-warning py-2" id="error">
-                    <b>Aucun code de secours enregistrée !</b><br>Attention, vous avez activé l'authentification forte
+                    <b>Aucun code de secours enregistré !</b><br>Attention, vous avez activé l'authentification forte
                     mais vous n'avez généré aucun code de secours. Il est fortement conseillé de générer des codes de secours
                     et de les garder en lieu sûr, au cas où vous perdriez l'accès à vos autres moyens d'authentification forte.<br><br>
 
-                    <a class="btn btn-success" id="register-key-start" href="@genBackupUrl()">
+                    <a class="btn btn-success" href="@genBackupUrl()">
                         Générer des codes de secours</a>
                 </div>
             }
@@ -96,13 +96,13 @@
 
 
 
-            <button class="btn btn-primary" type="submit" id="register-key-start">
+            <button class="btn btn-primary" id="register-key-start">
                 Enregistrer une clé de sécurité</button>
 
-            <a class="btn btn-primary" id="register-key-start" href="@controllers.management.routes.TFAManagementController.totpEnrolStart()">
+            <a class="btn btn-primary" href="@controllers.management.routes.TFAManagementController.totpEnrolStart()">
                 Enregistrer une application OTP</a>
 
-            <a class="btn btn-@{if(modes(Backup)) "secondary" else "warning"}" id="register-key-start" href="@genBackupUrl">
+            <a class="btn btn-@{if(modes(Backup)) "secondary" else "warning"}" href="@genBackupUrl">
                 @{if(modes(Backup)) "Regénérer les" else "Générer des"} codes de secours</a>
 
         </div>
