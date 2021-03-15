@@ -27,7 +27,7 @@ lazy val tools = (project in file("tools"))
 
 
 lazy val root = (project in file("."))
-  .enablePlugins(PlayScala, JDebPackaging, SystemdPlugin, JavaServerAppPackaging)
+  .enablePlugins(PlayScala, JDebPackaging, SystemdPlugin, JavaServerAppPackaging, DockerPlugin)
   .settings(
     name := "JIAuth",
     version := "1.0",
@@ -86,6 +86,8 @@ lazy val root = (project in file("."))
       // Apply DB evolutions automatically
       "-DapplyEvolutions.default=true"
     ),
+
+    dockerExposedPorts in Docker := Seq(80),
 
 
 
