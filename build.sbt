@@ -87,8 +87,9 @@ lazy val root = (project in file("."))
       "-DapplyEvolutions.default=true"
     ),
 
-    dockerExposedPorts in Docker := Seq(80),
-
+    dockerExposedPorts := Seq(80),
+    dockerUsername := Some("polyjapan"),
+    dockerBaseImage := "openjdk:11",
 
 
     // Don't add the doc in the zip

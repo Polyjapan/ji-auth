@@ -35,6 +35,6 @@ object CasConfiguration {
     val service = config.get[String]("cas.service")
     val protocol = if (config.getOptional[Boolean]("cas.secure").getOrElse(true)) "https" else "http"
 
-    new CasConfiguration(hostname, url, service, protocol)
+    new CasConfiguration(hostname, url.dropWhile(_ == '/'), service, protocol)
   }
 }
