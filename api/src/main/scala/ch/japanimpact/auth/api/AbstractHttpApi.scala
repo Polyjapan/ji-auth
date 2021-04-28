@@ -17,14 +17,19 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author Louis Vialar
  */
 abstract class AbstractHttpApi(scopes: Set[String], ws: WSClient, config: Configuration, tokens: APITokensService, cache: AsyncCacheApi)(implicit ec: ExecutionContext) {
-  private val apiBase: String = config.getOptional[String]("jiauth.api.baseUrl").getOrElse(config.get[String]("jiauth.baseUrl") + "/api/v2/")
+  private val apiBase: String = config.getOptional[String]("jiauth.api.baseUrl").getOrElse({
+    val base = config.get[String]("jiauth.baseUrl")
+    var url = (if (base.endsWith("/")) base else base + "/") + "api/v2/"
+    while (url.endsWith("/")) url = url.dropRight(1)
+    url
+  })
   private val cacheDuration = config.getOptional[Duration]("jiauth.cacheDuration").getOrElse(10.minutes)
   private val tokenDuration = config.getOptional[Duration]("jiauth.tokenDuration").getOrElse(48.hours)
   private val token = new TokenHolder
 
   protected def withToken[T](endpoint: String)(exec: WSRequest => Future[WSResponse])(map: JsValue => T): Future[Either[APIError, T]] =
     token()
-      .map(token => ws.url(s"$apiBase/$endpoint").addHttpHeaders("Authorization" -> ("Bearer " + token)))
+      .map(token => ws.url(s"$apiBase/${endpoint.dropWhile(_ == '/')}").addHttpHeaders("Authorization" -> ("Bearer " + token)))
       .flatMap(r => mapping(r)(exec)(map))
       .recover {
         case ex: Throwable => Left(APIError(ex.getClass.getName, ex.getMessage))
@@ -32,7 +37,7 @@ abstract class AbstractHttpApi(scopes: Set[String], ws: WSClient, config: Config
 
   protected def withTokenToDone(endpoint: String)(exec: WSRequest => Future[WSResponse]): Future[Either[APIError, Done]] =
     token()
-      .map(token => ws.url(s"$apiBase/$endpoint").addHttpHeaders("Authorization" -> ("Bearer " + token)))
+      .map(token => ws.url(s"$apiBase/${endpoint.dropWhile(_ == '/')}").addHttpHeaders("Authorization" -> ("Bearer " + token)))
       .flatMap(r => {
         exec(r).map { resp =>
           if (resp.status == 200) Right(Done)

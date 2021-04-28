@@ -12,7 +12,7 @@ ThisBuild / libraryDependencies ++= Seq(
 
 lazy val api = (project in file("api"))
   .settings(
-    version := "2.0-SNAPSHOT",
+    version := "2.0.1",
     libraryDependencies += "com.google.inject" % "guice" % "4.2.2",
     libraryDependencies += cacheApi,
     publishTo := { Some("Japan Impact Repository" at { "https://repository.japan-impact.ch/" + ( if (isSnapshot.value) "snapshots" else "releases" ) } ) },

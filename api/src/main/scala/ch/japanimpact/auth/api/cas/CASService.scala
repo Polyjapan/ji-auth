@@ -31,7 +31,7 @@ class CASService @Inject()(val ws: WSClient, val config: CasConfiguration)(impli
     * Get the URL to which the client should be redirected to login
     */
   def loginUrl(callback: Option[String]) =
-    config.path("/login?service=" + callback.getOrElse(config.service))
+    config.path("login?service=" + callback.getOrElse(config.service))
 
   /**
     * Use a service ticket to get user information
