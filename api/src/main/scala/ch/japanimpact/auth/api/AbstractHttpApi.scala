@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * @author Louis Vialar
  */
-abstract class AbstractHttpApi(scopes: Set[String], ws: WSClient, config: Configuration, cache: AsyncCacheApi)(implicit ec: ExecutionContext, tokens: APITokensService) {
+abstract class AbstractHttpApi(scopes: Set[String], ws: WSClient, config: Configuration, tokens: APITokensService, cache: AsyncCacheApi)(implicit ec: ExecutionContext) {
   private val apiBase: String = config.getOptional[String]("jiauth.api.baseUrl").getOrElse({
     val base = config.get[String]("jiauth.baseUrl")
     var url = (if (base.endsWith("/")) base else base + "/") + "api/v2/"
@@ -27,7 +27,7 @@ abstract class AbstractHttpApi(scopes: Set[String], ws: WSClient, config: Config
 
   private val cacheDuration = config.getOptional[Duration]("jiauth.cacheDuration").getOrElse(10.minutes)
   private val tokenDuration = config.getOptional[Duration]("jiauth.tokenDuration").getOrElse(48.hours)
-  private val token = new TokenHolder(scopes, Set("auth"), tokenDuration)
+  private val token = tokens.holder(scopes, Set("auth"), tokenDuration)
 
   protected def withToken[T](endpoint: String)(exec: WSRequest => Future[WSResponse])(map: JsValue => T): Future[Either[APIError, T]] =
     token()

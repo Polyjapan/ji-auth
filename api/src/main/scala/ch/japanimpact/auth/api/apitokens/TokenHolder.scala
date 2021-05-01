@@ -1,6 +1,5 @@
 package ch.japanimpact.auth.api.apitokens
 
-import javax.inject.Singleton
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -11,6 +10,8 @@ import scala.concurrent.{ExecutionContext, Future}
  *
  * val tokens = new TokenHolder(Set("api/blah", Set("auth"), 12.hours)
  * val req = token().map(token => my_request_requiring_a_token_here)
+ *
+ * See also: APITokensService.holder()
  *
  * @param scopes        the scopes required in the requested token
  * @param audiences     the audiences targeted for the token

@@ -1,13 +1,12 @@
 package ch.japanimpact.auth.api.apitokens
 
-import ch.japanimpact.auth.api.ApiMapper
-import ch.japanimpact.auth.api.constants.GeneralErrorCodes.ErrorCode
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.libs.json.{Json, Writes}
 import play.api.libs.ws._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
 
 
 /**
@@ -30,6 +29,9 @@ class APITokensService @Inject()(ws: WSClient, config: Configuration)(implicit e
       .post(Json.toJson(req))
       .map(_.json.as[Either[ErrorResponse, TokenResponse]])
   }
+
+  def holder(scopes: Set[String], audiences: Set[String], tokenDuration: Duration): TokenHolder =
+    new TokenHolder(scopes, audiences, tokenDuration)(this, ec)
 }
 
 
