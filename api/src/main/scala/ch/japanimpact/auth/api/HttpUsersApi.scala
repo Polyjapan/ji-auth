@@ -28,7 +28,7 @@ class HttpUsersApi @Inject()(ws: WSClient, config: Configuration, tokens: APITok
 
   override def searchUsers(query: String): Result[Seq[UserProfile]] = {
     cacheOnlySuccess(s"users.search.$query") {
-      withToken("/users")(_.withQueryStringParameters("q" -> query).get())(_.as[Seq[UserProfile]])
+      withToken("/users/search")(_.withQueryStringParameters("q" -> query).get())(_.as[Seq[UserProfile]])
     }
   }
 
@@ -46,7 +46,7 @@ class HttpUsersApi @Inject()(ws: WSClient, config: Configuration, tokens: APITok
           case (_, Left(rErr)) => Left(rErr)
         }
       } else if (ids.nonEmpty) {
-        withToken("/users/" + ids.mkString(","))(_.get)(_.as[Map[String, UserData]])
+        withToken("/users/" + ids.mkString(",") + ",")(_.get)(_.as[Map[String, UserData]])
           .map(_.map(_.map { case (k, v) => k.toInt -> v }))
       } else {
         Future.successful(Right(Map()))
