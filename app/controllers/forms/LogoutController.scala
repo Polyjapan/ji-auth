@@ -23,7 +23,7 @@ class LogoutController @Inject()(cc: ControllerComponents)
       if (app.orElse(service).nonEmpty) {
         cas.getCasService(app.orElse(service).get).map {
           case Some(CasService(_, _, Some(url), _)) if url.trim.nonEmpty => url + "?logout"
-          case Some(_) => app.get + "?logout"
+          case Some(_) => app.orElse(service).get + "?logout"
           case None => "/login"
         }
       } else "/login"
