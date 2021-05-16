@@ -34,7 +34,7 @@ lazy val root = (project in file("."))
   .enablePlugins(PlayScala, JDebPackaging, SystemdPlugin, JavaServerAppPackaging, DockerPlugin)
   .settings(
     name := "JIAuth",
-    version := "1.0-saml.9",
+    version := "1.1-2",
     scalaVersion := "2.13.1",
 
     maintainer in Linux := "Louis Vialar <louis.vialar@japan-impact.ch>",

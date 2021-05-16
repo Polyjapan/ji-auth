@@ -7,6 +7,7 @@ import controllers.saml2.responses.MetadataResponse
 import data.{CASInstance, SAMLv2Instance}
 import data.UserSession.RequestWrapper
 import models.{ServicesModel, TicketsModel}
+import play.api.Logger
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 import play.twirl.api.Html
@@ -51,7 +52,9 @@ class SAMLv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel)
 
   private def login(SAMLRequest: String, RelayState: Option[String])(implicit rq: Request[_]) = {
     val xml = XMLUtils.decodeURLParamToXML(SAMLRequest, rq.charset.getOrElse(Charset.defaultCharset().name()))
-    val targetUrl = rq.uri.split('?').head
+    val targetUrl = {
+      "https://" + rq.host + rq.path.split('?').head
+    }
     try {
       SAMLv2Parser(xml) match {
         case xmlReq: SAMLv2AuthnRequest if xmlReq.destination.isEmpty || xmlReq.destination.contains(targetUrl) =>
@@ -92,6 +95,7 @@ class SAMLv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel)
               NotFound(views.html.errorPage("Service introuvable", Html("<p>Le service spécifié est introuvable. Merci de signaler cette erreur à l'administrateur du site d'où vous provenez.</p>")));
           }
         case xmlReq: SAMLv2AuthnRequest  =>
+          Logger("SAML").error(s"[SAML Error::Invalid Destination] Current URL: $targetUrl -- Request Dest: ${xmlReq.destination}")
           Future successful BadRequest(views.html.errorPage("Destination invalide", Html("<p>Cette requête SAML est invalide car sa destination est différente de l'URL à laquelle vous avez été redirigé. Merci de signaler cette erreur à l'administrateur du site d'où vous provenez.</p>")));
         case _ =>
           Future successful BadRequest(views.html.errorPage("Requête invalide", Html("<p>Cette requête SAML est invalide. Merci de signaler cette erreur à l'administrateur du site d'où vous provenez.</p>")));
