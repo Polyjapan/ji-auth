@@ -1,29 +1,52 @@
 package controllers.cas
 
 import ch.japanimpact.auth.api.cas.{CASError, CASErrorType}
+import controllers.cas.saml.SAMLv1Parser.{IllegalVersionException, InvalidRequestException}
+import controllers.cas.saml.{SAMLError, SAMLv1Parser, SAMLSuccess}
 import data.{CasService, SessionID}
+
 import javax.inject.Inject
 import models.{ServicesModel, TicketsModel}
-import play.api.http.Writeable
-import play.api.libs.json.JsObject
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 import utils.{CAS, RandomUtils}
 
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.matching.Regex
-import scala.xml.Elem
+import scala.xml.NodeSeq
 
 /**
  * Implemented as per `https://apereo.github.io/cas/6.0.x/protocol/CAS-Protocol-Specification.html#27-proxy-cas-20`
  *
+ * Implements versions 2 and 3 of CAS protocol
+ *
  * @author Louis Vialar
  */
-class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, tickets: TicketsModel, ws: WSClient)(implicit ec: ExecutionContext) extends AbstractController(cc) {
+class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, tickets: TicketsModel, ws: WSClient)
+                               (implicit ec: ExecutionContext) extends AbstractController(cc) {
 
   private val servicePattern: Regex = "^ST-[a-zA-Z0-9_-]{32,128}$".r
   private val proxyPattern = "^[SP]T-[a-zA-Z0-9_-]{32,128}$".r
   private val pgtPattern = "^PGT-[a-zA-Z0-9_-]{32,128}$".r
+
+  private case class SAMLCASWriter(rqId: String, service: String) extends CAS.CASResponses {
+
+    override def getErrorResponse(errType: CASErrorType, param: String): Result = {
+      BadRequest(SAMLError(service, Some(rqId))(SAMLError.ErrorType.Requester, Some(errType), param))
+    }
+
+   override def getSuccessResponse(properties: Map[String, String], attributes: Map[String, String], groups: Set[String]): Result = {
+     val respId = RandomUtils.randomString(160)
+     val xml = SAMLSuccess(service, respId, rqId, service, Instant.now(), properties, attributes, groups)
+
+     Ok(xml)
+   }
+
+    override def getProxySuccessResponse(ticket: String): Result = NotImplemented
+
+    override def getProxyErrorResponse(errType: CASErrorType, param: String): Result = NotImplemented
+  }
 
   /**
    * Validate a ticket and return the associated data. <br>
@@ -50,6 +73,28 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
    */
   def serviceValidate(ticket: String, service: String, format: Option[String], pgtUrl: Option[String]): Action[AnyContent] =
     doServiceValidate(ticket, service, format, pgtUrl, servicePattern)
+
+  /**
+   *
+   * @param target get parameter named TARGET containing the URL encoded service URL
+   * @return
+   */
+  def samlValidate(TARGET: Option[String]): Action[NodeSeq] = Action.async(parse.xml) { implicit rq =>
+    // parse the request T_T
+    try {
+      if (TARGET.isEmpty) Future.successful(NotFound)
+      else {
+        val request = SAMLv1Parser(rq.body)
+        doServiceValidateWithResponseWriter(request.serviceTicket, TARGET.get, SAMLCASWriter(request.requestId, TARGET.get), None, servicePattern)
+      }
+    } catch {
+      case e: IllegalVersionException =>
+        Future.successful(BadRequest(SAMLError(TARGET.get)(SAMLError.ErrorType.VersionMismatch)))
+      case e: InvalidRequestException =>
+        Future.successful(BadRequest(SAMLError(TARGET.get)(SAMLError.ErrorType.Requester)))
+    }
+
+  }
 
   /**
    * Generate a proxyTicket from a PGT
@@ -119,6 +164,10 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
     val json = format.getOrElse("XML").equalsIgnoreCase("json")
     val responses: CAS.CASResponses = if (json) CAS.JSONCasResponses else CAS.XMLCasResponses
 
+    doServiceValidateWithResponseWriter(ticket, service, responses, pgtUrl, pattern)
+  }
+
+  private def doServiceValidateWithResponseWriter(ticket: String, service: String, responses: CAS.CASResponses, pgtUrl: Option[String], pattern: Regex): Future[Result] = {
     if (!pattern.matches(ticket)) {
       Future.successful(responses.getErrorResponse(CASErrorType.InvalidTicketSpec, ticket))
     } else {
@@ -143,7 +192,7 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
                   val properties = (pgt match {
                     case Some(t) => Map("proxyGrantingTicket" -> t)
                     case None => Map.empty[String, String]
-                  }) + ("user" -> s"${user.id.get}")
+                  }) + (CASv2Controller.UserProperty -> s"${user.id.get}")
 
                   responses.getSuccessResponse(properties, attributes, groups)
               }
@@ -159,4 +208,8 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
       }
     }
   }
+}
+
+object CASv2Controller {
+  val UserProperty = "user"
 }

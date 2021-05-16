@@ -112,6 +112,14 @@ GET            /cas/p3/proxyValidate                                controllers.
 GET            /cas/proxyValidate                                   controllers.cas.CASv2Controller.proxyValidate(ticket: String, service: String, format: Option[String] ?= None, pgtUrl: Option[String] ?= None)
 GET            /cas/v2/login                                        controllers.cas.CASLoginController.loginGet(service: String, renew: Option[Boolean] ?= None, gateway: Option[Boolean] ?= None)
 
+GET            /cas/samlValidate                                    controllers.cas.CASv2Controller.samlValidate(TARGET: Option[String] ?= None)
+GET            /cas/p3/samlValidate                                 controllers.cas.CASv2Controller.samlValidate(TARGET: Option[String] ?= None)
+
+GET            /SAML2/SSO/Redirect                                  controllers.saml2.SAMLv2Controller.loginGet(SAMLRequest: String, RelayState: Option[String] ?= None)
+GET            /SAML2/SSO/Logout                                    controllers.saml2.SAMLv2Controller.logoutGet
+GET            /SAML2/SSO/Metadata                                  controllers.saml2.SAMLv2Controller.metadataGet
+POST           /SAML2/SSO/POST                                      controllers.saml2.SAMLv2Controller.loginPost
+
 # General redirection
 
 GET            /redirect                                            controllers.RedirectController.redirectGet
