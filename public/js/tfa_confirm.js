@@ -83,7 +83,7 @@ const webauthnChallenge = async () => {
 // One of these two techniques (or both?) successfully sets the event "onclick" of the button to "webauthnChallenge"
 // We have to do this because the CSP (ContentSecurityPolicy) doesn't allow onclick="..." in HTML (considered as inline JS)
 // Allowing 'unsafe-inline' in the CSP would also fix this problem, but if we can avoid it it's better to avoid it.
-document.getElementById("use-webauthn").onclick = webauthnChallenge
+// document.getElementById("use-webauthn").onclick = webauthnChallenge
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Registering event click on button.");
     document.getElementById('use-webauthn').addEventListener('click', webauthnChallenge);
