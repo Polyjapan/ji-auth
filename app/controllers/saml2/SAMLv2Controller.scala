@@ -67,8 +67,13 @@ class SAMLv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, 
                 val ret = Redirect(controllers.routes.RedirectController.redirectGet())
 
                 // TODO: handle case where Protocol Binding is not set
-                val instance = SAMLv2Instance(redirectUrl.orElse(casService.serviceRedirectUrl.map(_.trim)).get,
-                  RelayState, xmlReq.protocolBinding.get, xmlReq.requestId, xmlReq.nameIdPolicy.flatMap(_.format).getOrElse(SAMLNameIdFormats.EmailAddressFormat),
+                val instance = SAMLv2Instance(
+                  redirectUrl.orElse(casService.serviceRedirectUrl.map(_.trim)).get,
+                  RelayState,
+                  xmlReq.protocolBinding.get,
+                  issuer = service,
+                  xmlReq.requestId,
+                  xmlReq.nameIdPolicy.flatMap(_.format).getOrElse(SAMLNameIdFormats.EmailAddressFormat),
                   casService.serviceId.get, requireFullInfo = casService.serviceRequiresFullInfo)
 
                 if (xmlReq.forceAuthn)

@@ -72,7 +72,7 @@ class SAMLResponseBuilder @Inject()(val signService: XMLSignService) {
       if (instance.nameIDFormat == SAMLNameIdFormats.EmailAddressFormat) user.email
       else user.id.get.toString
     }
-    val audience = StringHelper.getServiceDomain(instance.url).get
+    val audience = instance.issuer
 
     val attributes = {
       val src: Map[String, String] = Map(

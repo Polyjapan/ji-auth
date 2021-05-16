@@ -38,7 +38,7 @@ sealed trait AuthenticationInstance {
 
 case class CASInstance(url: String, serviceId: Int, requireFullInfo: Boolean) extends AuthenticationInstance
 
-case class SAMLv2Instance(url: String, relay: Option[String], binding: String,
+case class SAMLv2Instance(url: String, relay: Option[String], binding: String, issuer: String,
                           requestId: String, nameIDFormat: String, serviceId: Int, requireFullInfo: Boolean) extends AuthenticationInstance
 
 
