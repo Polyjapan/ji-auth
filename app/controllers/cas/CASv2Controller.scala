@@ -1,8 +1,8 @@
 package controllers.cas
 
 import ch.japanimpact.auth.api.cas.{CASError, CASErrorType}
-import controllers.cas.saml.SAMLParser.{IllegalVersionException, InvalidRequestException}
-import controllers.cas.saml.{SAMLError, SAMLParser, SAMLSuccess}
+import controllers.cas.saml.SAMLv1Parser.{IllegalVersionException, InvalidRequestException}
+import controllers.cas.saml.{SAMLError, SAMLv1Parser, SAMLSuccess}
 import data.{CasService, SessionID}
 
 import javax.inject.Inject
@@ -33,12 +33,12 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
   private case class SAMLCASWriter(rqId: String, service: String) extends CAS.CASResponses {
 
     override def getErrorResponse(errType: CASErrorType, param: String): Result = {
-      BadRequest(SAMLError(Some(rqId))(SAMLError.ErrorType.Requester, Some(errType), param))
+      BadRequest(SAMLError(service, Some(rqId))(SAMLError.ErrorType.Requester, Some(errType), param))
     }
 
    override def getSuccessResponse(properties: Map[String, String], attributes: Map[String, String], groups: Set[String]): Result = {
      val respId = RandomUtils.randomString(160)
-     val xml = SAMLSuccess(respId, rqId, service, Instant.now(), properties, attributes, groups)
+     val xml = SAMLSuccess(service, respId, rqId, service, Instant.now(), properties, attributes, groups)
 
      Ok(xml)
    }
@@ -84,14 +84,14 @@ class CASv2Controller @Inject()(cc: ControllerComponents, apps: ServicesModel, t
     try {
       if (TARGET.isEmpty) Future.successful(NotFound)
       else {
-        val request = SAMLParser(rq.body)
+        val request = SAMLv1Parser(rq.body)
         doServiceValidateWithResponseWriter(request.serviceTicket, TARGET.get, SAMLCASWriter(request.requestId, TARGET.get), None, servicePattern)
       }
     } catch {
       case e: IllegalVersionException =>
-        Future.successful(BadRequest(SAMLError()(SAMLError.ErrorType.VersionMismatch)))
+        Future.successful(BadRequest(SAMLError(TARGET.get)(SAMLError.ErrorType.VersionMismatch)))
       case e: InvalidRequestException =>
-        Future.successful(BadRequest(SAMLError()(SAMLError.ErrorType.Requester)))
+        Future.successful(BadRequest(SAMLError(TARGET.get)(SAMLError.ErrorType.Requester)))
     }
 
   }

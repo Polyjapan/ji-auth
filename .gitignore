@@ -15,3 +15,4 @@ dist
 /.settings
 application.prod.conf
 /private.pem
+/*.pem

@@ -1,0 +1,41 @@
+@(url: String, token: String, relay: Option[String], auto: Boolean)
+
+
+@main("Redirection") {
+    <div class="container">
+        <br>
+
+        <div class="row">
+            <div class="col-lg-12">
+
+                <h1>Connexion réussie</h1>
+
+                <p>Vous êtes bien connecté à votre compte Japan Impact. Pour continuer vers le site, cliquez sur le bouton ci dessous.</p>
+
+                <form action="@url" method="POST">
+                    <input type="hidden" name="SAMLResponse" value="@token" />
+                    @if(relay.nonEmpty) {
+                        <input type="hidden" name="RelayState" value="@{relay.get}" />
+                    }
+
+                    <button class="btn btn-lg btn-success btn-block">Continuer vers le service</button>
+                </form>
+
+                <br>
+
+                <p><i>En cliquant sur ce bouton, vous serez redirigé vers <a href="@url">@url</a>
+                    . Si ce n'est pas votre souhait, merci de fermer cette page.</i></p>
+            </div>
+        </div>
+
+    </div>
+
+
+    @if(auto) {
+        <script>
+                window.onload = function () {
+                    document.forms[0].submit();
+                }
+        </script>
+    }
+}

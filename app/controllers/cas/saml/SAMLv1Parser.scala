@@ -3,7 +3,7 @@ package controllers.cas.saml
 import java.time.Instant
 import scala.xml.NodeSeq
 
-object SAMLParser {
+object SAMLv1Parser {
   case class SamlValidateRequest(requestId: String, timestamp: Instant, serviceTicket: String)
 
   case class IllegalVersionException() extends Exception

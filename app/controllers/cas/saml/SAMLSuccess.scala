@@ -10,7 +10,7 @@ object SAMLSuccess {
    * @param instant
    * @return
    */
-  def apply(responseId: String, requestId: String, service: String, instant: Instant, properties: Map[String, String], attributes: Map[String, String], groups: Set[String], issuer: String = "auth") = {
+  def apply(url: String, responseId: String, requestId: String, service: String, instant: Instant, properties: Map[String, String], attributes: Map[String, String], groups: Set[String], issuer: String = "auth") = {
     val subject = {
       <Subject>
         <NameIdentifier>
@@ -30,7 +30,7 @@ object SAMLSuccess {
         <Response xmlns="urn:oasis:names:tc:SAML:1.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion"
                   xmlns:samlp="urn:oasis:names:tc:SAML:1.0:protocol" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" IssueInstant={instant.toString}
-                  MajorVersion="1" MinorVersion="1" Recipient="https://eiger.iad.vt.edu/dat/home.do"
+                  MajorVersion="1" MinorVersion="1" Recipient={url}
                   ResponseID={responseId} InResponseTo={requestId}>
           <Status>
             <StatusCode Value="samlp:Success"></StatusCode>

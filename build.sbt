@@ -15,7 +15,11 @@ lazy val api = (project in file("api"))
     version := "2.0.4",
     libraryDependencies += "com.google.inject" % "guice" % "4.2.2",
     libraryDependencies += cacheApi,
-    publishTo := { Some("Japan Impact Repository" at { "https://repository.japan-impact.ch/" + ( if (isSnapshot.value) "snapshots" else "releases" ) } ) },
+    publishTo := {
+      Some("Japan Impact Repository" at {
+        "https://repository.japan-impact.ch/" + (if (isSnapshot.value) "snapshots" else "releases")
+      })
+    },
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
   )
 
@@ -30,7 +34,7 @@ lazy val root = (project in file("."))
   .enablePlugins(PlayScala, JDebPackaging, SystemdPlugin, JavaServerAppPackaging, DockerPlugin)
   .settings(
     name := "JIAuth",
-    version := "1.0",
+    version := "1.0-saml.8",
     scalaVersion := "2.13.1",
 
     maintainer in Linux := "Louis Vialar <louis.vialar@japan-impact.ch>",
@@ -55,14 +59,18 @@ lazy val root = (project in file("."))
       // Webauthn imports Jackson 2.11 which is "too recent" for the Play Framework pipeline (Jackson < 2.11)
       // We need to prevent this by making the dependencies intransitive
       "com.yubico" % "webauthn-server-core" % "1.7.0"
-        exclude ("com.fasterxml.jackson.core", "jackson-databind")
-        exclude ("com.yubico", "yubico-util"),
+        exclude("com.fasterxml.jackson.core", "jackson-databind")
+        exclude("com.yubico", "yubico-util"),
       "com.yubico" % "yubico-util" % "1.7.0"
-        exclude ("com.fasterxml.jackson.core", "jackson-databind")
-        exclude ("com.fasterxml.jackson.datatype", "jackson-datatype-jdk8")
-        exclude ("com.fasterxml.jackson.dataformat", "jackson-dataformat-cbor"),
+        exclude("com.fasterxml.jackson.core", "jackson-databind")
+        exclude("com.fasterxml.jackson.datatype", "jackson-datatype-jdk8")
+        exclude("com.fasterxml.jackson.dataformat", "jackson-dataformat-cbor"),
 
-      "com.warrenstrange" % "googleauth" % "1.4.0"
+      "com.warrenstrange" % "googleauth" % "1.4.0",
+
+      // https://mvnrepository.com/artifact/org.apache.santuario/xmlsec
+      "org.apache.santuario" % "xmlsec" % "2.2.2",
+      "com.onelogin" % "java-saml-core" % "2.6.0"
     ),
 
     resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
@@ -99,5 +107,3 @@ lazy val root = (project in file("."))
   .aggregate(api, tools)
   .dependsOn(api)
 
-
-      
