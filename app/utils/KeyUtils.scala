@@ -17,14 +17,16 @@ object KeyUtils {
     object X509 extends CertType("X.509")
   }
 
-  private def keyToBytes(key: String) =
-    Base64.getDecoder.decode(
-      key.replaceAll("-----BEGIN (.*)-----", "")
+  def extractPEMdata(pem: String): String =
+      pem.replaceAll("-----BEGIN (.*)-----", "")
         .replaceAll("-----END (.*)-----", "")
         .replaceAll("\r\n", "")
         .replaceAll("\n", "")
         .trim
-    )
+
+
+  private def keyToBytes(key: String) =
+    Base64.getDecoder.decode(extractPEMdata(key))
 
   def parsePrivateKey(pk: String, kind: KeyTypes.KeyType): PrivateKey = {
     val spec = new PKCS8EncodedKeySpec(keyToBytes(pk))

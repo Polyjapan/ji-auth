@@ -23,6 +23,8 @@ class XMLSignService @Inject()(conf: Configuration) {
   private lazy val privateKeyData = new String(Files.readAllBytes(Paths.get(conf.get[String]("saml.keypair.private"))))
   private lazy val certData = new String(Files.readAllBytes(Paths.get(conf.get[String]("saml.keypair.cert"))))
 
+  lazy val certContent: String = KeyUtils.extractPEMdata(certData)
+
   private val DigestAlgo = OneLoginConstants.SHA256
   private val SignatureAlgo = OneLoginConstants.RSA_SHA256
 
@@ -30,8 +32,7 @@ class XMLSignService @Inject()(conf: Configuration) {
     samlSign(SAMLUtils.loadXML(elem.toString()))
 
   def samlSign(xmlDoc: Document): String = {
-    val ret = SAMLUtils.addSign(xmlDoc, privateKey, certificate, SignatureAlgo, DigestAlgo)
-    SAMLUtils.base64encoder(ret)
+    SAMLUtils.addSign(xmlDoc, privateKey, certificate, SignatureAlgo, DigestAlgo)
   }
 
 }

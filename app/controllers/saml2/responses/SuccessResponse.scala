@@ -1,7 +1,8 @@
-package controllers.saml2
+package controllers.saml2.responses
 
 import ch.japanimpact.auth.api.UserData
-import ch.japanimpact.auth.api.cas.StringHelper
+import com.onelogin.saml2.util.{Util => SAMLUtils}
+import controllers.saml2.SAMLNameIdFormats
 import data.SAMLv2Instance
 import play.api.mvc.RequestHeader
 import services.XMLSignService
@@ -9,7 +10,6 @@ import utils.RandomUtils
 
 import java.time.Instant
 import java.util.UUID
-import javax.inject.Inject
 
 /*
     DO NOT REFORMAT THIS FILE!!!!!!
@@ -17,57 +17,10 @@ import javax.inject.Inject
     INTELLIJ CREATES NEWLINES IN THE XML WHICH MAKES THE VALUES INCORRECT.
  */
 
-class SAMLResponseBuilder @Inject()(val signService: XMLSignService) {
+class SuccessResponse (private val instance: SAMLv2Instance, user: UserData) extends AbstractSAMLResponse {
+  def toBase64()(implicit signService: XMLSignService, r: RequestHeader): String = SAMLUtils.base64encoder(apply())
 
-  def metadata(implicit h: RequestHeader) = {
-    val loginUrl = {
-      val url = controllers.saml2.routes.SAMLv2Controller.loginGet("").absoluteURL(true)
-
-      url.take(url.indexOf('?'))
-    }
-
-    val base = <md:EntityDescriptor entityID={issuer} validUntil={(Instant.now().plusSeconds(300)).toString}
-                                    xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
-                                    xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
-                                    xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
-      <!-- insert ds:Signature element (omitted) -->
-      <!-- insert md:IDPSSODescriptor element (below) -->
-      <md:Organization>
-        <md:OrganizationName xml:lang="en">PolyJapan</md:OrganizationName>
-        <md:OrganizationDisplayName xml:lang="en">PolyJapan / Japan Impact</md:OrganizationDisplayName>
-        <md:OrganizationURL xml:lang="en">https://www.japan-impact.ch/</md:OrganizationURL>
-      </md:Organization>
-      <md:ContactPerson contactType="technical">
-        <md:SurName>SAML Technical Support</md:SurName>
-        <md:EmailAddress>mailto:informatique@japan-impact.ch</md:EmailAddress>
-      </md:ContactPerson>
-
-      <md:IDPSSODescriptor
-      protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-        <!--
-        TODO
-        <md:KeyDescriptor use="signing">
-          <ds:KeyInfo>...</ds:KeyInfo>
-        </md:KeyDescriptor> -->
-
-        <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
-        <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat>
-
-        <md:SingleSignOnService
-        Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-        Location={loginUrl}/>
-        <md:SingleSignOnService
-        Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-        Location={controllers.saml2.routes.SAMLv2Controller.loginPost().absoluteURL(true)}/>
-      </md:IDPSSODescriptor>
-
-    </md:EntityDescriptor>
-
-    signService.signScalaElement(base)
-
-  }
-
-  def success(instance: SAMLv2Instance, user: UserData)(implicit r: RequestHeader): String = {
+  def apply()(implicit signService: XMLSignService, r: RequestHeader): String = {
     val nameID = {
       if (instance.nameIDFormat == SAMLNameIdFormats.EmailAddressFormat) user.email
       else user.id.get.toString
@@ -88,16 +41,13 @@ class SAMLResponseBuilder @Inject()(val signService: XMLSignService) {
       } else src
     }
 
-
     build(nameID, issuer, audience, attributes, user.groups, instance)
   }
 
-  private def issuer(implicit h: RequestHeader): String = controllers.saml2.routes.SAMLv2Controller.metadataGet().absoluteURL(true)
-
   private def build(nameID: String, issuer: String, audience: String,
-                    attributes: Map[String, String], groups: Set[String], instance: SAMLv2Instance): String = {
+                    attributes: Map[String, String], groups: Set[String], instance: SAMLv2Instance)(implicit signService: XMLSignService): String = {
     val now = Instant.now().toString
-    val id = "pfx" + UUID.randomUUID().toString
+    val id = random()
     val assertId = random()
 
     val assertion = buildAssertion(assertId, nameID, issuer, now, audience, attributes, groups, instance)
@@ -123,7 +73,7 @@ class SAMLResponseBuilder @Inject()(val signService: XMLSignService) {
     signService.signScalaElement(data)
   }
 
-  private def random() = "SAML-" + RandomUtils.randomString(16)
+  private def random() = "JIAUTH_" + RandomUtils.randomString(16)
 
   private def buildAssertion(index: String, nameID: String, issuer: String, now: String, audience: String,
                              attributes: Map[String, String], groups: Set[String], instance: SAMLv2Instance) = {

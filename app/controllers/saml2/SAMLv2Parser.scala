@@ -7,11 +7,6 @@ import java.time.Instant
 import scala.xml.NodeSeq
 
 object SAMLv2Parser {
-
-  implicit val NameIDPolicyFormat: OFormat[NameIDPolicy] = Json.format[NameIDPolicy]
-  implicit val SAMLv2AuthnRequestFormat: OFormat[SAMLv2AuthnRequest] = Json.format[SAMLv2AuthnRequest]
-
-
   def parseNameIDPolicy(policy: xml.Elem): NameIDPolicy = {
     val format = (policy attribute "Format").map(_.text)
     val allowCreate = (policy attribute "AllowCreate").map(_.text == "true")
@@ -26,7 +21,6 @@ object SAMLv2Parser {
 
     val dest: Option[String] = request.attribute("Destination").map(_.text)
     val issuer: Option[String] = (request \ "Issuer").headOption.map(_.text)
-    val signed: Boolean = (request \ "Signature").nonEmpty
 
     val nameIDPolicy: Option[NameIDPolicy] = (request \ "NameIDPolicy").collectFirst { case elem: xml.Elem =>parseNameIDPolicy(elem) }
 
@@ -36,7 +30,7 @@ object SAMLv2Parser {
     val assertionConsumerServiceURL = request.attribute("AssertionConsumerServiceURL").map(_.text)
     val protocolBinding = request.attribute("ProtocolBinding").map(_.text)
 
-    SAMLv2AuthnRequest(id, version, Instant.parse(instant), dest, issuer, signed, nameIDPolicy, forceAuthn, isPassive, assertionConsumerServiceURL, protocolBinding)
+    SAMLv2AuthnRequest(id, version, Instant.parse(instant), dest, issuer, nameIDPolicy, forceAuthn, isPassive, assertionConsumerServiceURL, protocolBinding)
   }
 
   @throws[IllegalVersionException]
@@ -80,11 +74,6 @@ object SAMLv2Parser {
      * Identifies the entity that generated the message
      */
     val issuer: Option[String]
-
-    /**
-     * The signature
-     */
-    val signed: Boolean
   }
 
   /**
@@ -99,7 +88,6 @@ object SAMLv2Parser {
                                  issueInstant: Instant,
                                  destination: Option[String],
                                  issuer: Option[String],
-                                 signed: Boolean,
                                  nameIdPolicy: Option[NameIDPolicy],
                                  forceAuthn: Boolean = false,
                                  passive: Boolean = false,
