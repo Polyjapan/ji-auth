@@ -1,19 +1,53 @@
 JI Auth
 =======
 
-It's just a slightly tweaked CAS-like protocol, really.
+A homemade identity provider and SSO portal for Japan Impact!
 
 ## Compile
 
-You'll need to clone [https://github.com/Polyjapan/ji-auth-framework], and compile it using `sbt publishLocal`.
+To get a universal zip, run `sbt dist`.
 
-You can then run `sbt dist` to produce a zip, or `sbt boot` to start development environment (in which case the server will start on port 9000).
+To get a docker container (prefered), run `sbt docker:publishLocal`. The tag for the container depends on the version
+set in `build.sbt`.
 
-You can provide a specific configuration file using the `-Dconfig.file=path` switch.
+This build contains three artifacts:
+ - The API (`ch.japanimpact.jiauthframework`): a Scala API to use the framework
+ - The Tools: a small application to generate test API tokens using a private key
+ - The Server: JI Auth itself, the CAS+SAMLv2 IdP. 
+
+Run `sbt boot` to start development environment (in which case the server will start on port 9000). You can provide a specific configuration file using the `-Dconfig.file=path` switch.
 
 ## Client
 
-[https://github.com/Polyjapan/ji-auth-framework] is a cool client written in scala for the JVM :)
+The scala client is located in the API folder. 
+
+## Endpoints
+
+JIAuth supports protocols CAS and SAML. Here are the endpoints to use:
+
+ - SAMLv2:
+    - Metadata discovery/entity ID: `https://auth.japan-impact.ch/SAML2/SSO/Metadata`
+    - Redirect binding: `https://auth.japan-impact.ch/SAML2/SSO/Redirect`
+    - POST binding: `https://auth.japan-impact.ch/SAML2/SSO/POST`
+ - CAS:
+    - Login page for the user: `https://auth.japan-impact.ch/cas/login?service=<your service url>`
+    - V1 validation endpoint: `https://auth.japan-impact.ch/cas/validate?service=<your service>&ticket=<the ticket>`
+    - V2/V3 service validation: `https://auth.japan-impact.ch/cas/serviceValidate?...`
+    - V2/V3 service+proxy validation: `https://auth.japan-impact.ch/cas/proxyValidate?...`
+    - V2/V3 proxy validation: `https://auth.japan-impact.ch/cas/proxy`
+    - V3 saml validation: `https://auth.japan-impact.ch/cas/samlValidate`
+    
+SAMLv1.1 is "supported-ish" via the CAS v3 SAML validation. Use at your own risks.
+
+All v2/v3 endpoints (except SAML validation) take an optional `format` GET parameter, by default set to `XML`. 
+If set to `json`, the data returned by the endpoint will be in JSON instead of XML.
+    
+CAS endpoints are available on multiple places. 
+ - V1 endpoints are available under `https://auth.japan-impact.ch/cas/<endpoint>` and `https://auth.japan-impact.ch/cas/v1/<endpoint>`
+ - V2-3 endpoints are available under `https://auth.japan-impact.ch/cas/<endpoint>` and `https://auth.japan-impact.ch/cas/v2/<endpoint>`
+ - V3 endpoints are available under `https://auth.japan-impact.ch/cas/<endpoint>` and `https://auth.japan-impact.ch/cas/p3/<endpoint>`
+
+## Old informations (probably not up to date)
 
 ## API authentication
 
