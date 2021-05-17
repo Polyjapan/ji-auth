@@ -32,6 +32,7 @@ class SuccessResponse (private val instance: SAMLv2Instance, user: UserData) ext
         "id" -> user.id.get.toString,
         "email" -> user.email,
         "name" -> (user.details.firstName + " " + user.details.lastName),
+        "displayName" -> (user.details.firstName + " " + user.details.lastName),
         "firstname" -> user.details.firstName,
         "lastname" -> user.details.lastName,
       )
@@ -87,9 +88,7 @@ class SuccessResponse (private val instance: SAMLv2Instance, user: UserData) ext
                     ID={index}
                     Version="2.0"
                     IssueInstant={now}>
-      <saml:Issuer>
-        {issuer}
-      </saml:Issuer>
+      <saml:Issuer>{issuer}</saml:Issuer>
       <saml:Subject>
         <saml:NameID Format={instance.nameIDFormat}>{nameID}</saml:NameID>
         <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
