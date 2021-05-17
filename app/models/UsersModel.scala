@@ -2,12 +2,12 @@ package models
 
 import java.net.URLEncoder
 import java.sql.Timestamp
-
 import anorm.SqlParser._
 import anorm._
 import ch.japanimpact.auth.api.{UserData, UserProfile}
 import com.google.common.base.Preconditions
 import data.{Address, AddressRowParser, RegisteredUser, RegisteredUserRowParser}
+
 import javax.inject.Inject
 import play.api.Configuration
 import play.api.i18n.MessagesProvider
@@ -17,6 +17,9 @@ import services.{HashService, ReCaptchaService}
 import utils.Implicits._
 import utils.RandomUtils
 
+import java.time.Instant
+import java.time.temporal.{ChronoUnit, TemporalUnit}
+import java.util.Date
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -198,28 +201,59 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
 
             AlreadyRegistered(c.id.get)
           case None =>
+            val confirmCode = sendConfirmEmail(emailConfirmBuilder)(user.email)
 
-            val confirmCode = RandomUtils.randomString(32)
-            val emailEncoded = URLEncoder.encode(user.email, "UTF-8")
-
-            val url = emailConfirmBuilder(emailEncoded, URLEncoder.encode(confirmCode, "UTF-8"))
             val (algo, hash) = hashes.hash(user.password)
 
-            mailer.send(Email(
-              rq.messages("users.register.email_title"),
-              rq.messages("users.register.email_from") + " <noreply@japan-impact.ch>",
-              Seq(user.email),
-              bodyText = Some(rq.messages("users.register.email_text", url))
-            ))
-
             createUser(
-              user.copy(password = hash, passwordAlgo = algo, emailConfirmKey = Some(confirmCode)),
+              user.copy(password = hash, passwordAlgo = algo, emailConfirmKey = Some(confirmCode), emailConfirmLastSent = Some(new Date())),
               address
-            )
-              .map(AccountCreated)
+            ).map(AccountCreated)
         }
       }
     )
+  }
+
+  sealed trait ResendConfirmEmailResult
+
+  case object RetryLater extends ResendConfirmEmailResult
+  case object NoAccountOrAlreadyConfirmed extends ResendConfirmEmailResult
+  case object Success extends ResendConfirmEmailResult
+
+  def resendConfirmEmail(email: String, emailConfirmBuilder: (String, String) => String)(implicit rq: MessagesRequestHeader): Future[ResendConfirmEmailResult] = {
+    getUser(email).flatMap {
+      case Some(c) if c.emailConfirmKey.nonEmpty =>
+        val antiSpam = c.emailConfirmLastSent
+          .map(_.toInstant)
+          .map(_.plus(5, ChronoUnit.MINUTES))
+          .exists(_.isAfter(Instant.now()))
+
+        if (antiSpam) {
+          Future successful RetryLater
+        } else {
+          updateUser(user = c.copy(emailConfirmLastSent = Some(new Date()))) map { _ =>
+            sendConfirmEmail(emailConfirmBuilder)(c.email, c.emailConfirmKey.get)
+
+            Success
+          }
+        }
+      case _ => Future successful NoAccountOrAlreadyConfirmed
+    }
+  }
+
+  private def sendConfirmEmail(emailConfirmBuilder: (String, String) => String)(email: String, confirmCode: String = RandomUtils.randomString(32))(implicit rq: MessagesRequestHeader) = {
+    val emailEncoded = URLEncoder.encode(email, "UTF-8")
+
+    val url = emailConfirmBuilder(emailEncoded, URLEncoder.encode(confirmCode, "UTF-8"))
+
+    mailer.send(Email(
+      rq.messages("users.register.email_title"),
+      rq.messages("users.register.email_from") + " <noreply@japan-impact.ch>",
+      Seq(email),
+      bodyText = Some(rq.messages("users.register.email_text", url))
+    ))
+
+    confirmCode
   }
 
   def resetPassword(email: String, urlBuilder: (String, String) => String)(implicit rq: MessagesProvider) = {
@@ -290,7 +324,7 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
   /**
    * The email of the user is not confirmed
    */
-  case object EmailNotConfirmed extends LoginResult
+  case class EmailNotConfirmed(canResend: Boolean) extends LoginResult
 
   /**
    * The login was successful.
@@ -301,15 +335,15 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
 
   def login(email: String, password: String): Future[LoginResult] = {
     getUser(email).flatMap {
-      case Some(user@RegisteredUser(Some(id), _, emailConfirmKey, hash, algo, _, _, _, _, _, _, _, _)) =>
+      case Some(user) =>
         // Check if password is correct
-        if (hashes.check(algo, hash, password)) {
+        if (hashes.check(user.passwordAlgo, user.password, password)) {
 
           // Check if email is confirmed
-          if (emailConfirmKey.isEmpty) {
+          if (user.emailConfirmKey.isEmpty) {
 
             // Try to upgrade password if needed
-            val np = hashes.upgrade(algo, password)
+            val np = hashes.upgrade(user.passwordAlgo, password)
             np match {
               case Some((newAlgo, newHash)) =>
                 // The method returned a new (algo, pass) pair ==> we have to update!
@@ -318,10 +352,9 @@ class UsersModel @Inject()(dbApi: play.api.db.DBApi, mailer: MailerClient, reCap
             }
 
             LoginSuccess(user)
-          } else EmailNotConfirmed
+          } else EmailNotConfirmed(!user.emailConfirmLastSent.map(_.toInstant).map(_.plus(5, ChronoUnit.MINUTES)).exists(_.isAfter(Instant.now())))
 
         } else BadLogin
-
 
       case None =>
         // No account found... we just spend some time computing a fake password and return

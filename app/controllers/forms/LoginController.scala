@@ -28,26 +28,52 @@ class LoginController @Inject()(cc: MessagesControllerComponents)(implicit ec: E
 
   private val loginForm = Form(mapping("email" -> email, "password" -> nonEmptyText(8))(Tuple2.apply)(Tuple2.unapply))
 
-  private def displayForm(form: Form[(String, String)])(implicit rq: RequestHeader): HtmlFormat.Appendable = views.html.login.login(form)
+  def loginGet(app: Option[String], tokenType: Option[String], service: Option[String] = None): Action[AnyContent] = Action.async { implicit rq: Request[AnyContent] =>
+    val flashErrors = rq.flash.get("errors")
+    val flashSuccess = rq.flash.get("resend-success").contains("true")
 
-  def loginGet(app: Option[String], tokenType: Option[String], service: Option[String] = None): Action[AnyContent] = Action.async { implicit rq =>
     AuthTools.ifLoggedOut {
-      Future.successful(Ok(displayForm(loginForm)))
+      Future.successful(Ok(views.html.login.login(
+        flashErrors match {
+          case Some(err) => loginForm.withGlobalError(err)
+          case None => loginForm
+        }, resendSuccess = flashSuccess
+      )))
     }
   }
 
-  def loginPost: Action[AnyContent] = Action.async { implicit rq =>
+  def emailReconfirm(email: String): Action[AnyContent] = Action.async { implicit rq =>
+    AuthTools.ifLoggedOut {
+      users.resendConfirmEmail(email,
+        (email, code) => controllers.forms.routes.EmailConfirmController.emailConfirmGet(email, code).absoluteURL(true)) map {
+        case users.Success =>
+          Redirect(controllers.forms.routes.LoginController.loginGet(None, None))
+            .flashing("resend-success" -> "true")
+        case users.NoAccountOrAlreadyConfirmed =>
+          Redirect(controllers.forms.routes.LoginController.loginGet(None, None))
+          .flashing("errors" -> "Ce compte n'existe pas ou l'email est déjà confirmé")
+        case users.RetryLater =>
+          Redirect(controllers.forms.routes.LoginController.loginGet(None, None))
+          .flashing("errors" -> "Merci de patienter environ 5 minutes avant de demander un nouvel email.")
+      }
+    }
+  }
+
+  def loginPost: Action[AnyContent] = Action.async { implicit rq: Request[AnyContent] =>
     AuthTools.ifLoggedOut {
       loginForm.bindFromRequest().fold(withErrors => {
-        Future.successful(BadRequest(displayForm(withErrors)))
+        Future.successful(BadRequest(views.html.login.login(withErrors)))
       }, data => {
         val (email, password) = data
 
         users.login(email, password).map {
           case users.BadLogin =>
-            BadRequest(displayForm(loginForm.withGlobalError("Email ou mot de passe incorrect")))
-          case users.EmailNotConfirmed =>
-            BadRequest(displayForm(loginForm.withGlobalError("Vous devez confirmer votre adresse email pour pouvoir vous connecter")))
+            BadRequest(views.html.login.login(loginForm.withGlobalError("Email ou mot de passe incorrect")))
+          case users.EmailNotConfirmed(canRetry: Boolean) =>
+            BadRequest(
+              views.html.login.login(loginForm.withGlobalError("Vous devez confirmer votre adresse email pour pouvoir vous connecter"),
+                resendConfirmEmail = if (canRetry) Some(email) else None
+            ))
           case users.LoginSuccess(user) =>
             TFAValidationController.writeTemporarySession(user.id.get)(Redirect(controllers.forms.routes.TFAValidationController.tfaCheckGet()))
             /*sessions.createSession(user.id.get, rq.remoteAddress, rq.headers.get("User-Agent").getOrElse("unknown"))

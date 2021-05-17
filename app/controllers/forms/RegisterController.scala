@@ -49,7 +49,14 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
         val (email, password, firstName, lastName, newsletter, captchaResponse) = data
 
         // Password is hashed by register method, don't worry
-        val profile = RegisteredUser(None, email, None, password, null, firstName = firstName, lastName = lastName, phoneNumber = None, newsletter = newsletter, userHandle = None)
+        val profile = RegisteredUser(
+          email = email,
+          password = password,
+          passwordAlgo = null,
+          firstName = firstName,
+          lastName = lastName,
+          newsletter = newsletter
+        )
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),

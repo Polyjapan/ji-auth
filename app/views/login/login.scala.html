@@ -1,4 +1,4 @@
-@(userForm: Form[_])(implicit request: RequestHeader, messageProvider: MessagesProvider)
+@(userForm: Form[_], resendConfirmEmail: Option[String] = None, resendSuccess: Boolean = false)(implicit request: RequestHeader, messageProvider: MessagesProvider)
 
 
     @import helper._
@@ -33,6 +33,14 @@
 
                 @if(userForm.hasGlobalErrors) {
                     @error(userForm.globalErrors.map(_.format))
+                }
+
+                @if(resendSuccess) {
+                    <div class="alert alert-success">Email de confirmation renvoyé.</div>
+                }
+
+                @if(resendConfirmEmail.isDefined) {
+                    <div class="alert alert-info">Email de confirmation non reçu ? <a href="@controllers.forms.routes.LoginController.emailReconfirm(resendConfirmEmail.get)">Cliquez ici pour le renvoyer.</a></div>
                 }
 
                 @inputText(userForm("email"), 'type -> "email", '_label -> "Email", 'class -> "form-control", 'placeholder -> "Email", 'required -> true, 'autofocus -> true)

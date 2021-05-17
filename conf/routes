@@ -131,6 +131,7 @@ POST           /register                                            controllers.
 
 GET            /login                                               controllers.forms.LoginController.loginGet(app: Option[String] ?= None, tokenType: Option[String] ?= None, service: Option[String] ?= None)
 POST           /login                                               controllers.forms.LoginController.loginPost
+GET            /email_confirm/resend                                controllers.forms.LoginController.emailReconfirm(email: String)
 
 GET            /login/tfa                                           controllers.forms.TFAValidationController.tfaCheckGet
 POST           /login/tfa                                           controllers.forms.TFAValidationController.tfaCheckPost
