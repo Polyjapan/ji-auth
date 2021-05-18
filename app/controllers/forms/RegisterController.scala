@@ -1,7 +1,7 @@
 package controllers.forms
 
+import data.UserSession._
 import data._
-import javax.inject.Inject
 import models.{ServicesModel, UsersModel}
 import play.api.Configuration
 import play.api.data.Form
@@ -11,8 +11,9 @@ import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import play.twirl.api.HtmlFormat
 import services.{HashService, ReCaptchaService}
-import utils.ValidationUtils
+import utils.StringUtils
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -28,11 +29,6 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
       "lastName" -> nonEmptyText(1, 50),
       "newsletter" -> boolean,
       "g-recaptcha-response" -> text)(Tuple6.apply)(Tuple6.unapply))
-
-  private def displayForm(form: Form[_])(implicit rq: RequestHeader): HtmlFormat.Appendable =
-    views.html.register.register(form, config.get[String]("recaptcha.siteKey"))
-
-
 
   def registerGet: Action[AnyContent] = Action.async { implicit rq =>
     AuthTools.ifLoggedOut {
@@ -60,7 +56,8 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
 
         users.register(
           captchaResponse, Some(captcha.AuthSecretKey),
-          profile, None, (email, code) => controllers.forms.routes.EmailConfirmController.emailConfirmGet(email, code).absoluteURL(true)
+          profile, None,
+          (email, code) => controllers.forms.routes.EmailConfirmController.emailConfirmGet(email, code).absoluteURL(true),
         ).map {
           case users.BadCaptcha =>
             BadRequest(displayForm(registerForm.withGlobalError("Captcha incorrect")))
@@ -70,6 +67,9 @@ class RegisterController @Inject()(cc: MessagesControllerComponents, hashes: Has
       })
     }
   }
+
+  private def displayForm(form: Form[_])(implicit rq: RequestHeader): HtmlFormat.Appendable =
+    views.html.register.register(form, config.get[String]("recaptcha.siteKey"))
 
 
 }
