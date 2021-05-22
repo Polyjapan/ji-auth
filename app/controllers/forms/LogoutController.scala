@@ -22,7 +22,7 @@ class LogoutController @Inject()(cc: ControllerComponents)
     def redirectUrl: Future[String] = {
       if (app.orElse(service).nonEmpty) {
         cas.getCasService(app.orElse(service).get).map {
-          case Some(CasService(_, _, Some(url), _)) if url.trim.nonEmpty => url + "?logout"
+          case Some(CasService(_, _, Some(url), _, _, _, _, _, _)) if url.trim.nonEmpty => url + "?logout"
           case Some(_) => app.orElse(service).get + "?logout"
           case None => "/login"
         }

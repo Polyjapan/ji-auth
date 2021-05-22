@@ -93,26 +93,22 @@ package object data {
   implicit val ApiKeyFormat: Format[ApiKey] = Json.format[ApiKey]
   implicit val ApiKeyDataFormat: Format[ApiKeyData] = Json.format[ApiKeyData]
 
-  case class CasService(serviceId: Option[Int], serviceName: String, serviceRedirectUrl: Option[String] = None,
-                        serviceRequiresFullInfo: Boolean)
+  case class CasService(serviceId: Option[Int],
+                        serviceName: String,
+                        serviceRedirectUrl: Option[String] = None,
+                        serviceRequiresFullInfo: Boolean,
+                        servicePortalDisplay: Boolean = false,
+                        servicePortalTitle: Option[String] = None,
+                        servicePortalDescription: Option[String] = None,
+                        servicePortalLoginUrl: Option[String] = None,
+                        servicePortalImageUrl: Option[String] = None) {
 
-  case class SAMLService(serviceId: Option[Int],
-                         serviceName: String,
-                         issuer: String,
-                         metadataEndpoint: Option[String] = None,
-                         assertionConsumerService: Option[String] = None,
-                         assertionConsumerServiceRegex: Option[String] = None,
-                         singleLogoutService: Option[String] = None,
-                         singleLogoutServiceRegex: Option[String] = None,
-                         serviceRequiresFullInfo: Boolean = false)
+    val isPortalEnabled: Boolean = servicePortalDisplay && servicePortalTitle.nonEmpty && servicePortalLoginUrl.nonEmpty
+  }
 
   implicit val CasServiceFormat: Format[CasService] = Json.format[CasService]
   implicit val CasServiceRowParser: RowParser[CasService] = Macro.namedParser[CasService](ColumnNaming.SnakeCase)
   implicit val CasServiceParameterList: ToParameterList[CasService] = Macro.toParameters[CasService]()
-
-  implicit val SAMLServiceFormat: Format[SAMLService] = Json.format[SAMLService]
-  implicit val SAMLServiceRowParser: RowParser[SAMLService] = Macro.namedParser[SAMLService](ColumnNaming.SnakeCase)
-  implicit val SAMLServiceParameterList: ToParameterList[SAMLService] = Macro.toParameters[SAMLService]()
 
   case class CasV2Ticket(email: String, firstname: String, lastname: String, groups: Set[String])
 

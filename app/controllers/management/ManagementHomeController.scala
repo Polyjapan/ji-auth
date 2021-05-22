@@ -19,8 +19,10 @@ class ManagementHomeController @Inject()(cc: ControllerComponents,
 
   def home: Action[AnyContent] = Action.async { implicit rq =>
     ManagementTools.ifLoggedIn { session =>
-      Future.successful {
-        Ok(views.html.management.home(session))
+      import data.UserSession._
+
+      cas.getPortalServicesForUser(rq.userSession.id) map { services =>
+        Ok(views.html.management.home(session, services))
       }
     }
   }

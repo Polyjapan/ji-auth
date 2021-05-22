@@ -1,36 +1,81 @@
-@import data.UserSession
-@(user: UserSession)(implicit request: RequestHeader)
+@import data.{CasService, UserSession}
 
-@style = {
-    <link rel="stylesheet" href="@routes.Assets.at("css/management.css")" crossorigin="anonymous">
-}
+@(user: UserSession, services: Iterable[CasService])(implicit request: RequestHeader)
 
-@main("Compte Japan Impact", style) {
+    @style = {
+        <link rel="stylesheet" href="@routes.Assets.at("css/management.css")" crossorigin="anonymous">
+    }
 
-    <div class="container">
-        <br>
+    @main("Compte Japan Impact", style) {
 
-        <div class="row">
-            <div class="col-lg-12">
+        <div class="container">
+            <br>
 
-                <h1>Compte Japan Impact</h1>
+            <div class="row">
+                <div class="col-lg-12">
+
+                    <h1>Compte Japan Impact</h1>
 
 
-                <p class="card-text">Bonjour, <b>@{
-                    user.email
-                } !</b> Votre identifiant est le <b>#@{
-                    user.id
-                }</b>. Vous êtes bien
-                    connecté à votre compte Japan Impact et pourrez donc accéder facilement à nos divers services en ligne.</p>
+                    <p class="card-text">Bonjour, <b>@{
+                        user.email
+                    } !</b> Votre identifiant est le <b>#@{
+                        user.id
+                    }</b>. Vous êtes bien
+                        connecté à votre compte Japan Impact et pourrez donc accéder facilement à nos divers services en ligne.</p>
 
-                <a class="btn btn-danger" href="/logout">Déconnexion</a>
-                <a class="btn btn-primary" href="@controllers.forms.routes.UpdateInfoController.updateGet()">
-                    Mettre à jour mon profil</a>
-                <a class="btn btn-secondary" href="@controllers.management.routes.TFAManagementController.get()">
-                    Paramètres d'authentification forte</a>
+                    <div class="text-right">
+                        <a class="btn btn-danger" href="/logout">Déconnexion</a>
+                        <a class="btn btn-primary" href="@controllers.forms.routes.UpdateInfoController.updateGet()">
+                            Mettre à jour mon profil</a>
+                        <a class="btn btn-secondary" href="@controllers.management.routes.TFAManagementController.get()">
+                            Paramètres d'authentification forte</a>
+                    </div>
+                    <hr>
 
-                <hr>
+                </div>
             </div>
+
+            @if(services.nonEmpty) {
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h2>Services en ligne</h2>
+                        <p>Voici les services auxquels vous avez accès.</p>
+                    </div>
+                </div>
+
+                @for(lst <- services.grouped(3)) {
+                    <div class="row">
+                    @for(service <- lst) {
+                        <div class="col-lg-4">
+                            <div class="card text-center" style="min-height: 100%">
+                                @if(service.servicePortalImageUrl.isDefined) {
+                                    <img src="@{
+                                        service.servicePortalImageUrl.get
+                                    }" class="card-img-top" alt="Image of the service">
+                                } else {
+                                    <svg height="140" class="card-img-top" style="text-anchor: middle; font-size: 1.5rem;">
+                                        <rect width="100%" height="100%" fill="#727272"></rect>
+                                        <text x="50%" y="50%" fill="#C8C8C8" dy=".3em">@{service.servicePortalTitle.get}</text>
+                                    </svg>
+                                }
+                            <div class="card-body">
+                                <h5 class="card-title">@{
+                                    service.servicePortalTitle.get
+                                }</h5>
+                                @if(service.servicePortalDescription.isDefined) {
+                                    <p class="card-text">@{
+                                        service.servicePortalDescription.get
+                                    }</p>
+                                }
+                                <a href="@service.servicePortalLoginUrl.get" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Ouvrir !</a>
+                            </div>
+                            </div>
+                        </div>
+                    }
+                    </div>
+                    <br>
+                    }
+            }
         </div>
-    </div>
-}
+    }

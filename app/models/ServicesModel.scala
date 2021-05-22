@@ -42,6 +42,27 @@ class ServicesModel @Inject()(dbApi: play.api.db.DBApi)(implicit ec: ExecutionCo
     required.forall(gid => user(gid)) && (allowed.isEmpty || allowed.exists(gid => user(gid)))
   })
 
+  /**
+   * Return all the services visible to a user that are portal enabled
+   * @param userId
+   * @return
+   */
+  def getPortalServicesForUser(userId: Int): Future[Iterable[CasService]] = Future(db.withConnection { implicit c =>
+    val userGroups = SQL"SELECT group_id FROM groups_members WHERE user_id = $userId".as(int("group_id").*).toSet
+
+    val services: Map[CasService, (Set[Int], Set[Int])] = SQL("SELECT cag.group_id AS allowed, crg.group_id AS required, cas_services.* FROM cas_services LEFT JOIN cas_allowed_groups cag on cas_services.service_id = cag.service_id LEFT JOIN cas_required_groups crg on cas_services.service_id = crg.service_id WHERE service_portal_display = 1 AND service_portal_title IS NOT NULL AND service_portal_login_url IS NOT NULL ORDER BY service_id")
+      .as((int(1).? ~ int(2).? ~ CasServiceRowParser).*)
+      .map({ case allowed ~ required ~ group => (group, allowed, required)})
+      .groupMapReduce(triple => triple._1)(triple => (triple._2.toSet[Int], triple._3.toSet[Int])) {
+        case ((lA: Set[Int], lB: Set[Int]), (rA: Set[Int], rB: Set[Int])) => (lA ++ rA, lB ++ rB)
+      }
+
+    services.filter {
+      case (_, (allowedGroups, requiredGroups)) =>
+        (allowedGroups.isEmpty || allowedGroups.exists(userGroups)) && requiredGroups.forall(userGroups)
+    }.keys
+  })
+
 
   def getCasServices: Future[List[CasService]] = {
     Future(db.withConnection { implicit c =>

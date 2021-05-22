@@ -11,7 +11,7 @@ import scala.concurrent.Future
 trait UsersApi {
   type Result[A] = Future[Either[APIError, A]]
 
-  def getUsers: Result[Iterable[UserData]]
+  def getUsers: Result[Iterable[UserProfile]]
 
   def searchUsers(query: String): Result[Seq[UserProfile]]
 

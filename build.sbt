@@ -12,7 +12,7 @@ ThisBuild / libraryDependencies ++= Seq(
 
 lazy val api = (project in file("api"))
   .settings(
-    version := "2.0.4",
+    version := "2.0.5",
     libraryDependencies += "com.google.inject" % "guice" % "4.2.2",
     libraryDependencies += cacheApi,
     publishTo := {
@@ -34,7 +34,7 @@ lazy val root = (project in file("."))
   .enablePlugins(PlayScala, JDebPackaging, SystemdPlugin, JavaServerAppPackaging, DockerPlugin)
   .settings(
     name := "JIAuth",
-    version := "1.1-6",
+    version := "1.1.1-1",
     scalaVersion := "2.13.1",
 
     maintainer in Linux := "Louis Vialar <louis.vialar@japan-impact.ch>",

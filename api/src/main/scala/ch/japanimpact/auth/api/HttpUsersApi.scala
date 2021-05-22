@@ -18,10 +18,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class HttpUsersApi @Inject()(ws: WSClient, config: Configuration, tokens: APITokensService, cache: AsyncCacheApi)(implicit ec: ExecutionContext)
   extends AbstractHttpApi(Set("users/*"), ws, config, tokens, cache) with UsersApi {
 
-  override def getUsers: Result[Iterable[UserData]] = {
+  override def getUsers: Result[Iterable[UserProfile]] = {
     cacheOnlySuccess("users") {
-      withToken("/users")(_.get())(_.as[Seq[UserData]]).map(_.map {
-        value => value.map(user => user.id.get -> user).toMap
+      withToken("/users")(_.get())(_.as[Seq[UserProfile]]).map(_.map {
+        value => value.map(user => user.id -> user).toMap
       })
     }.map(_.map(_.values))
   }
